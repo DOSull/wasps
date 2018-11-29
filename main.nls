@@ -1,0 +1,42 @@
+to go
+  if total-pop > 0 [
+    let r random-normal r-mean r-sd
+    ask patches with [capacity > 0] [
+      set r-loc r * (capacity - sum pops) / capacity
+      if sum pops > 0 [
+        disperse
+      ]
+    ]
+    update-populations
+    color-patches
+  ]
+  renew-plots
+  tick
+end
+
+to update-populations
+  ask the-land [
+    set phase-pops phase-next-pops
+    set phase-next-pops matrix:minus phase-next-pops phase-next-pops
+    set pops map [j -> sum matrix:get-column phase-pops j] (n-values num-pops [i -> i])
+  ]
+  ifelse any? the-land with [sum pops > 0] [
+    calc-total-pop
+    calc-total-extent
+  ]
+  [ 
+    set total-pop 0
+    set total-extent 0
+    set min-d 0
+    set mean-d 0
+    set max-d 0
+  ]
+end
+
+to calc-total-pop
+  set total-pop sum [sum pops] of the-land
+end
+
+to calc-total-extent
+  set total-extent count the-land with [sum pops > 0]
+end

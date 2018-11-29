@@ -1,0 +1,4 @@
+*.tmp.nlogo
+foo.*
+GIS/*
+

@@ -1,0 +1,159 @@
+;to-report get-next-generation [ps]
+;  ;; Going to assume two populations
+;  let wild item 0 ps
+;  let new-pop random-poisson (r-loc * wild)
+;  let w-prop item 0 pops / sum pops
+;  report get-n-binom-p new-pop w-prop
+;end
+
+to-report get-next-generation [r buffer-pops local-pops]
+  ;; Going to assume THREE populations
+  ;; only wild and GM reproduce
+  let reproductive sum buffer-pops - item 2 buffer-pops
+  ;; from which we get the new-population
+  let new-pop random-poisson (r * reproductive)
+  ;; the proportions of these in each of wild, GM and sterile
+  ;; determined by w^2, 2gw, g^2
+  let pop-rel binom-series but-last local-pops
+  report repeat-binomial-draws new-pop pop-rel
+end
+
+to-report binom-series [x]
+  report (list (item 0 x * item 0 x) (2 * item 0 x * item 1 x) (item 1 x * item 1 x))
+end
+
+to-report get-n-binom-p [n p]
+  let result [0 0]
+  repeat n [
+    ifelse random-float 1 < p 
+    [ set result replace-item 0 result (item 0 result + 1) ]  
+    [ set result replace-item 1 result (item 1 result + 1) ]  
+  ]
+  report result
+end
+
+to-report repeat-binomial-draws [n rel-nums]
+  let result []
+  while [sum result < n] [ 
+    let px first rel-nums / sum rel-nums
+    set result sentence result get-binomial (n - sum result) px
+    set rel-nums but-first rel-nums
+  ]
+  report pack-zeros result  
+end
+
+to-report get-binomial [n p]
+  report length filter [x -> x < p] n-values n [random-float 1]
+end
+
+to-report pack-zeros [lst]
+  report sublist (sentence lst n-values num-pops [x -> 0]) 0 num-pops
+end
+
+to disperse 
+  foreach [0 1 2 3 4] [ i ->
+    ifelse i = 4 
+    [ handle-core-cases ]
+    [ handle-buffer-cases i ]
+  ]
+end
+
+to-report patch-at-offset [xy]
+  report patch-at item 0 xy item 1 xy
+end
+
+
+to handle-core-cases 
+  let pop-list matrix:get-row phase-pops 4
+  (foreach (get-next-generation r-loc pop-list pops) (n-values num-pops [i -> i]) [
+    [new-cases idx] ->
+    let target nobody
+    repeat new-cases [ 
+      let d get-distance
+      ifelse d > H [ 
+        ;; simple LDD case
+        while [target = nobody] [ 
+          let bearing random-float 360
+          set target patch-at-heading-and-distance bearing d
+        ]
+        ask target [ 
+          if capacity > 0 [
+            let phase ifelse-value (random-float 1 < p-buffer) [one-of [0 1 2 3]] [4]
+            matrix:set phase-next-pops phase idx (matrix:get phase-next-pops phase idx) + 1
+          ]
+        ]
+      ]
+      [ 
+        ifelse random-float 1 < get-p-buff d [ 
+          ;; escape to neighboring buffer
+          let dir random 4
+          set target patch-at-offset item dir NESW
+          if not (target = nobody) [ 
+            ask target [
+              if capacity > 0 [
+                let phase (dir + 2) mod 4
+                matrix:set phase-next-pops phase idx (matrix:get phase-next-pops phase idx) + 1
+              ]
+            ]
+          ]
+        ]
+        [ ;; stay in core
+          matrix:set phase-next-pops 4 idx (matrix:get phase-next-pops 4 idx) + 1
+        ]
+      ]
+    ]
+  ])
+end
+
+to handle-buffer-cases [phase]
+  let pop-list matrix:get-row phase-pops phase
+  (foreach (get-next-generation r-loc pop-list pops) (n-values num-pops [i -> i]) [
+    [new-cases idx] ->
+    let target nobody
+    repeat new-cases [
+      ifelse random-float 1 < s 
+      [ ;; stays in buffer
+        matrix:set phase-next-pops phase idx (matrix:get phase-next-pops phase idx) + 1
+      ]
+      [ ;; moves on - either forward or back
+        ifelse random-float 1 < b 
+        [ ;; goes back
+          set target patch-at-offset item phase SWNE
+          if not (target = nobody) [
+            ask patch-at-offset item phase SWNE [
+              if capacity > 0 [
+                let opp-phase (phase + 2) mod 4
+                matrix:set phase-next-pops opp-phase idx (matrix:get phase-next-pops opp-phase idx) + 1
+              ]
+            ]
+          ]
+        ]
+        [ ;; goes forward
+          matrix:set phase-next-pops 4 idx (matrix:get phase-next-pops 4 idx) + 1
+        ]
+      ]
+    ]
+  ])
+end
+
+
+
+to-report get-p-buff [ x ]
+  let p x * (4 - x) / pi
+  report p * (1 - b) * (1 - s) / (1 - s - (1.20911801786 * eff-lambda))
+end
+
+
+to-report get-distance
+  ifelse random-float 1 < p-ldd [ 
+    let d world-width
+    while [d > world-width / 2] [
+      set d random-exponential lambda-2
+    ]
+    report d 
+  ]
+  [ 
+    report random-exponential lambda-1 
+  ]
+end
+

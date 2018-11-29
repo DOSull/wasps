@@ -1,0 +1,96 @@
+to setup
+  ca
+  reset-ticks
+  set num-pops 3
+  set pals ["Reds" "Blues" "Greens" "BuGn" "GnBu" "Oranges" "PuBu" "PuBuGn"]
+  set lambda-1 (eff-lambda - (p-ldd * lambda-2)) / (1 - p-ldd)
+  ;; set eff-lambda (p-ldd * lambda-2) + ((1 - p-ldd) * lambda-1)
+  set p-exit get-p-exit
+  set K (1 - b) * (1 - s) / (1 - s - p-exit)
+
+  setup-patch-capacities
+  setup-patch-populations
+  update-populations
+  ask patches with [capacity > 0][
+    sprout-vizs 1 [
+      set shape "circle"
+    ]
+  ]
+  color-patches
+  tick
+  reset-timer
+end
+
+
+to-report get-p-exit
+  let ml 1 / eff-lambda
+  let int-H 1 / exp(H * ml) * (ml * ml * H * (H - 4) + 2 * ml * (H - 2) + 2)
+  let int-0 2 - (4 * ml)
+  report (int-H - int-0) / ml / ml / pi
+end
+
+to setup-patch-capacities
+  with-local-randomness [
+    if use-seed? [
+      random-seed landscape-seed
+    ]
+    ifelse levels = 1 [
+      set capacities (list max-capacity)
+    ]
+    [
+      let interval max-capacity / (levels - 1)
+      set capacities n-values levels [q -> q * interval]
+    ]
+    ask patches [
+    set capacity one-of capacities
+    ]
+    repeat setup-iter [
+      ask patches [
+        set capacity [capacity] of one-of neighbors4
+      ]
+      if ensure-equal-areas? [
+        adjust-qs
+      ]
+    ]
+  ]
+end
+
+
+to setup-patch-populations
+  ask patches [
+    set the-pops n-values num-pops [i -> 0]
+    set pops matrix:make-constant 1 num-pops 0
+    set next-pops matrix:make-constant 1 num-pops 0
+  ]
+;  ask high-q-patch-near-centre [
+  ask patches [
+    repeat int (capacity / 2) [ 
+      let species ifelse-value (random-float 1 < init-prop-gm) [1] [0]
+      matrix:set next-pops 0 species (matrix:get next-pops 0 species) + 1
+    ]
+  ]
+end
+  
+to-report high-q-patch-near-centre
+  let max-q patches with-max [capacity]
+  let src one-of (max-q with-min [distance patch 0 0])
+  ask src [ 
+    sprout 1 [
+      set source self
+      set hidden? true
+    ]
+  ]  
+  report src
+end
+
+
+to make-movie [n]
+  vid:start-recorder
+  setup
+  vid:record-interface
+  repeat n [
+    go
+    vid:record-interface
+  ]
+  vid:save-recording "foo.mp4"
+end

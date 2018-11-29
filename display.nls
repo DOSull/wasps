@@ -1,0 +1,55 @@
+to color-patches
+  let mx-q max capacities
+  let mn-q min capacities
+  ask the-land [
+    set pcolor palette:scale-gradient [[255 255 255] [153 153 153]] capacity mx-q mn-q
+  ]
+  ifelse show-pop? [
+    ask vizs [set hidden? true]
+    let pal item show-pop pals
+    let pop-patches the-land with [item show-pop pops > 0]
+    if any? pop-patches [
+      let pops-to-show [item show-pop pops] of pop-patches
+      let mx-pop max pops-to-show
+      let mn-pop min pops-to-show
+      ask pop-patches [
+        set pcolor palette:scale-scheme "Sequential" pal 9 (item show-pop pops) mn-pop mx-pop
+      ]
+    ]
+  ]
+  [
+    let max-w max [item 0 pops] of the-land
+    let max-gm max [item 1 pops] of the-land
+    ask vizs [
+      ;set pcolor white
+      set hidden? false
+      let p sum but-last pops
+      ifelse p > 0 [
+        let r-p item 0 pops / p
+        let b-p item 1 pops / p
+        set color (list (255 * r-p) 0 (255 * b-p) 153)
+      ]
+      [ set hidden? true ]
+    ]
+  ]
+end
+
+
+to renew-plots
+  set-current-plot "total-pop"
+  set-current-plot-pen "total-pop"
+  plot total-pop / count the-land / 100
+  set-current-plot-pen "pop-0"
+  plot sum [item 0 pops] of the-land / count the-land / 100
+  set-current-plot-pen "pop-1"
+  plot sum [item 1 pops] of the-land / count the-land / 100
+  set-current-plot-pen "pop-2"
+  plot sum [item 2 pops] of the-land / count the-land / 100
+;  set-current-plot "mean-d"
+;  set-current-plot-pen "mean-d"
+;  plot mean-d
+;  set-current-plot-pen "min-d"
+;  plot min-d
+;  set-current-plot-pen "max-d"
+;  plot max-d
+end

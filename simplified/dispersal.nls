@@ -1,0 +1,69 @@
+to-report get-next-generation [r buffer-pops local-pops]
+  ;; Going to assume THREE populations
+  ;; only wild and GM reproduce
+  let reproductive sum buffer-pops - item 2 buffer-pops
+  ;; from which we get the new-population
+  let new-pop random-poisson (r * reproductive)
+  ;; the proportions of these in each of wild, GM and sterile
+  ;; determined by w^2, 2gw, g^2
+  let pop-rel binom-series but-last local-pops
+  report repeat-binomial-draws new-pop pop-rel
+end
+
+to-report binom-series [x]
+  report (list (item 0 x * item 0 x) (2 * item 0 x * item 1 x) (item 1 x * item 1 x))
+end
+
+to-report repeat-binomial-draws [n rel-nums]
+  let result []
+  while [sum result < n] [ 
+    let px first rel-nums / sum rel-nums
+    set result sentence result get-binomial (n - sum result) px
+    set rel-nums but-first rel-nums
+  ]
+  report pack-zeros result  
+end
+
+to-report get-binomial [n p]
+  report length filter [x -> x < p] n-values n [random-float 1]
+end
+
+to-report pack-zeros [lst]
+  report sublist (sentence lst n-values num-pops [x -> 0]) 0 num-pops
+end
+
+to disperse 
+  let pop-list matrix:get-row pops 0
+  (foreach (get-next-generation r-loc pop-list the-pops) (n-values num-pops [i -> i]) [
+    [new-cases idx] ->
+    let target nobody
+    repeat new-cases [ 
+      let candidates patch-set nobody
+      while [not any? candidates] [
+        set candidates (patches-at-distance get-distance) with [capacity > 0]
+      ] 
+      ask one-of candidates [ 
+        matrix:set next-pops 0 idx (matrix:get next-pops 0 idx) + 1
+      ]
+    ]
+  ])
+end
+
+to-report patches-at-distance [r]
+  let max-r r + 0.5
+  report (patches in-radius max-r) with [abs (r - distance myself) < 0.5] 
+end
+
+to-report get-distance
+  ifelse random-float 1 < p-ldd [ 
+    let d world-width
+    while [d > world-width / 2] [
+      set d random-exponential lambda-2
+    ]
+    report d 
+  ]
+  [ 
+    report random-exponential lambda-1 
+  ]
+end
+
