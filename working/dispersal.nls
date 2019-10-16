@@ -1,22 +1,22 @@
-to disperse 
+to disperse
   (foreach (get-next-generation r-loc pops) (n-values num-pops [i -> i]) [
     [new-cases idx] ->
     ifelse new-cases > 0 [
-      repeat new-cases [ 
+      repeat new-cases [
         let target nobody
         ifelse random-float 1 < p-ldd [
           set target one-of roads
         ]
         [
-          while [target = nobody] [ 
+          while [target = nobody] [
             set target patch-at-heading-and-distance (random-float 360) (random-exponential lambda-1)
           ]
         ]
-        ask target [ 
-          if capacity > 0 and sum next-pops < capacity [
+        ask target [
+          if capacity > 0 [ ; and sum next-pops < capacity [
             set next-pops replace-item idx next-pops (item idx next-pops + 1)
             ;          let i floor distance myself
-            ;          array:set distances i (array:item distances i) + 1 
+            ;          array:set distances i (array:item distances i) + 1
           ]
         ]
       ]
