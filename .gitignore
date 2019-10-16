@@ -1,4 +1,16 @@
 *.tmp.nlogo
 foo.*
 GIS/*
-
+.R*
+*.mp4
+GIS/
+BS-model/
+abstract-space/
+buffer-core-GIS-model/
+combined-buffer/
+GIS/
+paper/
+*.zip
+*.Rmd
+*.png
+monitor.txt
