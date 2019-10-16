@@ -16,9 +16,8 @@ end
 
 to update-populations
   ask patches [
-    set pops next-pops
-    set next-pops matrix:minus next-pops next-pops
-    set the-pops map [j -> sum matrix:get-column pops j] (n-values num-pops [i -> i])
+    set the-pops next-pops
+    set next-pops n-values num-pops [i -> 0]
   ]
   ifelse any? patches with [sum the-pops > 0] [
     calc-total-pop

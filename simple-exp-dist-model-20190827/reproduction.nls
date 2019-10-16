@@ -1,0 +1,92 @@
+
+to-report get-next-generation [r local-pops]
+  ;; Going to assume THREE populations
+  ;; only wild and GM reproduce
+  let reproductive sum but-last local-pops
+  ;; from which we get the new-population
+  let new-pop random-poisson (r * reproductive)
+  ;; the proportions of these in each of wild, GM and sterile
+  ;; determined by w^2, 2gw, g^2
+  let pop-rel binom-series but-last local-pops
+  report repeat-binomial-draws new-pop pop-rel
+end
+
+to-report binom-series [x]
+  let x0 item 0 x
+  let x1 item 1 x
+  report (list (x0 * x0) (2 * x0 * x1) (x1 * x1))
+end
+
+;to-report get-n-binom-p [n p]
+;  let result [0 0]
+;  repeat n [
+;    ifelse random-float 1 < p 
+;    [ set result replace-item 0 result (item 0 result + 1) ]  
+;    [ set result replace-item 1 result (item 1 result + 1) ]  
+;  ]
+;  report result
+;end
+
+
+; This binomial algorithm from
+; Devroye. L. 1960. Generating the maximum of independent identically 
+; distributed random variables. Computers and Mathematics with 
+; Applications 6, 305-315. 
+; should be a bit quicker because it only needs ~ np random-float calls
+to-report get-binomial-2 [n p]
+  if p = 0 [ report 0 ]
+  if p = 1 [ report n ]
+  let y 0
+  let x 0
+  ; since O(np) use fact that Bin(n, p) = n - Bin(n, 1-p)
+  ifelse p < 0.5 [
+    let c ln (1 - p)
+    loop [
+      set y y + int (ln (random-float 1) / c) + 1
+      ifelse y < n 
+      [ set x x + 1 ]
+      [ report x ]
+    ]
+  ]
+  [
+    let c ln p
+    loop [
+      set y y + int (ln (random-float 1) / c) + 1
+      ifelse y < n 
+      [ set x x + 1 ]
+      [ report n - x ]
+    ]
+  ]
+end
+
+
+to-report repeat-binomial-draws [n rel-nums]
+  let result []
+  let len length rel-nums
+  while [sum result < n] [ 
+    let px first rel-nums / sum rel-nums
+    set result sentence result get-binomial-2 (n - sum result) px
+    set rel-nums but-first rel-nums
+  ]
+  ifelse length result < len
+  [ report pack-zeros result ]
+  [ report result ]
+end
+
+
+to-report get-binomial [n p]
+  report sum n-values n [i -> ifelse-value (random-float 1 < p) [1] [0]]
+end
+
+
+
+to-report pack-zeros [lst]
+  report sublist (sentence lst n-values num-pops [x -> 0]) 0 num-pops
+end
+
+
+to-report patch-at-offset [xy]
+  report patch-at item 0 xy item 1 xy
+end
+
+

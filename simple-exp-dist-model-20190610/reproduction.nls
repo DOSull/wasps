@@ -1,0 +1,57 @@
+
+to-report get-next-generation [r local-pops]
+  ;; Going to assume THREE populations
+  ;; only wild and GM reproduce
+  let reproductive sum but-last local-pops
+  ;; from which we get the new-population
+  let new-pop random-poisson (r * reproductive)
+  ;; the proportions of these in each of wild, GM and sterile
+  ;; determined by w^2, 2gw, g^2
+  let pop-rel binom-series but-last local-pops
+  report repeat-binomial-draws new-pop pop-rel
+end
+
+to-report binom-series [x]
+  report (list (item 0 x * item 0 x) (2 * item 0 x * item 1 x) (item 1 x * item 1 x))
+end
+
+;to-report get-n-binom-p [n p]
+;  let result [0 0]
+;  repeat n [
+;    ifelse random-float 1 < p 
+;    [ set result replace-item 0 result (item 0 result + 1) ]  
+;    [ set result replace-item 1 result (item 1 result + 1) ]  
+;  ]
+;  report result
+;end
+
+to-report repeat-binomial-draws [n rel-nums]
+  let result []
+  let len length rel-nums
+  while [sum result < n] [ 
+    let px first rel-nums / sum rel-nums
+    set result sentence result get-binomial (n - sum result) px
+    set rel-nums but-first rel-nums
+  ]
+  ifelse length result < len
+  [ report pack-zeros result ]
+  [ report result ]
+end
+
+
+to-report get-binomial [n p]
+  report sum n-values n [i -> ifelse-value (random-float 1 < p) [1] [0]]
+end
+
+
+
+to-report pack-zeros [lst]
+  report sublist (sentence lst n-values num-pops [x -> 0]) 0 num-pops
+end
+
+
+to-report patch-at-offset [xy]
+  report patch-at item 0 xy item 1 xy
+end
+
+

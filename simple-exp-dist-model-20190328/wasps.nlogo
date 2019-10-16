@@ -1,38 +1,62 @@
-__includes [ "setup.nls" "main.nls" "display.nls" "dispersal.nls" "../profile.nls"]
+__includes [ "setup.nls" "main.nls" "display.nls"
+  "dispersal.nls" "reproduction.nls"
+  "profile.nls" ]
 
-extensions [ palette vid gis profiler ]
+extensions [ palette vid gis profiler array ]
 
 breed [ vizs viz ]
+breed [ roads road ]
 
 globals [
+  ;; population related
   num-pops
   total-pop
-  total-extent
   capacities
-  lambda-1
+  mean-occupancy-rate
+
+  ;; dispersal related
+  total-extent
+  prop-occupied
+
   mean-d
   min-d
   max-d
   source
+
+  ;; colour palettes for display
   pals
-  p-exit
-  K
+
+  ;; subsets of the patches
   the-land
   the-sea
+  the-roads
+  the-habitable-land
+
+  ;; distances of successful dispersals
+  distances
+
+  ;; history of populations
+  pop-history
+  wild-history
+  gm-history
 ]
 
 patches-own [
   capacity
-  the-pops
+  pop
+  pops
   next-pops
+  init-pop
+  init-pops
   r-loc
+  road?
 ]
 @#$#@#$#@
 GRAPHICS-WINDOW
-216
-7
-642
-668
+205
+10
+631
+671
 -1
 -1
 2.0
@@ -55,26 +79,11 @@ GRAPHICS-WINDOW
 ticks
 30.0
 
-SLIDER
-813
-91
-985
-124
-setup-iter
-setup-iter
-0
-50
-25.0
-1
-1
-NIL
-HORIZONTAL
-
 BUTTON
-735
-16
-798
-49
+646
+13
+709
+46
 NIL
 setup
 NIL
@@ -96,17 +105,17 @@ r-mean
 r-mean
 1.0
 4
-4.0
+3.0
 0.01
 1
 NIL
 HORIZONTAL
 
 BUTTON
-735
-53
-798
-86
+646
+50
+709
+83
 step
 go
 NIL
@@ -120,10 +129,10 @@ NIL
 1
 
 BUTTON
-735
-90
-798
-123
+646
+86
+709
+119
 NIL
 go
 T
@@ -137,10 +146,10 @@ NIL
 1
 
 MONITOR
-57
-271
-125
-316
+129
+386
+197
+431
 NIL
 total-pop
 0
@@ -148,11 +157,11 @@ total-pop
 11
 
 PLOT
-673
-194
-988
-528
-total-pop
+638
+283
+954
+473
+Populations
 NIL
 NIL
 0.0
@@ -163,25 +172,10 @@ true
 true
 "" ""
 PENS
-"total-pop" 1.0 0 -16777216 true "" ""
-"pop-0" 1.0 0 -2674135 true "" ""
-"pop-1" 1.0 0 -13791810 true "" ""
-"pop-2" 1.0 0 -13840069 true "" ""
-
-SLIDER
-26
-191
-198
-224
-lambda-2
-lambda-2
-0.1
-35
-35.0
-0.1
-1
-NIL
-HORIZONTAL
+"total" 1.0 0 -8630108 true "" ""
+"wild" 1.0 0 -2674135 true "" ""
+"GM" 1.0 0 -13791810 true "" ""
+"dying" 1.0 0 -13840069 true "" ""
 
 SLIDER
 26
@@ -192,35 +186,20 @@ p-ldd
 p-ldd
 0
 0.001
-1.0E-4
-0.0001
-1
-NIL
-HORIZONTAL
-
-SLIDER
-812
-14
-984
-47
-levels
-levels
-1
-5
-2.0
-1
+1.0E-5
+0.00001
 1
 NIL
 HORIZONTAL
 
 MONITOR
-131
-273
+93
+436
 198
-318
+481
 NIL
-total-extent
-0
+prop-occupied
+3
 1
 11
 
@@ -233,84 +212,47 @@ r-sd
 r-sd
 0
 0.25
-0.2
+0.25
 0.001
 1
 NIL
 HORIZONTAL
 
 SLIDER
-813
-52
-985
-85
-max-capacity
-max-capacity
-10
-100
-100.0
-5
-1
-NIL
-HORIZONTAL
-
-SLIDER
 25
-92
+135
 197
-125
-eff-lambda
-eff-lambda
+168
+lambda-1
+lambda-1
 0.01
-5
-3.0
+10
+0.5
 0.01
 1
 NIL
 HORIZONTAL
 
 MONITOR
-126
-140
-200
-185
-NIL
-lambda-1
-4
-1
-11
-
-MONITOR
-129
-325
-197
-370
-NIL
-mean-d
-4
-1
-11
-
-MONITOR
-55
-326
-124
-371
-ppp
-total-pop / total-extent
-2
+45
+486
+199
+531
+mean-occupancy-rate
+mean-occupancy-rate
+3
 1
 11
 
 SLIDER
-80
-380
-199
-413
+687
+156
+806
+189
 show-pop
 show-pop
 0
-(num-pops - 1)
+num-pops
 0.0
 1
 1
@@ -318,10 +260,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-812
-133
-984
-166
+776
+195
+948
+228
 init-prop-gm
 init-prop-gm
 0
@@ -333,10 +275,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-63
-486
-195
-520
+818
+235
+950
+269
 NIL
 color-patches\n
 NIL
@@ -350,41 +292,123 @@ NIL
 1
 
 SWITCH
-61
-421
-201
-454
+810
+156
+950
+189
 show-pop?
 show-pop?
 0
 1
 -1000
 
-SLIDER
-22
-533
-194
-566
-H
-H
-0.5
+BUTTON
+717
+13
+823
+47
+NIL
+reset-map
+NIL
 1
-1.0
-0.001
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+670
+236
+812
+270
+toggle-roads
+ask roads [set hidden? not hidden?]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+639
+480
+953
+670
+Dispersal distances
+distance
+ln frequency
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"d" 1.0 0 -16777216 true "" ""
+
+SLIDER
+843
+17
+950
+50
+seed
+seed
+0
+1000
+500.0
+1
 1
 NIL
 HORIZONTAL
 
-MONITOR
-139
-575
-197
-620
-NIL
-p-exit
-4
+SWITCH
+810
+55
+952
+88
+use-seed?
+use-seed?
 1
-11
+1
+-1000
+
+SLIDER
+731
+92
+835
+125
+init-mean-occ
+init-mean-occ
+0
+1
+1.0
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+837
+92
+952
+125
+init-sd-occ
+init-sd-occ
+0
+0.5
+0.1
+0.001
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?

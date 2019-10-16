@@ -1,51 +1,75 @@
-to-report get-next-generation [r buffer-pops local-pops]
+to-report get-next-generation [r pops]
   ;; Going to assume THREE populations
   ;; only wild and GM reproduce
-  let reproductive sum buffer-pops - item 2 buffer-pops
+  let reproductive sum pops - last pops
   ;; from which we get the new-population
   let new-pop random-poisson (r * reproductive)
   ;; the proportions of these in each of wild, GM and sterile
   ;; determined by w^2, 2gw, g^2
-  let pop-rel binom-series but-last local-pops
+  let pop-rel binom-series but-last pops
   report repeat-binomial-draws new-pop pop-rel
 end
 
+; reports for [x y] -> [x^2 2xy y^2]
 to-report binom-series [x]
   report (list (item 0 x * item 0 x) (2 * item 0 x * item 1 x) (item 1 x * item 1 x))
 end
 
+; distributes n values stochastically according to the relative
+; values in the 3 item list rel-nums
+; first time through will assign Bin(N, item 0 rel-nums / but-first rel-nums) 
+; then it removes first item from rel-nums and iterates
+; last time around all remaining items are assigned to the last entry in the list
 to-report repeat-binomial-draws [n rel-nums]
   let result []
-  while [sum result < n] [ 
+  while [length rel-nums > 1 and sum rel-nums > 0] [ 
     let px first rel-nums / sum rel-nums
     set result sentence result get-binomial (n - sum result) px
     set rel-nums but-first rel-nums
   ]
-  report pack-zeros result  
+  report pack-zeros sentence result (n - sum result)  
 end
 
+
+; reports Bin(n, p) by counting how many U(0,1) are < p in n draws
 to-report get-binomial [n p]
   report length filter [x -> x < p] n-values n [random-float 1]
 end
 
+
+; [x] -> [x 0 0] where returned list has num-pops items
 to-report pack-zeros [lst]
   report sublist (sentence lst n-values num-pops [x -> 0]) 0 num-pops
 end
 
+
+; 
 to disperse 
-  let pop-list matrix:get-row pops 0
-  (foreach (get-next-generation r-loc pop-list the-pops) (n-values num-pops [i -> i]) [
+  (foreach (get-next-generation r-loc the-pops) (n-values num-pops [i -> i]) [
     [new-cases idx] ->
-    let target nobody
-    repeat new-cases [ 
-      let candidates patch-set nobody
-      while [not any? candidates] [
-        set candidates (patches-at-distance get-distance) with [capacity > 0]
-      ] 
-      ask one-of candidates [ 
-        matrix:set next-pops 0 idx (matrix:get next-pops 0 idx) + 1
+    
+    let long-distances filter [d -> d > H] n-values new-cases [d -> get-distance]
+    foreach long-distances [
+      d -> 
+
+      let candidates (patches-at-distance d) with [capacity > 0]
+      if any? candidates [
+        ask one-of candidates [
+          set next-pops increment-item-i idx 1 next-pops
+        ]
       ]
     ]
+    let remaining new-cases - length long-distances
+    let n-exit get-binomial remaining p-exit
+    repeat n-exit [
+      let candidates neighbors4 with [capacity > 0]
+      if any? candidates [
+        ask one-of candidates [
+          set next-pops increment-item-i idx 1 next-pops
+        ]
+      ]
+    ]
+    set next-pops increment-item-i idx (remaining - n-exit) next-pops
   ])
 end
 
@@ -67,3 +91,11 @@ to-report get-distance
   ]
 end
 
+
+to-report get-distance-greater-than-H 
+  let d 0
+  while [d <= H] [
+    set d get-distance
+  ]
+  report d
+end

@@ -1,0 +1,90 @@
+to go
+  if total-pop > 0 [
+    let r random-normal r-mean r-sd
+    ask the-habitable-land [ ;; patches with [capacity > 0] [
+      set r-loc max (list 0 (r * (capacity - pop) / capacity))
+      if pop > 0 [
+        disperse
+      ]
+    ]
+    if member? "release sites" scenario [
+      if periodicity > 0 [
+        if ticks mod periodicity = 0 [
+          release-gm-wasps
+        ]
+      ]
+    ]
+  ]
+  update-populations
+  color-patches
+  renew-plots
+  tick
+end
+
+to update-populations
+  ask the-habitable-land [
+    set pops next-pops
+    set pop sum pops
+    set next-pops n-values num-pops [ i -> 0 ]
+  ]
+  ifelse any? the-habitable-land with [pop > 0] [
+    set total-pop sum [pop] of the-habitable-land
+    set pop-history lput total-pop pop-history
+    set wild-history lput sum [item 0 pops] of the-habitable-land wild-history
+    set gm-history lput sum [item 1 pops] of the-habitable-land gm-history
+    set pop-history lput total-pop pop-history
+    set total-extent count the-habitable-land with [pop > 0]
+    set prop-occupied total-extent / count the-land
+    set mean-occupancy-rate mean [pop / capacity] of the-habitable-land
+  ]
+  [ 
+    set total-pop 0
+    set total-extent 0
+    set min-d 0
+    set mean-d 0
+    set max-d 0
+  ]
+  ask monitoring-area [
+    set history lput pops history
+  ]
+end
+
+
+
+to-report increment-list-item [lst i x]
+  let y item i lst
+  report replace-item i lst (x + y)
+end
+
+to reset-map
+  reset-ticks
+  clear-all-plots
+  ask patches [
+    set pops init-pops
+    set pop init-pop
+  ]
+  set total-pop sum [pop] of patches
+  color-patches
+  renew-plots
+end
+
+to save-monitor 
+  if file-exists? "monitor.txt" [
+    file-delete "monitor.txt"
+  ]
+  file-open "monitor.txt"
+  file-print "x y t k p1 p2 p3"
+  foreach n-values ticks [i -> i] [ t -> 
+    ask monitoring-area [
+      file-type word pxcor " "
+      file-type word pycor " "
+      file-type word t " "
+      file-type word capacity " "
+      let p item t history
+      file-type word item 0 p " "
+      file-type word item 1 p " "
+      file-print item 2 p
+    ]
+  ]
+  file-close
+end
