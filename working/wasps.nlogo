@@ -189,7 +189,7 @@ p-ldd
 p-ldd
 0
 0.001
-1.0E-4
+0.0
 0.00001
 1
 NIL
@@ -230,7 +230,7 @@ lambda-1
 lambda-1
 0.01
 10
-3.0
+0.5
 0.01
 1
 NIL
@@ -271,7 +271,7 @@ base-prop-gm
 base-prop-gm
 0
 0.5
-0.0
+0.01
 0.01
 1
 NIL
@@ -366,7 +366,7 @@ seed
 seed
 0
 1000
-4.0
+1.0
 1
 1
 NIL
@@ -866,7 +866,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.1.0
+NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -1134,6 +1134,77 @@ NetLogo 6.1.0
     </enumeratedValueSet>
     <enumeratedValueSet variable="scenario">
       <value value="&quot;base plus release sites&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="experiment-1" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="250"/>
+    <exitCondition>prop-occupied = 0.95 or total-pop = 0</exitCondition>
+    <metric>total-pop</metric>
+    <metric>prop-occupied</metric>
+    <enumeratedValueSet variable="r-mean">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="r-sd">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="lambda-1">
+      <value value="0.5"/>
+      <value value="1"/>
+      <value value="2"/>
+      <value value="3"/>
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="p-ldd">
+      <value value="0"/>
+      <value value="1.0E-5"/>
+      <value value="1.0E-4"/>
+      <value value="3.0E-4"/>
+      <value value="0.001"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-seed?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="seed" first="1" step="1" last="30"/>
+    <enumeratedValueSet variable="scenario">
+      <value value="&quot;release sites only&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="number-of-sites">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="wasps-per-site">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="percentile-selector">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="init-sd-occ">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="homogenous?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="track-monitoring-area?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="base-prop-gm">
+      <value value="0.01"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="release-prop-gm">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodicity">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="init-mean-occ">
+      <value value="0.5"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
