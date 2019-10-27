@@ -1,0 +1,7 @@
+"BehaviorSpace results (NetLogo 6.1.1)"
+"wasps.nlogo"
+"experiment-base-1"
+"10/17/2019 22:20:09:118 +1300"
+"min-pxcor","max-pxcor","min-pycor","max-pycor"
+"0","208","0","325"
+"[run number]","r-mean","r-sd","lambda-1","p-ldd","use-seed?","landscape-seed","number-of-sites","wasps-per-site","percentile-selector","init-sd-occ","homogenous?","show-pop","track-monitoring-area?","base-prop-gm","release-prop-gm","show-pop?","periodicity","init-mean-occ","[step]","total-pop","total-extent","(total-extent / count the-land)","mean-d","max-d","min-d"
