@@ -12,5 +12,5 @@ GIS/
 paper/
 *.zip
 *.Rmd
-*.png
+/*.png
 monitor.txt
