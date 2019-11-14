@@ -108,7 +108,7 @@ r-mean
 r-mean
 1.0
 4
-2.0
+2.4
 0.01
 1
 NIL
@@ -189,7 +189,7 @@ p-ldd
 p-ldd
 0
 0.001
-0.0
+1.0E-4
 0.00001
 1
 NIL
@@ -271,7 +271,7 @@ base-prop-gm
 base-prop-gm
 0
 0.5
-0.01
+0.0
 0.01
 1
 NIL
@@ -392,7 +392,7 @@ init-mean-occ
 init-mean-occ
 0
 1
-0.5
+0.075
 0.01
 1
 NIL
@@ -1205,6 +1205,68 @@ NetLogo 6.1.1
     </enumeratedValueSet>
     <enumeratedValueSet variable="init-mean-occ">
       <value value="0.5"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="experiment-nozero" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="10"/>
+    <exitCondition>total-pop = 0 or prop-occupied &gt; 0.95 or ticks &gt; 100</exitCondition>
+    <metric>total-pop</metric>
+    <metric>prop-occupied</metric>
+    <steppedValueSet variable="lambda-1" first="0.5" step="0.5" last="3"/>
+    <enumeratedValueSet variable="use-seed?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="seed" first="1" step="1" last="30"/>
+    <enumeratedValueSet variable="init-sd-occ">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="percentile-selector">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="homogenous?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="number-of-sites">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="track-monitoring-area?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="p-ldd">
+      <value value="1.0E-4"/>
+      <value value="0.001"/>
+      <value value="0.01"/>
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="base-prop-gm">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="release-prop-gm">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="r-mean" first="1.6" step="0.2" last="2.4"/>
+    <enumeratedValueSet variable="periodicity">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="wasps-per-site">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="init-mean-occ">
+      <value value="0.075"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="r-sd">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="scenario">
+      <value value="&quot;release sites only&quot;"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
