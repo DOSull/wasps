@@ -38,5 +38,27 @@ dev.off()
 
 ##
 
+library(dplyr)
+library(ggplot2)
+
+setwd('~/Documents/code/working/wasps/output/')
+wasps <- read.csv("wasps experiment-nozero-table.csv", skip=6)
+
+wasps <- select(wasps, 1:5,11, 21:23)
+
+wasps.t <- wasps %>% 
+  group_by(X.run.number.) %>%
+  summarise_at('X.step.', max) %>%
+  merge(wasps) %>%
+  filter(total.pop > 0) %>%
+  mutate(LDD = as.factor(p.ldd))
+
+
+svg("time-to-95-by-lambda-pldd.svg")
+ggplot(wasps.t) + 
+  geom_smooth(aes(x=lambda.1, y=X.step., group=LDD, color=LDD))
+
+dev.off()
+
 
   
