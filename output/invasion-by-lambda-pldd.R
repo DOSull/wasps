@@ -66,7 +66,7 @@ svg("time-to-95-by-lambda-pldd.svg")
 ggplot(wasps.t) + 
   geom_smooth(aes(x=lambda.1, y=X.step., group=p.ldd, color=P.LDD)) +
   scale_color_viridis_d(option='C', direction=-1) +
-  facet_wrap(vars(r.mean), nrow=1)
+  facet_wrap(vars(r.mean), nrow=1, labeller=label_both)
 dev.off()
 
 
