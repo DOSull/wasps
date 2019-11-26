@@ -108,7 +108,7 @@ r-mean
 r-mean
 1.0
 4
-2.0
+1.0
 0.01
 1
 NIL
@@ -189,7 +189,7 @@ p-ldd
 p-ldd
 0
 0.001
-1.0E-4
+0.1
 0.00001
 1
 NIL
@@ -348,7 +348,7 @@ seed
 seed
 0
 1000
-1.0
+71.0
 1
 1
 NIL
@@ -1318,7 +1318,7 @@ NetLogo 6.1.0
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="scenario">
-      <value value="&quot;base plus-release-sites&quot;"/>
+      <value value="&quot;base plus release sites&quot;"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
