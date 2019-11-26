@@ -10,7 +10,7 @@ to go
     if member? "release sites" scenario [
       if periodicity > 0 [
         if ticks mod periodicity = 0 [
-          release-gm-wasps
+          release-gm-wasps false
         ]
       ]
     ]

@@ -36,7 +36,7 @@ to setup
   set the-land patches with [capacity >= 0]
   set the-habitable-land the-land with [capacity > 0]
   set the-sea patches with [capacity < 0]
-  set release-sites patch-set nobody
+  set potential-release-sites patch-set nobody
   
   set pop-history []
   set wild-history []
@@ -64,24 +64,7 @@ to setup
     ; number-of-sites selected at random from the percentile-selector best locations
     ; (defined by capacity). wasps-per-site will be added, with proportion of them 
     ; GM given by prop-gm
-    release-gm-wasps
-;    let potential-sites patch-set nobody
-;    ifelse percentile-selector = 0 [
-;      set potential-sites the-habitable-land
-;    ]
-;    [ 
-;      let n-percentile count the-habitable-land * (1 - percentile-selector)
-;      set potential-sites patch-set sublist (reverse sort-on [capacity] the-habitable-land) 0 n-percentile 
-;    ]
-;    set release-sites n-of number-of-sites potential-sites
-    ask release-sites [
-;      repeat wasps-per-site [ 
-;        let species ifelse-value (random-float 1 < release-prop-gm) [1] [0]
-;        set next-pops replace-item species next-pops (item species next-pops + 1)
-;      ]
-      set init-pops next-pops
-      set init-pop sum next-pops
-    ]
+    release-gm-wasps true
   ]
   setup-monitoring-area
   
@@ -94,7 +77,7 @@ to setup
   color-patches
   ask the-sea [set pcolor cyan + 4]
   
-  set distances array:from-list n-values 350 [i -> 0]
+  ;; set distances array:from-list n-values 350 [i -> 0]
   renew-plots
 end
 
@@ -110,20 +93,25 @@ to setup-patch-populations
   ]
 end
   
-to release-gm-wasps
-  let potential-sites patch-set nobody
-  ifelse percentile-selector = 0 [
-    set potential-sites the-habitable-land
+to release-gm-wasps [initialise?]
+  if initialise? [
+    ifelse percentile-selector = 0 [
+      set potential-release-sites the-habitable-land
+    ]
+    [ 
+      let n-percentile count the-habitable-land * (1 - percentile-selector)
+      let min-capacity [capacity] of last sublist (reverse sort-on [capacity] the-habitable-land) 0 n-percentile 
+      set potential-release-sites the-habitable-land with [capacity >= min-capacity]
+    ]
   ]
-  [ 
-    let n-percentile count the-habitable-land * (1 - percentile-selector)
-    set potential-sites patch-set sublist (reverse sort-on [capacity] the-habitable-land) 0 n-percentile 
-  ]
-  set release-sites n-of number-of-sites potential-sites
+  let release-sites n-of number-of-sites potential-release-sites
   ask release-sites [
-    repeat wasps-per-site [ 
-      let species ifelse-value (random-float 1 < release-prop-gm) [1] [0]
-      set next-pops replace-item species next-pops (item species next-pops + 1)
+    set next-pops replace-item release-type next-pops (item release-type next-pops + wasps-per-site)
+  ]
+  if initialise? [
+    ask release-sites [
+      set init-pops next-pops
+      set init-pop sum init-pops
     ]
   ]
 end

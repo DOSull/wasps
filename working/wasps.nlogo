@@ -31,11 +31,11 @@ globals [
   the-sea
   the-roads
   the-habitable-land
-  release-sites
+  potential-release-sites
   monitoring-area
 
   ;; distances of successful dispersals
-  distances
+  ;; distances
 
   ;; history of populations
   pop-history
@@ -108,7 +108,7 @@ r-mean
 r-mean
 1.0
 4
-2.4
+2.0
 0.01
 1
 NIL
@@ -163,7 +163,7 @@ PLOT
 638
 283
 954
-473
+669
 Populations
 NIL
 NIL
@@ -339,24 +339,6 @@ NIL
 NIL
 1
 
-PLOT
-639
-480
-953
-670
-Dispersal distances
-distance
-ln frequency
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-"d" 1.0 0 -16777216 true "" ""
-
 SLIDER
 844
 15
@@ -392,7 +374,7 @@ init-mean-occ
 init-mean-occ
 0
 1
-0.075
+0.5
 0.01
 1
 NIL
@@ -421,7 +403,7 @@ CHOOSER
 scenario
 scenario
 "base plus release sites" "release sites only" "base only"
-1
+0
 
 SLIDER
 18
@@ -432,7 +414,7 @@ number-of-sites
 number-of-sites
 0
 50
-1.0
+20.0
 1
 1
 NIL
@@ -467,7 +449,7 @@ wasps-per-site
 wasps-per-site
 0
 1000
-1.0
+500.0
 1
 1
 NIL
@@ -482,7 +464,7 @@ percentile-selector
 percentile-selector
 0
 1
-0.0
+0.95
 0.01
 1
 NIL
@@ -493,12 +475,12 @@ SLIDER
 393
 190
 426
-release-prop-gm
-release-prop-gm
+release-type
+release-type
 0
 1
-0.0
-0.01
+1.0
+1
 1
 NIL
 HORIZONTAL
@@ -540,7 +522,7 @@ periodicity
 periodicity
 0
 10
-0.0
+1.0
 1
 1
 NIL
@@ -866,7 +848,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.1.1
+NetLogo 6.1.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

@@ -70,4 +70,33 @@ ggplot(wasps.t) +
 dev.off()
 
 
-  
+##
+
+library(dplyr)
+library(ggplot2)
+
+setwd('~/Documents/code/working/wasps/output/')
+wasps <- read.csv("control-by-lambda-pldd.csv", skip=6)
+
+wasps.sel <- select(wasps, 1:2, 11, 21:23)
+
+wasps.start.pop <- wasps.sel %>%
+  filter(X.step. == 0) %>%
+  select('X.run.number.', 'total.pop') %>%
+  rename(initial.pop = total.pop)
+
+wasps.sel <- wasps.sel %>% 
+  merge(wasps.start.pop, all.x=TRUE) %>%
+  mutate(relative.pop = total.pop / initial.pop)
+
+#svg("time-series-by-lambda-pldd.svg")
+ggplot(wasps.sel, aes(x=X.step.)) + 
+  geom_line(aes(y=prop.occupied, group=X.run.number., colour='Occupied area')) +
+  geom_line(aes(y=relative.pop, group=X.run.number., colour='Population')) +
+  labs(x = 'Time, years', y='Fraction of maximum', colour='Parameter') + 
+  facet_grid(p.ldd ~ lambda.1, labeller=label_both, as.table=FALSE)
+
+#dev.off()
+
+
+
