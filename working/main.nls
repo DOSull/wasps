@@ -29,10 +29,10 @@ to update-populations
   ]
   ifelse any? the-habitable-land with [pop > 0] [
     set total-pop sum [pop] of the-habitable-land
-    set pop-history lput total-pop pop-history
-    set wild-history lput sum [item 0 pops] of the-habitable-land wild-history
-    set gm-history lput sum [item 1 pops] of the-habitable-land gm-history
-    set pop-history lput total-pop pop-history
+;    set pop-history lput total-pop pop-history
+;    set wild-history lput sum [item 0 pops] of the-habitable-land wild-history
+;    set gm-history lput sum [item 1 pops] of the-habitable-land gm-history
+;    set pop-history lput total-pop pop-history
     set total-extent count the-habitable-land with [pop > 0]
     set prop-occupied total-extent / count the-land
     set mean-occupancy-rate mean [pop / capacity] of the-habitable-land
@@ -43,6 +43,9 @@ to update-populations
     set min-d 0
     set mean-d 0
     set max-d 0
+    set prop-occupied 0
+    set mean-occupancy-rate 0
+    set total-extent 0
   ]
   ask monitoring-area [
     set history lput pops history

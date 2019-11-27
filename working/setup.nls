@@ -38,9 +38,9 @@ to setup
   set the-sea patches with [capacity < 0]
   set potential-release-sites patch-set nobody
   
-  set pop-history []
-  set wild-history []
-  set gm-history []
+;  set pop-history []
+;  set wild-history []
+;  set gm-history []
   
   initialise-pops-to-zero
   

@@ -38,9 +38,9 @@ globals [
   ;; distances
 
   ;; history of populations
-  pop-history
-  wild-history
-  gm-history
+;  pop-history
+;  wild-history
+;  gm-history
 ]
 
 patches-own [
@@ -108,7 +108,7 @@ r-mean
 r-mean
 1.0
 4
-1.0
+2.0
 0.01
 1
 NIL
@@ -189,7 +189,7 @@ p-ldd
 p-ldd
 0
 0.001
-0.1
+0.01
 0.00001
 1
 NIL
@@ -348,7 +348,7 @@ seed
 seed
 0
 1000
-71.0
+1.0
 1
 1
 NIL
@@ -853,13 +853,18 @@ NetLogo 6.1.0
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="experiment" repetitions="1" runMetricsEveryStep="true">
+  <experiment name="INVASION-EXPERIMENT" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="150"/>
+    <exitCondition>prop-occupied = 0 or prop-occupied &gt;= 0.95</exitCondition>
     <metric>total-pop</metric>
     <metric>prop-occupied</metric>
-    <steppedValueSet variable="lambda-1" first="0.5" step="0.5" last="3"/>
+    <enumeratedValueSet variable="lambda-1">
+      <value value="0.5"/>
+      <value value="2"/>
+      <value value="5"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="use-seed?">
       <value value="true"/>
     </enumeratedValueSet>
@@ -868,7 +873,7 @@ NetLogo 6.1.0
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="percentile-selector">
-      <value value="0.95"/>
+      <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="homogenous?">
       <value value="false"/>
@@ -877,42 +882,44 @@ NetLogo 6.1.0
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="number-of-sites">
-      <value value="20"/>
+      <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="track-monitoring-area?">
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="p-ldd">
-      <value value="0"/>
-      <value value="1.0E-4"/>
-      <value value="0.001"/>
       <value value="0.01"/>
-      <value value="0.1"/>
+      <value value="1.0E-4"/>
+      <value value="1.0E-6"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="base-prop-gm">
-      <value value="0.3"/>
+      <value value="0"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="release-prop-gm">
-      <value value="1"/>
+    <enumeratedValueSet variable="release-type">
+      <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="show-pop?">
       <value value="true"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="r-mean" first="1.6" step="0.2" last="2.4"/>
+    <enumeratedValueSet variable="r-mean">
+      <value value="1.5"/>
+      <value value="2"/>
+      <value value="2.5"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="periodicity">
-      <value value="1"/>
+      <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="wasps-per-site">
-      <value value="500"/>
+      <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="init-mean-occ">
-      <value value="0.075"/>
+      <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="r-sd">
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="scenario">
-      <value value="&quot;base only&quot;"/>
+      <value value="&quot;base plus release sites&quot;"/>
     </enumeratedValueSet>
   </experiment>
   <experiment name="gc-19-base" repetitions="1" runMetricsEveryStep="true">
@@ -1269,7 +1276,7 @@ NetLogo 6.1.0
     <enumeratedValueSet variable="use-seed?">
       <value value="true"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="seed" first="71" step="1" last="100"/>
+    <steppedValueSet variable="seed" first="71" step="1" last="80"/>
     <enumeratedValueSet variable="init-sd-occ">
       <value value="0"/>
     </enumeratedValueSet>
@@ -1289,8 +1296,9 @@ NetLogo 6.1.0
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="p-ldd">
-      <value value="0.1"/>
+      <value value="0.01"/>
       <value value="0.001"/>
+      <value value="1.0E-4"/>
       <value value="1.0E-5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="base-prop-gm">
@@ -1303,7 +1311,77 @@ NetLogo 6.1.0
       <value value="true"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="r-mean">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodicity">
       <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="wasps-per-site">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="init-mean-occ">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="r-sd">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="scenario">
+      <value value="&quot;base plus release sites&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="CONTROL-EXPERIMENT" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="250"/>
+    <metric>total-pop</metric>
+    <metric>prop-occupied</metric>
+    <metric>sum [item 1 pops] of the-habitable-land</metric>
+    <metric>sum [item 2 pops] of the-habitable-land</metric>
+    <enumeratedValueSet variable="lambda-1">
+      <value value="0.5"/>
+      <value value="2"/>
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-seed?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="seed" first="1" step="1" last="30"/>
+    <enumeratedValueSet variable="init-sd-occ">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="percentile-selector">
+      <value value="0.95"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="homogenous?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="number-of-sites">
+      <value value="20"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="track-monitoring-area?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="p-ldd">
+      <value value="0.01"/>
+      <value value="1.0E-4"/>
+      <value value="1.0E-6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="base-prop-gm">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="release-type">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="r-mean">
+      <value value="1.5"/>
+      <value value="2"/>
+      <value value="2.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="periodicity">
       <value value="1"/>
