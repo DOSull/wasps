@@ -11,6 +11,6 @@ combined-buffer/
 GIS/
 paper/
 *.zip
-*.Rmd
 /*.png
 monitor.txt
+*.log
