@@ -10,12 +10,13 @@ Load some libraries
 ```{r}
 library(dplyr)
 library(ggplot2)
+library(scales)
 ```
 
 Navigate to folder and read the data.
 ```{r}
 setwd('~/Documents/code/working/wasps/output/')
-wasps.invasion <- read.csv("wasps INVASION-EXPERIMENT-table.csv", skip=6)
+wasps.invasion <- read.csv("wasps INVASION-EXPERIMENT-LAMBDA-table.csv", skip=6)
 ```
 
 Select only variables we need.
@@ -26,7 +27,7 @@ wasps.sel <- select(wasps.invasion, 1:2 ,11, 15, 21:23)
 ## Time series plots
 Panel plot of time series, lines coloured by intrinsic growth-rate `r.mean`, panels arranged by local mean dispersal distance `lambda.1` and probability of long distance dispersal `p.ldd`.
 ```{r}
-ggplot(wasps.sel, aes(x=X.step., y=prop.occupied, color=as.factor(r.mean))) + 
+ggplot(filter(wasps.sel, lambda.1 %in% 1:3), aes(x=X.step., y=prop.occupied, color=as.factor(r.mean))) + 
   geom_line(aes(group=X.run.number.), lwd=.35, alpha=0.5) + 
   xlim(0, 150) + ylim(0, 1) +
   labs(x='Time, years', y='Proportion of land occupied') +
@@ -47,7 +48,7 @@ wasps.t <- wasps.sel %>%
 And plot it
 ```{r}
 ggplot(wasps.t, aes(x=lambda.1, y=X.step.)) + 
-  geom_jitter(aes(color=as.factor(p.ldd)), width=.05, height=0) +
+  geom_jitter(aes(color=as.factor(p.ldd)), width=.01, height=0, size=.5) +
   scale_color_viridis_d(option='C', direction=-1) +
   facet_wrap(vars(r.mean), nrow=1, labeller=label_both) +
   labs(y='Time to 95% occupied', x='Local mean dispersal distance, km')
@@ -58,8 +59,7 @@ To fit curves to these data we need more values of `lambda.1` than $\{0.5,2,5\}$
 
 ```{r}
 ggplot(wasps.t, aes(x=lambda.1, y=X.step., colour=as.factor(p.ldd))) + 
-  geom_smooth(aes(group=p.ldd), colour='blue') +
-  geom_smooth(aes(group=p.ldd), colour='gray', method='lm') +
+  geom_smooth(aes(group=p.ldd)) +
   geom_point(size=0.5) +
   scale_colour_viridis_d(option='C', direction=-1) +
   facet_wrap(vars(r.mean), nrow=1, labeller=label_both) +
