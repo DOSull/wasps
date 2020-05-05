@@ -9,8 +9,9 @@ abstract-space/
 buffer-core-GIS-model/
 combined-buffer/
 GIS/
-paper/
+*.doc*
 *.zip
 /*.png
 monitor.txt
 *.log
+paper/figures/data/

@@ -15,7 +15,7 @@ library(scales)
 
 Navigate to folder and read the data.
 ```{r}
-setwd('~/Documents/code/working/wasps/output/')
+setwd('~/Documents/code/wasps/output/')
 wasps.invasion <- read.csv("wasps INVASION-EXPERIMENT-LAMBDA-table.csv", skip=6)
 ```
 
@@ -46,18 +46,7 @@ wasps.t <- wasps.sel %>%
 ```
 
 And plot it
-```{r}
-ggplot(wasps.t, aes(x=lambda.1, y=X.step.)) + 
-  geom_jitter(aes(color=as.factor(p.ldd)), width=.01, height=0, size=.5) +
-  scale_color_viridis_d(option='C', direction=-1) +
-  facet_wrap(vars(r.mean), nrow=1, labeller=label_both) +
-  labs(y='Time to 95% occupied', x='Local mean dispersal distance, km')
-```
-
-### Need more data to fit curves
-To fit curves to these data we need more values of `lambda.1` than $\{0.5,2,5\}$ to avoid warnings about near-singularities with the default Loess fitting, and also unlikely 'kinks' in the curves. A linear model is clearly not appropriate per the plots. See below:
-
-```{r}
+````{r}
 ggplot(wasps.t, aes(x=lambda.1, y=X.step., colour=as.factor(p.ldd))) + 
   geom_smooth(aes(group=p.ldd)) +
   geom_point(size=0.5) +

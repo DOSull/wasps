@@ -72,10 +72,11 @@ to reset-map
 end
 
 to save-monitor 
-  if file-exists? "monitor.txt" [
-    file-delete "monitor.txt"
+  let fname (word "monitor-lambda" lambda-1 "-pldd" p-ldd "-rmean" r-mean ".txt")
+  if file-exists? fname [
+    file-delete fname
   ]
-  file-open "monitor.txt"
+  file-open fname
   file-print "x y t k p1 p2 p3"
   foreach n-values ticks [i -> i] [ t -> 
     ask monitoring-area [

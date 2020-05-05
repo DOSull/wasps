@@ -108,7 +108,7 @@ r-mean
 r-mean
 1.0
 4
-2.0
+2.5
 0.01
 1
 NIL
@@ -189,7 +189,7 @@ p-ldd
 p-ldd
 0
 0.001
-0.01
+1.0E-4
 0.00001
 1
 NIL
@@ -230,7 +230,7 @@ lambda-1
 lambda-1
 0.01
 10
-0.5
+5.0
 0.01
 1
 NIL
@@ -492,7 +492,7 @@ SWITCH
 673
 track-monitoring-area?
 track-monitoring-area?
-1
+0
 1
 -1000
 
@@ -541,15 +541,10 @@ homogenous?
 
 @#$#@#$#@
 ## WHAT IS IT?
-
-A model of dispersal processes in a fragmented landscape.
+A model of wasp control by a potential gene drive in the upper South Island of Aotearoa New Zealand.
 
 ## HOW IT WORKS
-
-See O'Sullivan and Perry, 2009. A discrete space model for continuous  
-space dispersal processes. Ecological Informatics, 4(2), 57-68.
-
-This paper explains the operation of the dispersal process aspect of the model.
+Each 1km grid cell location in the model study area has an associated population capacity `capacity` which is the maximum number of wasp colonies it can sustain. At any given moment the the number of wasp colonies in a grid cell is `pop`. This population is divided into 3 subpopulations, _wild_, _gm_, and _terminal_. The population of each in the next generation modelled using a Lotka-Volterra formulation.
 
 ## HOW TO USE IT
 
@@ -1381,6 +1376,71 @@ NetLogo 6.1.0
     <enumeratedValueSet variable="r-mean">
       <value value="1.5"/>
       <value value="2"/>
+      <value value="2.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodicity">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="wasps-per-site">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="init-mean-occ">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="r-sd">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="scenario">
+      <value value="&quot;base plus release sites&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="MONITOR" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <final>save-monitor</final>
+    <timeLimit steps="250"/>
+    <enumeratedValueSet variable="lambda-1">
+      <value value="0.5"/>
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-seed?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="seed">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="init-sd-occ">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="percentile-selector">
+      <value value="0.95"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="homogenous?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="number-of-sites">
+      <value value="20"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="track-monitoring-area?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="p-ldd">
+      <value value="1.0E-4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="base-prop-gm">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="release-type">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="r-mean">
+      <value value="1.5"/>
       <value value="2.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="periodicity">

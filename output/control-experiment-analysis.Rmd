@@ -12,7 +12,7 @@ library(ggplot2)
 
 Read data
 ```{r}
-setwd('~/Documents/code/working/wasps/output/')
+setwd('~/Documents/code/wasps/output/')
 wasps.control <- read.csv("wasps CONTROL-EXPERIMENT-table.csv", skip=6)
 ```
 
