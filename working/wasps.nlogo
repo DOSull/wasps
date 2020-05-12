@@ -1459,6 +1459,76 @@ NetLogo 6.1.0
       <value value="&quot;base plus release sites&quot;"/>
     </enumeratedValueSet>
   </experiment>
+  <experiment name="CONTROL-EXPERIMENT-RELEASE-AND-FORGET" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="250"/>
+    <metric>total-pop</metric>
+    <metric>prop-occupied</metric>
+    <metric>sum [item 1 pops] of the-habitable-land</metric>
+    <metric>sum [item 2 pops] of the-habitable-land</metric>
+    <enumeratedValueSet variable="lambda-1">
+      <value value="0.5"/>
+      <value value="2"/>
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-seed?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="seed" first="1" step="1" last="30"/>
+    <enumeratedValueSet variable="init-sd-occ">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="percentile-selector">
+      <value value="0.95"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="homogenous?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="number-of-sites">
+      <value value="20"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="track-monitoring-area?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="p-ldd">
+      <value value="0.01"/>
+      <value value="1.0E-4"/>
+      <value value="1.0E-6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="base-prop-gm">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="release-type">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="r-mean">
+      <value value="1.5"/>
+      <value value="2"/>
+      <value value="2.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodicity">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="wasps-per-site">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="init-mean-occ">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="r-sd">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="scenario">
+      <value value="&quot;base plus release sites&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
 </experiments>
 @#$#@#$#@
 @#$#@#$#@
