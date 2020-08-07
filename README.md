@@ -1,6 +1,4 @@
 # Wasps
-This is a test of the git setup more than anything...
+Repository for the model of wasp control by gene drive described in 
 
-<img src='https://upload.wikimedia.org/wikipedia/commons/a/a8/Common_Wasp_%28Vespula_%28Paravespula%29_vulgaris%29_%288654391297%29.jpg'>
-
-**Image from [https://upload.wikimedia.org/wikipedia/commons/a/a8/Common_Wasp_%28Vespula_%28Paravespula%29_vulgaris%29_%288654391297%29.jpg](wikimedia.commons)** 
+Lester PJ, D O'Sullivan, GLW Perry. Gene drives for invasive pest control: extinction is unlikely, with suppression levels dependent on local dispersal and intrinsic growth rates.
