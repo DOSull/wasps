@@ -50,7 +50,7 @@ patches-own [
   next-pops
   init-pop
   init-pops
-  r-loc
+  lambda-loc
   road?
   history
 ]
@@ -104,8 +104,8 @@ SLIDER
 10
 199
 43
-r-mean
-r-mean
+lambda-mean
+lambda-mean
 1.0
 4
 2.5
@@ -211,8 +211,8 @@ SLIDER
 47
 198
 80
-r-sd
-r-sd
+lambda-sd
+lambda-sd
 0
 0.25
 0.0
@@ -226,8 +226,8 @@ SLIDER
 99
 198
 132
-lambda-1
-lambda-1
+d-mean
+d-mean
 0.01
 10
 5.0

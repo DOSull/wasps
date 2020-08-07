@@ -1,5 +1,5 @@
 to disperse
-  (foreach (get-next-generation r-loc pops) (n-values num-pops [i -> i]) [
+  (foreach (get-next-generation lambda-loc pops) (n-values num-pops [i -> i]) [
     [new-cases idx] ->
     ifelse new-cases > 0 [
       repeat new-cases [
@@ -9,7 +9,7 @@ to disperse
         ]
         [
           while [target = nobody] [
-            set target patch-at-heading-and-distance (random-float 360) (random-exponential lambda-1)
+            set target patch-at-heading-and-distance (random-float 360) (random-exponential d-mean)
           ]
         ]
         ask target [

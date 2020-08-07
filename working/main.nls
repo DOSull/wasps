@@ -1,8 +1,8 @@
 to go
   if total-pop > 0 [
-    let r random-normal r-mean r-sd
+    let lambda random-normal lambda-mean lambda-sd
     ask the-habitable-land [ ;; patches with [capacity > 0] [
-      set r-loc max (list 0 (r * (capacity - pop) / capacity))
+      set lambda-loc max (list 0 (lambda * (capacity - pop) / capacity))
       if pop > 0 [
         disperse
       ]
@@ -72,7 +72,7 @@ to reset-map
 end
 
 to save-monitor 
-  let fname (word "monitor-lambda" lambda-1 "-pldd" p-ldd "-rmean" r-mean ".txt")
+  let fname (word "monitor-dmean" d-mean "-pldd" p-ldd "-lambdamean" lambda-mean ".txt")
   if file-exists? fname [
     file-delete fname
   ]
