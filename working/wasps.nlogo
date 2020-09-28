@@ -564,25 +564,41 @@ homogenous?
 
 @#$#@#$#@
 ## WHAT IS IT?
-A model of wasp control by a potential gene drive in the upper South Island of Aotearoa New Zealand.
+A model of wasp control by a potential gene drive in the upper South Island of Aotearoa New Zealand, as reported in 
+
+* Lester PJ, D O'Sullivan and GLW Perry. (In press). Gene drives for invasive pest
+control: extinction is unlikely, with suppression levels dependent on local dispersal
+and intrinsic growth rates. _Biology Letters_
 
 ## HOW IT WORKS
-Each 1km grid cell location in the model study area has an associated population capacity `capacity` which is the maximum number of wasp colonies it can sustain. At any given moment the the number of wasp colonies in a grid cell is `pop`. This population is divided into 3 subpopulations, _wild_, _gm_, and _terminal_. The population of each in the next generation modelled using a Lotka-Volterra formulation.
+### Overview
+Each 1km grid cell location in the model study area has an associated population capacity `capacity` which controls the population dynamics of the area. 
 
-## HOW TO USE IT
+### Population dynamics
+At any given moment the the number of wasp nests (i.e. queens) in a grid cell is contained in the list `pops` which records respectively the number of wild, gene-drive modified and sterile queens in the cell. The reproductive population is given by 
 
-## THINGS TO NOTICE
+    set reproductive sum but-last pops ;; i.e. item 0 + item 1
 
-## THINGS TO TRY
+The local growth rate of the cell `lambda-loc` is determined from the parameter setting `lambda-mean` and `lambda-sd` each year by draw from a normal distribution.
 
-## NETLOGO FEATURES
+    set lamdba-loc random-normal lambda-mean lambda-sd
 
-This section could point out any especially interesting or unusual features of NetLogo that the model makes use of, particularly in the Procedures tab.  It might also point out places where workarounds were needed because of missing features.
+These are combined to determine the total population of queens in the next generation according to 
+
+    set new-pop random-poisson lambda-loc * reproductive * (capacity - sum pops) / capacity
+
+The total `new-pop` is then allocated to wild, GM and sterile sub-populations by repeated draws from a Binomial distribution. This is implemented by code in **`reproduction.nls`** which has been commented in detail. Note that a binomial random generator has been coded in place of a naive implementation requiring _n_ random numbers to be generated for Bin(_n_, _p_), which would work but is slow for large _n_ and low _p_.
+
+### Dispersal
+New population may disperse to new locations. Each member of the population draws a random distance `random-exponential d-mean` and heading `random 360` and attempts to move to that location. If the location happens to have 0 `capacity` the dispersing population is lost. 
+
+With low probability `p-ldd` the dispersal may be _long distance_ meaning that the destination location will be a randomly selected road cell, which could be anywhere on the map.
 
 ## CREDITS AND REFERENCES
 
-O'Sullivan, D. and G. L. W. Perry. 2009. A discrete space model for continuous
-space dispersal processes. Ecological Informatics, 4(2), 57-68.
+Lester PJ, D O'Sullivan and GLW Perry. (In press). Gene drives for invasive pest
+control: extinction is unlikely, with suppression levels dependent on local dispersal
+and intrinsic growth rates. _Biology Letters_
 @#$#@#$#@
 default
 true
