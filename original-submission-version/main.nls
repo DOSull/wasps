@@ -23,7 +23,7 @@
 
 to go
   if total-pop > 0 [
-    let lambda random-normal lambda-mean lambda-sd ;; - 1
+    let lambda random-normal lambda-mean lambda-sd
     ask the-habitable-land [ ;; patches with [capacity > 0] [
       set lambda-loc max (list 0 (lambda * (capacity - pop) / capacity))
       if pop > 0 [

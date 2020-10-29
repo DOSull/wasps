@@ -28,7 +28,7 @@ to color-patches
     ifelse show-pop? [
       ask vizs [set hidden? true]
       let pal item show-pop pals
-      let pop-patches the-land ;; with [pop > 0]
+      let pop-patches the-land with [pop > 0]
       ifelse any? pop-patches [
         ifelse show-pop = num-pops [
           let mx-pop max capacities

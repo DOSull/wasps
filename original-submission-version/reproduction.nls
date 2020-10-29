@@ -31,11 +31,10 @@ to-report get-next-generation [lambda local-pops]
   let reproductive sum but-last local-pops
   ;; from which we get the new-population
   let new-pop random-poisson (lambda * reproductive)
-  ;; let new-pop reproductive + random-poisson (lambda * reproductive)
   ;; the proportions of these in each of wild, GM and sterile
   ;; determined by w^2, 2gw, g^2
   let pop-rel binom-series but-last local-pops
-  report multinomial new-pop pop-rel
+  report repeat-binomial-draws new-pop pop-rel
 end
 
 ;; report binomial coefficients [x_0^2 2x-0x_1 x_1^2]
@@ -62,8 +61,7 @@ end
 ; distributed random variables. Computers and Mathematics with
 ; Applications 6, 305-315.
 ; should be a bit quicker because it only needs ~ np random-float calls
-; Based on code from 
-; https://stackoverflow.com/questions/23561551/a-efficient-binomial-random-number-generator-code-in-java#23574723
+; Based on code from https://stackoverflow.com/questions/23561551/a-efficient-binomial-random-number-generator-code-in-java#23574723
 to-report get-binomial-2 [n p]
   ; need to trap p = 0 and p = 1
   if p = 1 [ report n ]
@@ -85,22 +83,22 @@ end
 ;; perform repeated binomial draws from population n
 ;; without replacement, with p based on ratios determined 
 ;; from the list of values in rel-nums
-to-report multinomial [n frequencies]
+to-report repeat-binomial-draws [n rel-nums]
   ;; empty list for the results
   let result []
   ;; remember how many values we will need
-  let num-values length frequencies
+  let num-values length rel-nums
   ;; keep going as long as we haven't drawn all n
   while [sum result < n] [
     ;; the next draw is based on the proportion of 
     ;; the remaining total represented by the first number
     ;; first time around this will be n0 / total
     ;; then it will be n1 / (total - n0), and so on
-    let px first frequencies / sum frequencies
+    let px first rel-nums / sum rel-nums
     ;; meanwhile the number remaining to be drawn is n - sum result, so...
     set result sentence result get-binomial-2 (n - sum result) px
     ;; remove the first item from the list of relative numbers
-    set frequencies but-first frequencies
+    set rel-nums but-first rel-nums
   ]
   ;; if the result is not the required length then pack it with zeros
   ifelse length result < num-values

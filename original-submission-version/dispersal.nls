@@ -21,43 +21,31 @@
 ;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 ;; DEALINGS IN THE SOFTWARE.
 
-to profile-steps [n]
-  setup                  ;; set up the model
-  profiler:start         ;; start profiling
-  repeat n [ go ]        ;; run something you want to measure
-  profiler:stop          ;; stop profiling
-  print profiler:report  ;; view the results
-  profiler:reset         ;; clear the data
-end
-
-
-to profile-get-binomial [n]
-  profiler:start
-;  let bin-1 n-values n [i -> get-binomial-1 100 0.1]
-  let bin n-values n [i -> get-binomial 100 0.1]
-  profiler:stop
-  print profiler:report
-  profiler:reset
-end
-
-
-to profile-multinomial [n]
-  profiler:start
-  let pb n-values n [multinomial 100 n-values 3 [i -> random 10 + 1]]
-  profiler:stop
-  print profiler:report
-  profiler:reset
-end
-
-
-to profile:one-of-roads [n]
-  profiler:start
-  repeat n [ one-of-roads ]
-  profiler:stop
-  print profiler:report
-  profiler:reset
-end
-
-to one-of-roads
-  let x one-of roads
+to disperse
+  (foreach (get-next-generation lambda-loc pops) (n-values num-pops [i -> i]) [
+    [new-cases idx] ->
+    ifelse new-cases > 0 [
+      repeat new-cases [
+        let target nobody
+        ifelse random-float 1 < p-ldd [
+          set target one-of roads
+        ]
+        [
+          while [target = nobody] [
+            set target patch-at-heading-and-distance (random-float 360) (random-exponential d-mean)
+          ]
+        ]
+        ask target [
+          if capacity > 0 [ ; and sum next-pops < capacity [
+            set next-pops replace-item idx next-pops (item idx next-pops + 1)
+            ;          let i floor distance myself
+            ;          array:set distances i (array:item distances i) + 1
+          ]
+        ]
+      ]
+    ]
+    [
+      set next-pops replace-item idx next-pops 0
+    ]
+  ])
 end

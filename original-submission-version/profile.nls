@@ -41,9 +41,9 @@ to profile-get-binomial [n]
 end
 
 
-to profile-multinomial [n]
+to profile-repeat-binom-draws [n]
   profiler:start
-  let pb n-values n [multinomial 100 n-values 3 [i -> random 10 + 1]]
+  let pb n-values n [repeat-binomial-draws 100 n-values 3 [i -> random 10 + 1]]
   profiler:stop
   print profiler:report
   profiler:reset
