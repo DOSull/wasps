@@ -31,19 +31,29 @@ to disperse
       ]
       ifelse use-kernel-method? [
         if new-cases > n-ldds [
-          (foreach kernel-offsets multinomial (new-cases - n-ldds) conditional-kernel-weights false [            [xy num] ->
-            let octants [
-              [-1 -1 true] [-1 1 true] [1 -1 true] [1 1 true]
-              [-1 -1 false] [-1 1 false] [1 -1 false] [1 1 false]
-            ]
-            let equal-conditional-probs reverse map [ x -> 1 / x ] n-values 8 [i -> i + 1]
-            (foreach octants multinomial num equal-conditional-probs false [
-              [q n] ->
-              ifelse item 2 q
-              [ disperse-to patch-at (item 0 xy * item 0 q) (item 1 xy * item 1 q) n idx]
-              [ disperse-to patch-at (item 1 xy * item 0 q) (item 0 xy * item 1 q) n idx]
-            ]) 
-          ])
+          let targets rnd:weighted-n-of-list-with-repeats (new-cases - n-ldds) kernel [p -> last p]
+          foreach targets [
+            t ->
+            let xy item 0 t
+            let x item 0 xy
+            let y item 1 xy
+            disperse-to patch-at x y 1 idx
+          ]
+
+;
+;          (foreach kernel-offsets multinomial (new-cases - n-ldds) conditional-kernel-weights false [            [xy num] ->
+;            let octants [
+;              [-1 -1 true] [-1 1 true] [1 -1 true] [1 1 true]
+;              [-1 -1 false] [-1 1 false] [1 -1 false] [1 1 false]
+;            ]
+;            let equal-conditional-probs reverse map [ x -> 1 / x ] n-values 8 [i -> i + 1]
+;            (foreach octants multinomial num equal-conditional-probs false [
+;              [q n] ->
+;              ifelse item 2 q
+;              [ disperse-to patch-at (item 0 xy * item 0 q) (item 1 xy * item 1 q) n idx]
+;              [ disperse-to patch-at (item 1 xy * item 0 q) (item 0 xy * item 1 q) n idx]
+;            ]) 
+;          ])
         ]
       ]
       [
@@ -81,8 +91,10 @@ end
 
 
 to-report get-dispersal-counts [n]
-  let bins map [ p -> length filter [ f -> f < p ] cumulative-kernel-weights ] n-values n [random-float 1]
-  report map [ i -> length filter [ b -> b = i ] bins] n-values length cumulative-kernel-weights [i -> i]
+  let targets rnd:weighted-n-of-list-with-repeats n kernel [p -> last p]
+  set targets map [ xy -> first xy ] targets
+  let unique-targets remove-duplicates targets
+  report map [tgt -> (list tgt (length filter [xy -> xy = tgt] targets)) ] unique-targets 
 end
 
 to-report kernel-cum-frequencies [k]

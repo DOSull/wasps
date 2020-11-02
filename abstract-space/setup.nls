@@ -38,7 +38,7 @@ to setup
   ask patches [
     set capacity max-pxcor - pxcor + random 10
   ]
-  repeat 15 [
+  repeat 5 [
     diffuse capacity 0.5
   ]
 
@@ -156,8 +156,8 @@ end
 
 to setup-kernel
   let r ceiling d-mean * 5
-  let dxs n-values (r + 1) [x -> x]
-  let dys n-values (r + 1) [y -> y]
+  let dxs n-values (2 * r + 1) [x -> x - r]
+  let dys n-values (2 * r + 1) [y -> y - r]
   
   set kernel-offsets []
   set kernel-weights []
@@ -167,15 +167,16 @@ to setup-kernel
       set kernel-offsets lput (list x y) kernel-offsets 
     ]
   ]
-  set kernel-offsets filter [ xy -> dist xy <= r and item 0 xy >= item 1 xy ] kernel-offsets
+  set kernel-offsets filter [ xy -> dist xy <= r ] kernel-offsets
   set kernel-offsets sort-by [ [xy1 xy2] -> dist xy1 < dist xy2 ] kernel-offsets
   set kernel-weights map [ xy -> 1 / d-mean / exp (dist xy / d-mean) ] kernel-offsets
-  let total-w sum kernel-weights
-  set kernel-weights filter [ w -> w / total-w > p-ldd ] kernel-weights
-  let kernel-size length kernel-weights
-  set kernel-offsets sublist kernel-offsets 0 kernel-size
-  set conditional-kernel-weights get-conditional-binom-probs kernel-weights
-  set cumulative-kernel-weights cum-frequencies kernel-weights
+;  let total-w sum kernel-weights
+;  set kernel-weights filter [ w -> w / total-w > p-ldd ] kernel-weights
+;  let kernel-size length kernel-weights
+;  set kernel-offsets sublist kernel-offsets 0 kernel-size
+;  set conditional-kernel-weights get-conditional-binom-probs kernel-weights
+;  set cumulative-kernel-weights cum-frequencies kernel-weights
+  set kernel (map [ [o p] -> (list o p) ] kernel-offsets kernel-weights) 
 end
 
 to-report dist [xy]

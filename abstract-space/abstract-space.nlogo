@@ -25,7 +25,7 @@ __includes [ "setup.nls" "main.nls" "display.nls"
   "dispersal.nls" "reproduction.nls"
   "profile.nls" ]
 
-extensions [ palette vid gis profiler array ]
+extensions [ palette vid gis profiler array rnd ]
 
 breed [ vizs viz ]
 breed [ roads road ]
@@ -50,6 +50,7 @@ globals [
   kernel-weights
   conditional-kernel-weights
   cumulative-kernel-weights
+  kernel
 
   ;; colour palettes for display
   pals
@@ -97,8 +98,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-0
-0
+1
+1
 1
 0
 34
@@ -217,7 +218,7 @@ p-ldd
 p-ldd
 0
 0.001
-1.0E-4
+0.001
 0.00001
 1
 NIL
@@ -258,7 +259,7 @@ d-mean
 d-mean
 0.01
 5
-4.12
+1.06
 0.01
 1
 NIL
@@ -593,7 +594,7 @@ SWITCH
 981
 481
 1164
-515
+514
 use-logistic-map?
 use-logistic-map?
 1
@@ -604,7 +605,7 @@ SWITCH
 982
 440
 1176
-474
+473
 use-stochastic-repro?
 use-stochastic-repro?
 0
