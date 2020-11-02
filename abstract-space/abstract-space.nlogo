@@ -34,7 +34,7 @@ globals [
   ;; population related
   num-pops
   total-pop
-  capacities
+;;  capacities
   mean-occupancy-rate
 
   ;; dispersal related
@@ -78,7 +78,7 @@ patches-own [
   next-pops
   init-pop
   init-pops
-  lambda-loc
+  lambda-local
   road?
   history
 ]
@@ -86,11 +86,11 @@ patches-own [
 GRAPHICS-WINDOW
 207
 10
-633
-671
+635
+679
 -1
 -1
-2.0
+12.0
 1
 10
 1
@@ -101,9 +101,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-208
+34
 0
-325
+54
 1
 1
 1
@@ -136,7 +136,7 @@ lambda-mean
 lambda-mean
 1.0
 4
-2.5
+2.3
 0.01
 1
 NIL
@@ -188,10 +188,10 @@ total-pop
 11
 
 PLOT
-638
-283
-954
-669
+644
+284
+960
+616
 Populations
 NIL
 NIL
@@ -257,8 +257,8 @@ SLIDER
 d-mean
 d-mean
 0.01
-10
-0.5
+5
+2.75
 0.01
 1
 NIL
@@ -284,7 +284,7 @@ show-pop
 show-pop
 0
 num-pops
-0.0
+3.0
 1
 1
 NIL
@@ -402,7 +402,7 @@ init-mean-occ
 init-mean-occ
 0
 1
-0.5
+0.85
 0.01
 1
 NIL
@@ -417,7 +417,7 @@ init-sd-occ
 init-sd-occ
 0
 0.5
-0.0
+0.046
 0.001
 1
 NIL
@@ -515,9 +515,9 @@ HORIZONTAL
 
 SWITCH
 6
-640
+627
 201
-673
+660
 track-monitoring-area?
 track-monitoring-area?
 0
@@ -526,9 +526,9 @@ track-monitoring-area?
 
 BUTTON
 68
-599
+586
 193
-633
+620
 NIL
 save-monitor
 NIL
@@ -566,6 +566,28 @@ homogenous?
 1
 1
 -1000
+
+SWITCH
+639
+628
+839
+661
+use-kernel-method?
+use-kernel-method?
+1
+1
+-1000
+
+MONITOR
+891
+638
+980
+683
+kernel-area
+length kernel-weights
+0
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?

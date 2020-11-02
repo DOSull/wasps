@@ -22,23 +22,44 @@
 ;; DEALINGS IN THE SOFTWARE.
 
 to disperse
-  (foreach (get-next-generation lambda-loc pops) (n-values num-pops [i -> i]) [
+  (foreach get-next-generation (n-values num-pops [i -> i]) [
     [new-cases idx] ->
     ifelse new-cases > 0 [
       let n-ldds binomial new-cases p-ldd
       repeat n-ldds [
         disperse-to one-of roads 1 idx
       ]
-      if new-cases > n-ldds [
-        (foreach kernel-offsets multinomial (new-cases - n-ldds) conditional-kernel-weights false [
-;        (foreach kernel-offsets get-dispersal-counts (new-cases - n-ldds) kernel-weights [
-          [xy num] ->
-          (foreach [[-1 -1] [-1 1] [1 -1] [1 1]] multinomial num (list 0.25 (1 / 3) 0.5 1) false [
-            [q n] ->
-            disperse-to patch-at (item 0 xy * item 0 q) (item 1 xy * item 1 q) n idx
-          ]) 
-;          disperse-to patch-at item 0 xy item 1 xy num idx
-        ])
+      ifelse use-kernel-method? [
+        if new-cases > n-ldds [
+          (foreach kernel-offsets multinomial (new-cases - n-ldds) conditional-kernel-weights false [            [xy num] ->
+            let octants [
+              [-1 -1 true] [-1 1 true] [1 -1 true] [1 1 true]
+              [-1 -1 false] [-1 1 false] [1 -1 false] [1 1 false]
+            ]
+            let equal-conditional-probs reverse map [ x -> 1 / x ] n-values 8 [i -> i + 1]
+            (foreach octants multinomial num equal-conditional-probs false [
+              [q n] ->
+              ifelse item 2 q
+              [ disperse-to patch-at (item 0 xy * item 0 q) (item 1 xy * item 1 q) n idx]
+              [ disperse-to patch-at (item 1 xy * item 0 q) (item 0 xy * item 1 q) n idx]
+            ]) 
+          ])
+        ]
+      ]
+      [
+        repeat (new-cases - n-ldds) [
+          let target nobody
+          while [target = nobody] [
+            set target patch-at-heading-and-distance (random-float 360) (random-exponential d-mean)
+          ]
+          ask target [
+            if capacity > 0 [ ; and sum next-pops < capacity [
+              set next-pops replace-item idx next-pops (item idx next-pops + 1)
+              ;          let i floor distance myself
+              ;          array:set distances i (array:item distances i) + 1
+            ]
+          ]
+        ]
       ]
     ]
     [

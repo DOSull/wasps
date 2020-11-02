@@ -35,19 +35,24 @@ to setup
   set num-pops 3
   set pals ["OrRd" "PuBu" "BuGn" "BuPu"]
 
-  let ds gis:load-dataset "wasp-suitability.asc"
-  gis:apply-raster ds capacity
+  ask patches [
+    set capacity max-pxcor - pxcor + random 10
+  ]
+  repeat 15 [
+    diffuse capacity 0.5
+  ]
+
   ask patches [
     ifelse (capacity >= 0)
-    [ set capacity ceiling (capacity * 100) ]
+    [ set capacity ceiling (capacity * 50) ]
     [ set capacity -1 ]
   ]
-  set capacities sort remove-duplicates [capacity] of patches
+;;  set capacities sort remove-duplicates [capacity] of patches
 
-  set ds gis:load-dataset "roads-oblique.asc"
-  gis:apply-raster ds road?
+;  set ds gis:load-dataset "roads-oblique.asc"
+;  gis:apply-raster ds road?
   ask patches [
-    set road? road? >= 0
+    set road? pxcor = 30 or pycor = 5
   ]
   set the-roads patches with [road?]
   ask the-roads [
@@ -162,7 +167,7 @@ to setup-kernel
       set kernel-offsets lput (list x y) kernel-offsets 
     ]
   ]
-  set kernel-offsets filter [ xy -> dist xy <= r ] kernel-offsets
+  set kernel-offsets filter [ xy -> dist xy <= r and item 0 xy >= item 1 xy ] kernel-offsets
   set kernel-offsets sort-by [ [xy1 xy2] -> dist xy1 < dist xy2 ] kernel-offsets
   set kernel-weights map [ xy -> 1 / d-mean / exp (dist xy / d-mean) ] kernel-offsets
   let total-w sum kernel-weights

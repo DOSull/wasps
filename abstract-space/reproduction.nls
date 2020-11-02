@@ -22,29 +22,29 @@
 ;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 ;; DEALINGS IN THE SOFTWARE.
 
-to-report get-next-generation [lambda local-pops]
-  if lambda = 0 [
-    report (list 0 0 0)
-  ]
+to-report get-next-generation
+;  if lambda = 0 [
+;    report (list 0 0 0)
+;  ]
   ;; Going to assume THREE populations
   ;; only wild and GM reproduce
-  let reproductive sum but-last local-pops
+  let reproductive sum but-last pops
   ;; from which we get the new-population
   ;;
   ;; DO SOMETHING HERE??
   ;; should there be a mortality rate?
   
-  ;; let new-pop (1 - m) * sum local-pops + lambda * reproductive
+  let new-pop random-poisson (lambda-local * reproductive)
   
   ;; where lambda is effectively old-lambda - 1
   ;; (and perhaps should be redesignated r)
   ;;
-  let new-pop random-poisson (lambda * reproductive)
+  ;; let new-pop random-poisson (lambda * reproductive)
   
   ;; let new-pop reproductive + random-poisson (lambda * reproductive)
   ;; the proportions of these in each of wild, GM and sterile
   ;; determined by w^2, 2gw, g^2
-  let pop-rel binom-expansion but-last local-pops
+  let pop-rel binom-expansion but-last pops
   report multinomial new-pop pop-rel true
 end
 
@@ -71,10 +71,13 @@ to-report binomial [n p]
   let ln-q ln (1 - p)
   let x 0
   let s 0
+;  let i 0
   ; also need to avoid x = n
   while [x < n] [
+;    set i i + 1
     set s s + ln (random-float 1) / (n - x)
     if s < ln-q [
+;      show (list n x i) 
       report x
     ]
     set x x + 1

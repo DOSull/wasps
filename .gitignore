@@ -5,7 +5,6 @@ GIS/*
 *.mp4
 GIS/
 BS-model/
-abstract-space/
 buffer-core-GIS-model/
 combined-buffer/
 GIS/
