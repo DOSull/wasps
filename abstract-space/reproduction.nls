@@ -34,7 +34,10 @@ to-report get-next-generation
   ;; DO SOMETHING HERE??
   ;; should there be a mortality rate?
   
-  let new-pop random-poisson (lambda-local * reproductive)
+  let new-pop 0
+  ifelse use-stochastic-repro?
+  [ set new-pop random-poisson (lambda-local * reproductive) ]
+  [ set new-pop (lambda-local * reproductive) ]
   
   ;; where lambda is effectively old-lambda - 1
   ;; (and perhaps should be redesignated r)

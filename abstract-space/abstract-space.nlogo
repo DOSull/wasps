@@ -258,7 +258,7 @@ d-mean
 d-mean
 0.01
 5
-2.75
+4.12
 0.01
 1
 NIL
@@ -402,7 +402,7 @@ init-mean-occ
 init-mean-occ
 0
 1
-0.85
+0.5
 0.01
 1
 NIL
@@ -417,7 +417,7 @@ init-sd-occ
 init-sd-occ
 0
 0.5
-0.046
+0.0
 0.001
 1
 NIL
@@ -568,10 +568,10 @@ homogenous?
 -1000
 
 SWITCH
-639
+980
+595
+1180
 628
-839
-661
 use-kernel-method?
 use-kernel-method?
 1
@@ -579,15 +579,37 @@ use-kernel-method?
 -1000
 
 MONITOR
-891
-638
 980
-683
+635
+1069
+680
 kernel-area
 length kernel-weights
 0
 1
 11
+
+SWITCH
+981
+481
+1164
+515
+use-logistic-map?
+use-logistic-map?
+1
+1
+-1000
+
+SWITCH
+982
+440
+1176
+474
+use-stochastic-repro?
+use-stochastic-repro?
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?

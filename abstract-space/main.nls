@@ -32,7 +32,10 @@ to go
       ;; HERE: should capacity be subject to variance?
       ;; add variance to capacity -- Gaussian SD 
       ;;
-      set lambda-local 1 + (lambda - 1) * (1 - pop / capacity)
+      ifelse use-logistic-map?
+      [ set lambda-local lambda * (1 - pop / capacity) ]
+      [ set lambda-local 1 + (lambda - 1) * (1 - pop / capacity) ]
+     
       if pop > 0 [
         disperse
       ]
