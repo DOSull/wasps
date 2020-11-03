@@ -25,26 +25,19 @@ __includes [ "setup.nls" "main.nls" "display.nls"
   "dispersal.nls" "reproduction.nls"
   "profile.nls" ]
 
-extensions [ palette vid gis profiler array rnd ]
+extensions [ palette vid gis profiler array rnd py ]
 
 breed [ vizs viz ]
 breed [ roads road ]
 
 globals [
-  ;; population related
   num-pops
   total-pop
-;;  capacities
   mean-occupancy-rate
 
   ;; dispersal related
   total-extent
   prop-occupied
-
-  ;mean-d
-  ;min-d
-  ;max-d
-  source
 
   kernel-offsets
   kernel-weights
@@ -62,14 +55,6 @@ globals [
   the-habitable-land
   potential-release-sites
   monitoring-area
-
-  ;; distances of successful dispersals
-  ;; distances
-
-  ;; history of populations
-;  pop-history
-;  wild-history
-;  gm-history
 ]
 
 patches-own [
@@ -82,6 +67,7 @@ patches-own [
   lambda-local
   road?
   history
+  my-kernel
 ]
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -98,8 +84,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-1
-1
+0
+0
 1
 0
 34
@@ -218,7 +204,7 @@ p-ldd
 p-ldd
 0
 0.001
-0.001
+1.0E-4
 0.00001
 1
 NIL
@@ -259,7 +245,7 @@ d-mean
 d-mean
 0.01
 5
-1.06
+1.0
 0.01
 1
 NIL
@@ -403,7 +389,7 @@ init-mean-occ
 init-mean-occ
 0
 1
-0.5
+0.85
 0.01
 1
 NIL
@@ -418,7 +404,7 @@ init-sd-occ
 init-sd-occ
 0
 0.5
-0.0
+0.05
 0.001
 1
 NIL
@@ -585,7 +571,7 @@ MONITOR
 1069
 680
 kernel-area
-length kernel-weights
+length kernel
 0
 1
 11

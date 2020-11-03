@@ -22,55 +22,15 @@
 ;; DEALINGS IN THE SOFTWARE.
 
 to disperse
-  (foreach get-next-generation (n-values num-pops [i -> i]) [
-    [new-cases idx] ->
+  (foreach get-next-generation (n-values num-pops [i -> i]) [ [new-cases idx] ->
     ifelse new-cases > 0 [
       let n-ldds binomial new-cases p-ldd
       repeat n-ldds [
         disperse-to one-of roads 1 idx
       ]
-      ifelse use-kernel-method? [
-        if new-cases > n-ldds [
-          let targets rnd:weighted-n-of-list-with-repeats (new-cases - n-ldds) kernel [p -> last p]
-          foreach targets [
-            t ->
-            let xy item 0 t
-            let x item 0 xy
-            let y item 1 xy
-            disperse-to patch-at x y 1 idx
-          ]
-
-;
-;          (foreach kernel-offsets multinomial (new-cases - n-ldds) conditional-kernel-weights false [            [xy num] ->
-;            let octants [
-;              [-1 -1 true] [-1 1 true] [1 -1 true] [1 1 true]
-;              [-1 -1 false] [-1 1 false] [1 -1 false] [1 1 false]
-;            ]
-;            let equal-conditional-probs reverse map [ x -> 1 / x ] n-values 8 [i -> i + 1]
-;            (foreach octants multinomial num equal-conditional-probs false [
-;              [q n] ->
-;              ifelse item 2 q
-;              [ disperse-to patch-at (item 0 xy * item 0 q) (item 1 xy * item 1 q) n idx]
-;              [ disperse-to patch-at (item 1 xy * item 0 q) (item 0 xy * item 1 q) n idx]
-;            ]) 
-;          ])
-        ]
-      ]
-      [
-        repeat (new-cases - n-ldds) [
-          let target nobody
-          while [target = nobody] [
-            set target patch-at-heading-and-distance (random-float 360) (random-exponential d-mean)
-          ]
-          ask target [
-            if capacity > 0 [ ; and sum next-pops < capacity [
-              set next-pops replace-item idx next-pops (item idx next-pops + 1)
-              ;          let i floor distance myself
-              ;          array:set distances i (array:item distances i) + 1
-            ]
-          ]
-        ]
-      ]
+      ifelse use-kernel-method?
+      [ disperse-using-kernel (new-cases - n-ldds) idx]
+      [ disperse-using-heading-and-distance (new-cases - n-ldds) idx ]
     ]
     [
       set next-pops replace-item idx next-pops 0
@@ -78,6 +38,39 @@ to disperse
   ])
 end
 
+
+to-report my-patch-at [xy]
+  report patch-at item 0 xy item 1 xy
+end
+
+
+to disperse-using-kernel [n idx]
+  if n > 0 [
+    ifelse true [
+      foreach rnd:weighted-n-of-list-with-repeats n my-kernel [p -> last p] [ t ->
+        let xy item 0 t
+        disperse-to my-patch-at xy 1 idx
+      ]
+    ]
+    [
+      foreach py-multinomial n [ xyn ->
+        let xy item 0 xyn
+        let num item 1 xyn
+        disperse-to my-patch-at xy num idx
+      ]
+    ]
+  ]
+end
+
+to disperse-using-heading-and-distance [n idx]
+  repeat n [
+    let target nobody
+    while [target = nobody] [
+      set target patch-at-heading-and-distance (random-float 360) (random-exponential d-mean)
+    ]
+    disperse-to target 1 idx
+  ]
+end
 
 to disperse-to [tgt num idx-type]
   if tgt != nobody [
@@ -91,11 +84,83 @@ end
 
 
 to-report get-dispersal-counts [n]
-  let targets rnd:weighted-n-of-list-with-repeats n kernel [p -> last p]
-  set targets map [ xy -> first xy ] targets
-  let unique-targets remove-duplicates targets
-  report map [tgt -> (list tgt (length filter [xy -> xy = tgt] targets)) ] unique-targets 
+  let targets map [ x -> first x ] (rnd:weighted-n-of-list-with-repeats n my-kernel [p -> last p])
+  let counts remove-duplicates targets
+  report map [ tgt -> (list tgt count-x-in-list targets tgt) ] counts 
+end
+    
+to-report count-x-in-list [L x]
+  report length filter [ y -> y = x ] L
 end
 
-to-report kernel-cum-frequencies [k]
+to setup-kernel
+  let r ceiling (min (list world-width world-height) / 2)
+  let dxs n-values (2 * r + 1) [x -> x - r]
+  let dys n-values (2 * r + 1) [y -> y - r]
+  
+  set kernel-offsets []
+  set kernel-weights []
+  
+  foreach dxs [ x ->
+    foreach dys [ y ->
+      set kernel-offsets lput (list x y) kernel-offsets 
+    ]
+  ]
+  set kernel-offsets filter [ xy -> dist xy <= r ] kernel-offsets
+  set kernel-offsets sort-by [ [xy1 xy2] -> dist xy1 < dist xy2 ] kernel-offsets
+  set kernel-weights map [ xy -> 1 / d-mean / exp (dist xy / d-mean) ] kernel-offsets
+  let total-w sum kernel-weights
+  set kernel-weights filter [ w -> w / total-w > p-ldd ] kernel-weights
+  let kernel-size length kernel-weights
+  set kernel-offsets sublist kernel-offsets 0 kernel-size
+  set kernel (map [ [o p] -> (list o p) ] kernel-offsets kernel-weights) 
+  ask patches [
+    set my-kernel filter [ xyp -> my-patch-at item 0 xyp != nobody ] kernel
+  ]
 end
+
+
+to-report dist [xy]
+  report sqrt (item 0 xy ^ 2 + item 1 xy ^ 2)
+end
+
+
+to-report cum-frequencies [k]
+  let total-freqs sum k
+  let freqs map [ f -> f / total-freqs ] k
+  report reduce [ [a b] -> lput (last a + b) a ] (fput (list first freqs) but-first freqs)  
+end
+
+to-report zip [L1 L2]
+  report (map [ [a b] -> (list a b) ] L1 L2)
+end
+
+to-report transpose [LL]
+  report map [ i -> map [ a -> item i a ] LL ] index-list LL
+end
+
+to-report index-list [L]
+  report n-values length first L [i -> i]
+end
+
+
+to setup-python
+  py:setup py:python3
+  py:run "import random"
+  py:set "kernel" kernel-offsets
+  py:set "weights" kernel-weights
+  py:run "from collections import Counter"
+end
+
+to-report py-multinomial [n]
+;  py:set "kernel" kern
+;  py:set "w" wghts
+  py:set "n" n
+  (py:run 
+    "offsets = random.choices(kernel, weights = weights, k = n)"
+    "offsets = [tuple(L) for L in offsets]"
+    "hist = Counter(offsets)"
+  )
+  report py:runresult "[z for z in zip([list(k) for k in hist.keys()], [v for v in hist.values()])]"
+end
+  

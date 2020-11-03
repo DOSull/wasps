@@ -198,7 +198,7 @@ num-dispersals
 num-dispersals
 1000
 1e6
-250000.0
+446000.0
 1000
 1
 NIL
@@ -211,9 +211,9 @@ SLIDER
 178
 p-ldd
 p-ldd
-1e-5
+0
 0.001
-1.0E-5
+0.0
 0.00001
 1
 NIL

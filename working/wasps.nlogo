@@ -25,7 +25,7 @@ __includes [ "setup.nls" "main.nls" "display.nls"
   "dispersal.nls" "reproduction.nls"
   "profile.nls" ]
 
-extensions [ palette vid gis profiler array ]
+extensions [ palette vid gis profiler array rnd ]
 
 breed [ vizs viz ]
 breed [ roads road ]
@@ -48,8 +48,7 @@ globals [
 
   kernel-offsets
   kernel-weights
-  conditional-kernel-weights
-  cumulative-kernel-weights
+  kernel
 
   ;; colour palettes for display
   pals
@@ -78,9 +77,10 @@ patches-own [
   next-pops
   init-pop
   init-pops
-  lambda-loc
+  lambda-local
   road?
   history
+  my-kernel
 ]
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -136,7 +136,7 @@ lambda-mean
 lambda-mean
 1.0
 4
-2.5
+2.3
 0.01
 1
 NIL
@@ -191,7 +191,7 @@ PLOT
 638
 283
 954
-669
+617
 Populations
 NIL
 NIL
@@ -258,7 +258,7 @@ d-mean
 d-mean
 0.01
 10
-0.5
+1.22
 0.01
 1
 NIL
@@ -284,7 +284,7 @@ show-pop
 show-pop
 0
 num-pops
-0.0
+3.0
 1
 1
 NIL
@@ -566,6 +566,28 @@ homogenous?
 1
 1
 -1000
+
+SWITCH
+650
+636
+850
+669
+use-kernel-method?
+use-kernel-method?
+1
+1
+-1000
+
+MONITOR
+863
+637
+951
+682
+kernel-area
+length kernel
+0
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
