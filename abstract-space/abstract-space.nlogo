@@ -389,7 +389,7 @@ init-mean-occ
 init-mean-occ
 0
 1
-0.85
+0.54
 0.01
 1
 NIL
@@ -583,7 +583,7 @@ SWITCH
 520
 use-logistic-map?
 use-logistic-map?
-1
+0
 1
 -1000
 
@@ -608,6 +608,21 @@ debug?
 1
 1
 -1000
+
+SLIDER
+418
+589
+590
+622
+var-mean-ratio
+var-mean-ratio
+1
+5
+1.0
+0.01
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?

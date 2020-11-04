@@ -32,11 +32,13 @@ to-report get-next-generation
   ;; should there be a mortality rate?
   
   let new-pop (lambda-local * reproductive)
-  if new-pop <= 1 [
+  if new-pop < 1 [
     report [0 0 0]
   ]
   if use-stochastic-repro? [ 
-    set new-pop nbinomial new-pop (new-pop ^ 1.5) 
+    ifelse var-mean-ratio = 1 
+    [ set new-pop random-poisson new-pop ]
+    [ set new-pop nbinomial-with-mean-vmr new-pop var-mean-ratio ]
   ]
   
   ;; where lambda is effectively old-lambda - 1
@@ -85,12 +87,18 @@ to-report binomial [n p]
   report x
 end
 
-to-report nbinomial [m v]
-  if debug? [ show (word m " " v " " (m / v)) ]
-  let p 1 - m / v 
-  let r m * m / (v - m)
+to-report nbinomial-with-mean-vmr [m vmr]
+  let p 1 - 1 / vmr 
+  let r m / (vmr - 1)
+  if debug? [ show (word "m: " m "v " (vmr * m) " r: " r " p: " p) ]
+  report random-nbinomial r p
+end
+
+
+to-report random-nbinomial [r p]
   report random-poisson random-gamma r ((1 - p) / p)
 end
+
 
 
 ;; perform repeated binomial draws from population n
