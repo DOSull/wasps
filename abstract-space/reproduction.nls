@@ -23,9 +23,6 @@
 ;; DEALINGS IN THE SOFTWARE.
 
 to-report get-next-generation
-;  if lambda = 0 [
-;    report (list 0 0 0)
-;  ]
   ;; Going to assume THREE populations
   ;; only wild and GM reproduce
   let reproductive sum but-last pops
@@ -34,10 +31,13 @@ to-report get-next-generation
   ;; DO SOMETHING HERE??
   ;; should there be a mortality rate?
   
-  let new-pop 0
-  ifelse use-stochastic-repro?
-  [ set new-pop random-poisson (lambda-local * reproductive) ]
-  [ set new-pop (lambda-local * reproductive) ]
+  let new-pop (lambda-local * reproductive)
+  if new-pop <= 1 [
+    report [0 0 0]
+  ]
+  if use-stochastic-repro? [ 
+    set new-pop nbinomial new-pop (new-pop ^ 1.5) 
+  ]
   
   ;; where lambda is effectively old-lambda - 1
   ;; (and perhaps should be redesignated r)
@@ -74,19 +74,24 @@ to-report binomial [n p]
   let ln-q ln (1 - p)
   let x 0
   let s 0
-;  let i 0
   ; also need to avoid x = n
   while [x < n] [
-;    set i i + 1
     set s s + ln (random-float 1) / (n - x)
     if s < ln-q [
-;      show (list n x i) 
       report x
     ]
     set x x + 1
   ]
   report x
 end
+
+to-report nbinomial [m v]
+  if debug? [ show (word m " " v " " (m / v)) ]
+  let p 1 - m / v 
+  let r m * m / (v - m)
+  report random-poisson random-gamma r ((1 - p) / p)
+end
+
 
 ;; perform repeated binomial draws from population n
 ;; without replacement, with p based on ratios determined 
@@ -113,7 +118,7 @@ to-report multinomial [n frequencies rescale?]
   ]
   ;; if the result is not the required length then pack it with zeros
   ifelse length result < num-values
-  [ report pack-zeros result num-values]
+  [ report pack-zeros result num-values true]
   [ report result ]
 end
 
@@ -127,14 +132,16 @@ to-report get-conditional-binom-probs [frequencies]
     set frequencies but-first frequencies
   ]
   ifelse length rescaled < length-reqd 
-  [ report pack-zeros rescaled length-reqd ]
+  [ report pack-zeros rescaled length-reqd true ]
   [ report rescaled ]  
 end
 
 
 ;; pack list out to length 0 with zeros
-to-report pack-zeros [lst n]
-  report sublist (sentence lst n-values n [x -> 0]) 0 n
+to-report pack-zeros [lst n post]
+  ifelse post 
+  [ report sublist (sentence lst n-values n [x -> 0]) 0 n ]
+  [ report sublist (sentence n-values n [x -> 0] lst) 0 n ]
 end
 
 

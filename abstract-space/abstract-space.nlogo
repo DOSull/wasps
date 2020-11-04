@@ -73,11 +73,11 @@ patches-own [
 GRAPHICS-WINDOW
 207
 10
-635
-679
+615
+419
 -1
 -1
-12.0
+8.0
 1
 10
 1
@@ -88,9 +88,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-34
+49
 0
-54
+49
 1
 1
 1
@@ -555,10 +555,10 @@ homogenous?
 -1000
 
 SWITCH
-980
-595
-1180
-628
+226
+535
+426
+568
 use-kernel-method?
 use-kernel-method?
 1
@@ -566,10 +566,10 @@ use-kernel-method?
 -1000
 
 MONITOR
-980
-635
-1069
-680
+226
+575
+315
+620
 kernel-area
 length kernel
 0
@@ -577,10 +577,10 @@ length kernel
 11
 
 SWITCH
-981
-481
-1164
-514
+228
+487
+411
+520
 use-logistic-map?
 use-logistic-map?
 1
@@ -588,13 +588,24 @@ use-logistic-map?
 -1000
 
 SWITCH
-982
-440
-1176
-473
+229
+446
+423
+479
 use-stochastic-repro?
 use-stochastic-repro?
 0
+1
+-1000
+
+SWITCH
+478
+483
+588
+516
+debug?
+debug?
+1
 1
 -1000
 
