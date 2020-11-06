@@ -29,37 +29,22 @@ to setup
   if use-seed? [
     random-seed seed
   ]
-  
-  setup-kernel
+  if use-kernel-method? [ setup-kernel ]
 
   set num-pops 3
   set pals ["OrRd" "PuBu" "BuGn" "BuPu"]
 
+  setup-capacities
+  
   ask patches [
-    set capacity max-pxcor - pxcor + random 2
-  ]
-  repeat 5 [
-    diffuse capacity 0.5
-  ]
-
-  ask patches [
-    ifelse (capacity >= 0)
-    [ set capacity ceiling (capacity * 30) ]
-    [ set capacity -1 ]
-  ]
-;;  set capacities sort remove-duplicates [capacity] of patches
-
-;  set ds gis:load-dataset "roads-oblique.asc"
-;  gis:apply-raster ds road?
-  ask patches [
-    set road? pxcor = 30 or pycor = 5
+    set road? pxcor = 43 or pycor = 6
   ]
   set the-roads patches with [road?]
   ask the-roads [
     sprout-roads 1 [
       set color grey - 2
       set shape "square"
-      set size 0.8
+      set size 0.85
     ]
   ]
 
@@ -111,6 +96,27 @@ to setup
   renew-plots
 end
 
+to setup-capacities
+;  let ds gis:load-dataset "wasp-suitability.asc"
+;  gis:apply-raster ds capacity  
+  ask patches [
+    set capacity max-pxcor - pxcor + random 2
+  ]
+  repeat 5 [
+    diffuse capacity 0.5
+  ]
+  let max-k max [capacity] of patches
+  let multiple max-capacity-per-sq-km / max-k
+  ask patches [
+    ifelse (capacity >= 0)
+    [ set capacity ceiling (capacity * multiple) ]
+    [ set capacity -1 ]
+  ]
+;;  set capacities sort remove-duplicates [capacity] of patches
+
+;  set ds gis:load-dataset "roads-oblique.asc"
+;  gis:apply-raster ds road?
+end
 
 to setup-patch-populations
   ask the-habitable-land [

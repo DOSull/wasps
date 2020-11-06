@@ -46,19 +46,17 @@ end
 
 to disperse-using-kernel [n idx]
   if n > 0 [
-;    ifelse true [
+    ifelse true [
       foreach rnd:weighted-n-of-list-with-repeats n my-kernel [p -> last p] [ t ->
         let xy item 0 t
         disperse-to my-patch-at xy 1 idx
       ]
-;    ]
-;    [
-;      foreach py-multinomial n [ xyn ->
-;        let xy item 0 xyn
-;        let num item 1 xyn
-;        disperse-to my-patch-at xy num idx
-;      ]
-;    ]
+    ]
+    [
+      (foreach multinomial n kernel-weights true kernel-offsets [ [num xy] ->
+        disperse-to my-patch-at xy num idx
+      ])
+    ]
   ]
 end
 

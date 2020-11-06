@@ -231,7 +231,7 @@ d-mean
 d-mean
 0.01
 10
-6.0
+1.0
 0.01
 1
 NIL
@@ -889,41 +889,70 @@ Annual variability in R
 
 @#$#@#$#@
 ## WHAT IS IT?
-A model of wasp control by a potential gene drive in the upper South Island of Aotearoa New Zealand, as reported in 
+A model of wasp control by a potential gene drive in the upper South Island of Aotearoa New Zealand.
 
-* Lester PJ, D O'Sullivan and GLW Perry. Submitted. Gene drives for invasive pest
-control: extinction is unlikely, with suppression levels dependent on local dispersal
-and intrinsic growth rates. _Biology Letters_
+This version is in an abstract 50 x 50km space.
 
 ## HOW IT WORKS
 ### Overview
-Each 1km grid cell location in the model study area has an associated population carrying **`capacity`** which controls the population dynamics of the area. 
+Each 1km grid cell location in the model study area has an associated population carrying **`capacity`** which controls the population dynamics of the area. The maximum possible carrying capacity is set by the **max-capacity-per-sq-km** control. In this abstract space, the capacity is decreases linearly from west to east.
 
 ### Population dynamics
-At any given moment the the number of wasp nests (i.e. queens) in a grid cell is contained in the list `pops` which records respectively the number of wild, gene-drive modified and sterile queens in the cell. The reproductive population is given by 
+At any given moment the the number of wasp nests (i.e. queens) in a grid cell is contained in the patch list variable **pops** which records respectively the number of *wild* (W), *gene-drive modified* (G) and *sterile* (S) queens in the cell. The reproductive population is given by W + G, which in model code is
 
-    set reproductive sum but-last pops ;; i.e. item 0 + item 1
+    set reproductive sum but-last pops
 
-The local growth rate of the cell `lambda-loc` is determined from the parameter setting **`lambda-mean`** and **`lambda-sd`** each year by draw from a normal distribution.
+The mean annual reproductive rate of all cells in a given year is determined from the parameter setting **R-mean** and **R-sd** by drawing from a normal distribution.
 
-    set lamdba-loc random-normal lambda-mean lambda-sd
+    set R-annual random-normal R-mean R-sd
 
-These are combined to determine the total population of queens in the next generation according to 
+This is modified locally per patch based on the current population and capacity according to 
 
-    set new-pop random-poisson lambda-loc * reproductive * (capacity - sum pops) / capacity
+    set R-local (1 - mortality) + (R-annual + mortality) * (1 - pop / capacity)
 
-The total **`new-pop`** is then allocated to wild, GM and sterile sub-populations by repeated draws from a Binomial distribution. This is implemented by code in **`reproduction.nls`** which has been commented in detail. Note that a binomial random generator has been coded in place of a naive implementation requiring _n_ random numbers to be generated for Bin(_n_, _p_), which would work but is slow for large _n_ and low _p_.
+where **mortality** will usually be set to 1 (since wasps are an annual species with no overlap between generations) and the boosting of R by the amount of the mortality setting ensures that **R-mean** is an expected number of surviving new queens *net* of mortality of the current generation. When **mortality** is set to 1 this formulation is equivalent to a logistic map.
+
+The expected new population in a cell is given by
+
+    set new-pop R-local * reproductive
+
+Stochastic variation is optionally applied when **stochastic-repro?** is set On, using either
+
+    set new-pop random-poisson new-pop
+
+or
+
+    set new-pop nbinmoial-with-mean-vmr new-pop var-mean-ratio
+
+The former is used when **var-mean-ratio** is set to 1, while the latter is applied with any higher value. The **nbinomial-with-mean-vmr** reporter converts specified mean *m* and variance mean ratio *vmr* to the *r* and *p* parameters of the Negative Binomial according to *r = m / (vmr - 1)* and *p = 1 - (1 / vmr)*  and invokes *random-nbinomial* which converts this to an appropriate composite Gamma-Poisson mixture (see https://en.wikipedia.org/wiki/Negative_binomial_distribution#Gamma%E2%80%93Poisson_mixture).
+
+### Genetics
+The total **new-pop** *N*<sup>+</sup> is split into wild, GM and sterile sub-populations by a multinomial draw with weights given by 
+    
+  *p<sub>W</sub>* = *W*<sup>2</sup>
+  *p<sub>G</sub>* = 2*WG*, and
+  *p<sub>S</sub>* = *G*<sup>2</sup>
+
+Note that a binomial random generator has been coded in place of a naive implementation requiring _n_ random numbers to be generated for Bin(_n_, _p_), which would work but is slow for large _n_ and low _p_.
+
+This is also the basis for an implementation of a multinomial variate draw, which distributes a requested _n_ items among categories weighted according to the wild, GM and sterile weights calculated above. The reporter works by repeated conditional binomial draws where each draw is based on the current remaining items to be drawn, and weight of the current category relative to the total weight of all categories (including the present one), i.e.,
+
+  *W*<sup>+</sup> ~ Bin(*n*, *p<sub>W</sub>* / (*p<sub>W</sub>* + *p<sub>G</sub>*))
+  *G*<sup>+</sup> ~ Bin(*n* - *W*<sup>+</sup>, *p*<sub>G</sub>* / (1 - *p*<sub>W</sub>))
+  *S*<sup>+</sup> = *N<sup>+</sup> - *W*<sup>+</sup> - *G*<sup>+</sup> 
+
+Note that for assignment to just three categories the reporter seems to be faster than the extension based **rnd:rnd:weighted-n-of-list-with-repeats** function.
 
 ### Dispersal
-New population may disperse to new locations. Each member of the population draws a random distance **`random-exponential d-mean`** and heading **`random 360`** and attempts to move to that location. If the location happens to have 0 **`capacity`** the dispersing population is lost. 
+New population may disperse to new locations. 
+
+Each member of the population draws a random distance **`random-exponential d-mean`** and heading **`random 360`** and attempts to move to that location. If the location happens to have 0 **`capacity`** the dispersing population is lost. 
 
 With low probability **`p-ldd`** the dispersal may be _long distance_ meaning that the destination location will be a randomly selected road cell, which could be anywhere on the map.
 
-## CREDITS AND REFERENCES
+An alternative implementation based on calculation of a dispersal kernel and the **rnd:weighted-n-of-list-with-repeats** reporter has been tried, but does not appear to run as quickly as this implementation.
 
-Lester PJ, D O'Sullivan and GLW Perry. Submitted. Gene drives for invasive pest
-control: extinction is unlikely, with suppression levels dependent on local dispersal
-and intrinsic growth rates. _Biology Letters_
+## CREDITS AND REFERENCES
 @#$#@#$#@
 default
 true
