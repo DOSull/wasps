@@ -198,14 +198,14 @@ PENS
 
 SLIDER
 13
-519
+548
 185
-552
+581
 p-ldd
 p-ldd
 0
 0.001
-0.0
+1.0E-4
 0.00001
 1
 NIL
@@ -224,14 +224,14 @@ prop-occupied
 
 SLIDER
 14
-445
+474
 186
-478
+507
 d-mean
 d-mean
 0.01
-5
-1.0
+10
+6.0
 0.01
 1
 NIL
@@ -375,7 +375,7 @@ mean-occupancy
 mean-occupancy
 0
 1
-0.54
+0.57
 0.01
 1
 NIL
@@ -404,7 +404,7 @@ CHOOSER
 scenario
 scenario
 "base plus release sites" "release sites only" "base only"
-2
+0
 
 SLIDER
 1123
@@ -547,12 +547,12 @@ use-logistic-map?
 
 SWITCH
 13
-231
+260
 183
-264
+293
 stochastic-repro?
 stochastic-repro?
-1
+0
 1
 -1000
 
@@ -569,14 +569,14 @@ debug?
 
 SLIDER
 13
-361
+390
 185
-394
+423
 var-mean-ratio
 var-mean-ratio
 1
 5
-1.0
+2.0
 0.01
 1
 NIL
@@ -689,9 +689,9 @@ For replicability set a seed and use it!
 
 SLIDER
 14
-104
+116
 186
-137
+149
 R-sd
 R-sd
 0
@@ -704,14 +704,14 @@ HORIZONTAL
 
 SLIDER
 13
-142
+171
 185
-175
+204
 mortality
 mortality
 0
 1
-0.0
+1.0
 0.001
 1
 NIL
@@ -721,8 +721,8 @@ TEXTBOX
 19
 69
 169
-97
-Surviving offspring per queen net of mortality
+111
+Surviving offspring per queen net of mortality - for logistic map M = 1
 11
 0.0
 1
@@ -739,9 +739,9 @@ Population dynamics
 
 TEXTBOX
 19
-267
+296
 188
-351
+380
 Exp(N) each generation is R * pop. Stochastic option will vary this according to a Poisson distribution (vmr = 1) or a Negative Binomial (vmr > 1)
 11
 0.0
@@ -749,9 +749,9 @@ Exp(N) each generation is R * pop. Stochastic option will vary this according to
 
 TEXTBOX
 7
-196
+225
 157
-226
+255
 Stochastic variation in reproduction
 12
 0.0
@@ -759,9 +759,9 @@ Stochastic variation in reproduction
 
 TEXTBOX
 10
-422
+451
 160
-440
+469
 Dispersal
 14
 0.0
@@ -769,9 +769,9 @@ Dispersal
 
 TEXTBOX
 17
-481
+510
 167
-509
+538
 Mean distance (exponentially distributed)
 11
 0.0
@@ -779,9 +779,9 @@ Mean distance (exponentially distributed)
 
 TEXTBOX
 17
-554
+583
 191
-610
+639
 Probability of long distance dispersal to a randomly select road location
 11
 0.0
@@ -873,6 +873,16 @@ TEXTBOX
 898
 287
 On = show populations\nOff = show red:blue mix of wild:GM
+11
+0.0
+1
+
+TEXTBOX
+19
+153
+169
+171
+Annual variability in R
 11
 0.0
 1
