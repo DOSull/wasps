@@ -94,14 +94,17 @@ to-report binomial [n p]
   report x
 end
 
+;; wrapper to get a negative binomial variate with mean m and variance mean ratio vmr
+;; the standard nbin parameters are r and p
 to-report nbinomial-with-mean-vmr [m vmr]
-  let p 1 - 1 / vmr 
   let r m / (vmr - 1)
+  let p 1 - 1 / vmr 
   if debug? [ show (word "m: " m "v " (vmr * m) " r: " r " p: " p) ]
   report random-nbinomial r p
 end
 
-
+;; negative binomial implemented as a Poisson draw paramterised with a Gamma distributed
+;; variate per https://en.wikipedia.org/wiki/Negative_binomial_distribution#Gamma%E2%80%93Poisson_mixture
 to-report random-nbinomial [r p]
   report random-poisson random-gamma r ((1 - p) / p)
 end
@@ -110,7 +113,12 @@ end
 
 ;; perform repeated binomial draws from population n
 ;; without replacement, with p based on ratios determined 
-;; from the list of values in rel-nums
+;; from the list of values in frequencies
+;; rescale allows pre-calculation of the relative frequencies
+;; if true the provided frequencies need to be calculated as we go
+;; if false the provided frequencies can be used as-is
+;; this is potentially useful for the spatial kernel where the frequencies 
+;; remain fixed (not currently used...)
 to-report multinomial [n frequencies rescale?]
   let conditional-freqs []
   ifelse rescale? 
@@ -137,6 +145,8 @@ to-report multinomial [n frequencies rescale?]
   [ report result ]
 end
 
+;; reports the conditional probabilities required
+;; for the multinomial generator
 to-report get-conditional-binom-probs [frequencies]
   let length-reqd length frequencies
   let rescaled []
@@ -153,13 +163,9 @@ end
 
 
 ;; pack list out to length 0 with zeros
-to-report pack-zeros [lst n post]
-  ifelse post 
+;; either post-pack or pre-pack depending on post
+to-report pack-zeros [lst n post?]
+  ifelse post? 
   [ report sublist (sentence lst n-values n [x -> 0]) 0 n ]
   [ report sublist (sentence n-values n [x -> 0] lst) 0 n ]
-end
-
-
-to-report patch-at-offset [xy]
-  report patch-at item 0 xy item 1 xy
 end

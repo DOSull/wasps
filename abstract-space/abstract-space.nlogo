@@ -21,11 +21,16 @@
 ;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 ;; DEALINGS IN THE SOFTWARE.
 
-__includes [ "setup.nls" "main.nls" "display.nls"
-  "dispersal.nls" "reproduction.nls"
-  "profile.nls" ]
+__includes [
+  "setup.nls"
+  "main.nls"
+  "display.nls"
+  "dispersal.nls"
+  "reproduction.nls"
+  "profile.nls"
+]
 
-extensions [ palette vid gis profiler array rnd py ]
+extensions [ palette vid gis profiler array rnd ]
 
 breed [ vizs viz ]
 breed [ roads road ]
@@ -519,7 +524,7 @@ SWITCH
 518
 use-kernel-method?
 use-kernel-method?
-1
+0
 1
 -1000
 

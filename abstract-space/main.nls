@@ -26,7 +26,7 @@ to go
     set R-annual random-normal R-mean R-sd
     ask the-habitable-land [ ;; patches with [capacity > 0] [
       if pop > 0 [
-        disperse
+        disperse use-kernel-method?
       ]
     ]
 ;    if member? "release sites" scenario [

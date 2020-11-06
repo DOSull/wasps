@@ -21,32 +21,50 @@
 ;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 ;; DEALINGS IN THE SOFTWARE.
 
-to disperse
+;; PATCH function
+;; distributes the next generation to new locations
+;; (which might be this patch in many cases!)
+;; according to a dispersal method requested
+to disperse [use-kernel?]
+  ;; next generation is a set of 3 numbers [wild GM sterile]
+  ;; which we iterate over incrementing the index position each time
   (foreach get-next-generation (n-values num-pops [i -> i]) [ [new-cases idx] ->
-    ifelse new-cases > 0 [
+    if new-cases > 0 [
+      ;; determine any long-distance dispersals and apply them
       let n-ldds binomial new-cases p-ldd
       repeat n-ldds [
         disperse-to one-of roads 1 idx
       ]
-      ifelse use-kernel-method?
+      ;; now do the locals remaining (this will be most of them)
+      ifelse use-kernel?
       [ disperse-using-kernel (new-cases - n-ldds) idx]
       [ disperse-using-heading-and-distance (new-cases - n-ldds) idx ]
-    ]
-    [
-      set next-pops replace-item idx next-pops 0
     ]
   ])
 end
 
-
+;; PATCH function
+;; convenience reporter for patch-at from a coordinate pair list
 to-report my-patch-at [xy]
   report patch-at item 0 xy item 1 xy
 end
 
-
+;; PATCH function
+;; uses a kernel which is list of lists
+;; [[ offset-x offset-y ] weight ]
+;; n is the number of individuals
+;; idx is their type 0 = wild 1 = GM 2 = sterile
+;;
+;; this appears to run more slowly than the simple heading and distance 
+;; formula in spite of repeated efforts to speed it up
+;; I think it's because often the kernel has several hundred bins
+;; and so there is not much gained assigning cases to several hundred
+;; bins versus a thousand or so random heading distance draws
+;; Also problematic is that it is difficult to get the right mean distance
+;; by manipulating the kernel weights
 to disperse-using-kernel [n idx]
   if n > 0 [
-    ifelse true [
+    ifelse true [ ;; just keeping an option open!
       foreach rnd:weighted-n-of-list-with-repeats n my-kernel [p -> last p] [ t ->
         let xy item 0 t
         disperse-to my-patch-at xy 1 idx
@@ -60,6 +78,8 @@ to disperse-using-kernel [n idx]
   ]
 end
 
+;; PATCH function
+;; simple dispersal by selection of random heading and distance
 to disperse-using-heading-and-distance [n idx]
   repeat n [
     let target nobody
@@ -70,17 +90,22 @@ to disperse-using-heading-and-distance [n idx]
   ]
 end
 
+
+;; PATCH function
+;; disperse to the specified target patch
+;; the specified number of cases of the 
+;; specified type 0 = wild 1 = GM 2 = sterile
 to disperse-to [tgt num idx-type]
-  if tgt != nobody [
-    ask tgt [
-      if capacity > 0 [
-        set next-pops replace-item idx-type next-pops (item idx-type next-pops + num)
-      ]
+  ask tgt [
+    if capacity > 0 [
+      set next-pops replace-item idx-type next-pops (item idx-type next-pops + num)
     ]
   ]
 end
 
 
+;; this tries to report a list [[ dx dy ] n] but is very slow
+;; not used
 to-report get-dispersal-counts [n]
   let targets map [ x -> first x ] (rnd:weighted-n-of-list-with-repeats n my-kernel [p -> last p])
   let counts remove-duplicates targets
@@ -91,52 +116,62 @@ to-report count-x-in-list [L x]
   report length filter [ y -> y = x ] L
 end
 
+
+;; setup dispersal kernels
 to setup-kernel
+  ;; make a offset coordinate lists
   let r ceiling (min (list world-width world-height) / 2)
   let dxs n-values (2 * r + 1) [x -> x - r]
   let dys n-values (2 * r + 1) [y -> y - r]
   
+  ;; make empty lists
   set kernel-offsets []
   set kernel-weights []
   
+  ;; create the kernel offsets list
   foreach dxs [ x ->
     foreach dys [ y ->
       set kernel-offsets lput (list x y) kernel-offsets 
     ]
   ]
+  ;; filter by distance and sort in order of distance from the origin
   set kernel-offsets filter [ xy -> dist xy <= r ] kernel-offsets
   set kernel-offsets sort-by [ [xy1 xy2] -> dist xy1 < dist xy2 ] kernel-offsets
+
+  ;; assign the relative weights
+  ;; this doesn't seem to get the weights right essentially
+  ;; because the mean distance to origin of a unit square is not 
+  ;; the distance at the centre
   set kernel-weights map [ xy -> 1 / d-mean / exp (dist xy / d-mean) ] kernel-offsets
+  ;; normalise to sum to 1 and filter to keep only those with p > p-ldd
   let total-w sum kernel-weights
   set kernel-weights filter [ w -> w / total-w > p-ldd ] kernel-weights
+  ;; apply corresponding filter to the offsets
   let kernel-size length kernel-weights
   set kernel-offsets sublist kernel-offsets 0 kernel-size
-  set kernel (map [ [o p] -> (list o p) ] kernel-offsets kernel-weights) 
+  set kernel zip kernel-offsets kernel-weights
+  ;; make patch local copy masked to only include patches that exist in the world
   ask patches [
     set my-kernel filter [ xyp -> my-patch-at item 0 xyp != nobody ] kernel
   ]
 end
 
-
+;; convenience distance reporter for coordinate pair
 to-report dist [xy]
   report sqrt (item 0 xy ^ 2 + item 1 xy ^ 2)
 end
 
-
-to-report cum-frequencies [k]
-  let total-freqs sum k
-  let freqs map [ f -> f / total-freqs ] k
-  report reduce [ [a b] -> lput (last a + b) a ] (fput (list first freqs) but-first freqs)  
-end
-
+;; utility function to zip two lists into a list of pairs
 to-report zip [L1 L2]
   report (map [ [a b] -> (list a b) ] L1 L2)
 end
 
+;; transpose a list of lists
 to-report transpose [LL]
   report map [ i -> map [ a -> item i a ] LL ] index-list LL
 end
 
+;; get a list of index positions for the supplied list
 to-report index-list [L]
   report n-values length first L [i -> i]
 end
