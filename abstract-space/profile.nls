@@ -49,7 +49,7 @@ to profile-multinomial [n]
 end
 
 
-to profile:one-of-roads [n]
+to profile-one-of-roads [n]
   profiler:start
   repeat n [ one-of-roads ]
   profiler:stop
@@ -59,4 +59,11 @@ end
 
 to one-of-roads
   let x one-of roads
+end
+
+to profile-setup
+  profiler:start
+  setup
+  profiler:stop
+  print profiler:report
 end

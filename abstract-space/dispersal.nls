@@ -46,19 +46,19 @@ end
 
 to disperse-using-kernel [n idx]
   if n > 0 [
-    ifelse true [
+;    ifelse true [
       foreach rnd:weighted-n-of-list-with-repeats n my-kernel [p -> last p] [ t ->
         let xy item 0 t
         disperse-to my-patch-at xy 1 idx
       ]
-    ]
-    [
-      foreach py-multinomial n [ xyn ->
-        let xy item 0 xyn
-        let num item 1 xyn
-        disperse-to my-patch-at xy num idx
-      ]
-    ]
+;    ]
+;    [
+;      foreach py-multinomial n [ xyn ->
+;        let xy item 0 xyn
+;        let num item 1 xyn
+;        disperse-to my-patch-at xy num idx
+;      ]
+;    ]
   ]
 end
 
@@ -144,23 +144,23 @@ to-report index-list [L]
 end
 
 
-to setup-python
-  py:setup py:python3
-  py:run "import random"
-  py:set "kernel" kernel-offsets
-  py:set "weights" kernel-weights
-  py:run "from collections import Counter"
-end
-
-to-report py-multinomial [n]
-;  py:set "kernel" kern
-;  py:set "w" wghts
-  py:set "n" n
-  (py:run 
-    "offsets = random.choices(kernel, weights = weights, k = n)"
-    "offsets = [tuple(L) for L in offsets]"
-    "hist = Counter(offsets)"
-  )
-  report py:runresult "[z for z in zip([list(k) for k in hist.keys()], [v for v in hist.values()])]"
-end
+;to setup-python
+;  py:setup py:python3
+;  py:run "import random"
+;  py:set "kernel" kernel-offsets
+;  py:set "weights" kernel-weights
+;  py:run "from collections import Counter"
+;end
+;
+;to-report py-multinomial [n]
+;;  py:set "kernel" kern
+;;  py:set "w" wghts
+;  py:set "n" n
+;  (py:run 
+;    "offsets = random.choices(kernel, weights = weights, k = n)"
+;    "offsets = [tuple(L) for L in offsets]"
+;    "hist = Counter(offsets)"
+;  )
+;  report py:runresult "[z for z in zip([list(k) for k in hist.keys()], [v for v in hist.values()])]"
+;end
   

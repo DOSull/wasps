@@ -66,7 +66,7 @@ to setup
   set the-land patches with [capacity >= 0]
   set the-habitable-land the-land with [capacity > 0]
   set the-sea patches with [capacity < 0]
-  set potential-release-sites patch-set nobody
+;  set potential-release-sites patch-set nobody
 
 ;  set pop-history []
 ;  set wild-history []
@@ -114,8 +114,8 @@ end
 
 to setup-patch-populations
   ask the-habitable-land [
-    repeat int (capacity * random-normal init-mean-occ init-sd-occ) [
-      let species ifelse-value (random-float 1 < base-prop-gm) [1] [0]
+    repeat int (capacity * random-normal mean-occupancy stdev-occupancy) [
+      let species ifelse-value (random-float 1 < proportion-gm) [1] [0]
       set next-pops replace-item species next-pops (item species next-pops + 1)
     ]
     set init-pops next-pops
@@ -124,25 +124,36 @@ to setup-patch-populations
 end
 
 to release-gm-wasps [initialise?]
-  if initialise? [
-    ifelse percentile-selector = 0 [
-      set potential-release-sites the-habitable-land
-    ]
-    [
-      let n-percentile count the-habitable-land * (1 - percentile-selector)
-      let min-capacity [capacity] of last sublist (reverse sort-on [capacity] the-habitable-land) 0 n-percentile
-      set potential-release-sites the-habitable-land with [capacity >= min-capacity]
-    ]
-  ]
+;  if initialise? [
+;    ifelse percentile-selector = 0 [
+;      set potential-release-sites the-habitable-land
+;    ]
+;    [
+;      let n-percentile count the-habitable-land * (1 - percentile-selector)
+;      let min-capacity [capacity] of last sublist (reverse sort-on [capacity] the-habitable-land) 0 n-percentile
+;      set potential-release-sites the-habitable-land with [capacity >= min-capacity]
+;    ]
+;  ]
   let release-sites n-of number-of-sites potential-release-sites
   ask release-sites [
-    set next-pops replace-item release-type next-pops (item release-type next-pops + wasps-per-site)
+    set next-pops replace-item release-type next-pops (item release-type next-pops + colonies-per-site)
   ]
   if initialise? [
     ask release-sites [
       set init-pops next-pops
       set init-pop sum init-pops
     ]
+  ]
+end
+
+to-report potential-release-sites 
+  ifelse percentile-selector = 0 [
+    report the-habitable-land
+  ]
+  [
+    let n-percentile count the-habitable-land * (1 - percentile-selector)
+    let min-capacity [capacity] of last sublist (reverse sort-on [capacity] the-habitable-land) 0 n-percentile
+    report the-habitable-land with [capacity >= min-capacity]
   ]
 end
 
@@ -157,10 +168,10 @@ end
 
 to setup-monitoring-area
   set monitoring-area patch-set nobody
-  if track-monitoring-area? [
-    set monitoring-area the-land with [pxcor < 100 and pycor > 150 ]
+;  if track-monitoring-area? [
+;    set monitoring-area the-land with [pxcor < 100 and pycor > 150 ]
 ;    set monitoring-area patches with [pxcor > 35 and pxcor < 61 and pycor > 170 and pycor < 196]
-  ]
+;  ]
   ask monitoring-area [
     set history []
   ]

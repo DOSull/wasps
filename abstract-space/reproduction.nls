@@ -23,19 +23,26 @@
 ;; DEALINGS IN THE SOFTWARE.
 
 to-report get-next-generation
-  ;; Going to assume THREE populations
+  ;; Assume THREE populations
   ;; only wild and GM reproduce
   let reproductive sum but-last pops
   ;; from which we get the new-population
-  ;;
-  ;; DO SOMETHING HERE??
-  ;; should there be a mortality rate?
+  ;; determine local R
+  ;; we allow for both 'standard' discrete logistic pop model and logistic map
+  ifelse use-logistic-map? 
+  [ ;; logistic map means no survivors and we use raw R + 1
+    ;; because there is no persistence of population in this model
+    set R-local (1 + R-annual) * (1 - pop / capacity) 
+  ]
+  [ ;; standard logistic, we apply mortality and boost R to get desired net R
+    set R-local (1 - mortality) + (R-annual + mortality) * (1 - pop / capacity) 
+  ]
   
-  let new-pop (lambda-local * reproductive)
+  let new-pop (R-local * reproductive)
   if new-pop < 1 [
     report [0 0 0]
   ]
-  if use-stochastic-repro? [ 
+  if stochastic-repro? [ 
     ifelse var-mean-ratio = 1 
     [ set new-pop random-poisson new-pop ]
     [ set new-pop nbinomial-with-mean-vmr new-pop var-mean-ratio ]

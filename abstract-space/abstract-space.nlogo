@@ -31,6 +31,7 @@ breed [ vizs viz ]
 breed [ roads road ]
 
 globals [
+  R-annual ;; this season's R value
   num-pops
   total-pop
   mean-occupancy-rate
@@ -53,7 +54,7 @@ globals [
   the-sea
   the-roads
   the-habitable-land
-  potential-release-sites
+;  potential-release-sites
   monitoring-area
 ]
 
@@ -64,7 +65,7 @@ patches-own [
   next-pops
   init-pop
   init-pops
-  lambda-local
+  R-local
   road?
   history
   my-kernel
@@ -95,13 +96,13 @@ GRAPHICS-WINDOW
 1
 1
 ticks
-30.0
+100.0
 
 BUTTON
-646
-13
-709
-46
+625
+17
+688
+50
 NIL
 setup
 NIL
@@ -115,25 +116,25 @@ NIL
 1
 
 SLIDER
-27
-10
-199
-43
-lambda-mean
-lambda-mean
+13
+32
+185
+65
+R-mean
+R-mean
 1.0
 4
-2.3
+1.3
 0.01
 1
 NIL
 HORIZONTAL
 
 BUTTON
-646
-50
-709
-83
+625
+54
+688
+87
 step
 go
 NIL
@@ -147,10 +148,10 @@ NIL
 1
 
 BUTTON
-646
-86
-709
-119
+625
+90
+688
+123
 NIL
 go
 T
@@ -164,10 +165,10 @@ NIL
 1
 
 MONITOR
-17
-480
-85
-525
+621
+493
+739
+538
 NIL
 total-pop
 0
@@ -175,10 +176,10 @@ total-pop
 11
 
 PLOT
-644
-284
-960
-616
+208
+426
+614
+637
 Populations
 NIL
 NIL
@@ -196,25 +197,25 @@ PENS
 "dying" 1.0 0 -13840069 true "" ""
 
 SLIDER
-25
-141
-197
-174
+13
+519
+185
+552
 p-ldd
 p-ldd
 0
 0.001
-1.0E-4
+0.0
 0.00001
 1
 NIL
 HORIZONTAL
 
 MONITOR
-91
-480
-196
-525
+621
+542
+740
+587
 NIL
 prop-occupied
 3
@@ -222,25 +223,10 @@ prop-occupied
 11
 
 SLIDER
-26
-47
-198
-80
-lambda-sd
-lambda-sd
-0
-0.25
-0.0
-0.001
-1
-NIL
-HORIZONTAL
-
-SLIDER
-26
-99
-198
-132
+14
+445
+186
+478
 d-mean
 d-mean
 0.01
@@ -252,10 +238,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-43
-530
-197
-575
+620
+592
+758
+637
 mean-occupancy-rate
 mean-occupancy-rate
 3
@@ -263,29 +249,29 @@ mean-occupancy-rate
 11
 
 SLIDER
-654
-199
-773
-232
+625
+295
+744
+328
 show-pop
 show-pop
 0
 num-pops
-3.0
+1.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-681
-164
-820
-197
-base-prop-gm
-base-prop-gm
+988
+325
+1159
+358
+proportion-gm
+proportion-gm
 0
-0.5
+1
 0.0
 0.01
 1
@@ -293,11 +279,11 @@ NIL
 HORIZONTAL
 
 BUTTON
-788
-241
-920
-275
-NIL
+627
+343
+744
+377
+redraw map
 color-patches\n
 NIL
 1
@@ -310,10 +296,10 @@ NIL
 1
 
 SWITCH
-777
-199
-917
-232
+625
+246
+745
+279
 show-pop?
 show-pop?
 0
@@ -321,10 +307,10 @@ show-pop?
 -1000
 
 BUTTON
-717
-13
-823
-47
+626
+149
+732
+183
 NIL
 reset-map
 NIL
@@ -338,11 +324,11 @@ NIL
 1
 
 BUTTON
-640
-242
-782
-276
-toggle-roads
+628
+383
+743
+417
+toggle roads
 ask roads [set hidden? not hidden?]
 NIL
 1
@@ -355,10 +341,10 @@ NIL
 1
 
 SLIDER
-844
-15
-951
-48
+708
+53
+847
+86
 seed
 seed
 0
@@ -370,10 +356,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-811
-53
-953
-86
+707
+91
+849
+124
 use-seed?
 use-seed?
 1
@@ -381,12 +367,12 @@ use-seed?
 -1000
 
 SLIDER
-823
-126
-952
-159
-init-mean-occ
-init-mean-occ
+874
+70
+1039
+103
+mean-occupancy
+mean-occupancy
 0
 1
 0.54
@@ -396,12 +382,12 @@ NIL
 HORIZONTAL
 
 SLIDER
-823
-162
-951
-195
-init-sd-occ
-init-sd-occ
+874
+107
+1040
+140
+stdev-occupancy
+stdev-occupancy
 0
 0.5
 0.05
@@ -411,20 +397,20 @@ NIL
 HORIZONTAL
 
 CHOOSER
-20
-189
-196
-234
+874
+170
+1050
+215
 scenario
 scenario
 "base plus release sites" "release sites only" "base only"
-0
+2
 
 SLIDER
-18
-277
-190
-310
+1123
+32
+1295
+65
 number-of-sites
 number-of-sites
 0
@@ -436,32 +422,32 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-22
-240
-172
-270
-Parameters for \"release sites\" scenario
+1119
+10
+1424
+28
+Parameters for any \"release sites\" scenario
 12
 0.0
 1
 
 TEXTBOX
-750
-122
-820
-152
-Base pop initialisation
-12
+877
+10
+1040
+28
+Population initialisation
+14
 0.0
 1
 
 SLIDER
-18
-315
-190
-348
-wasps-per-site
-wasps-per-site
+1123
+70
+1294
+103
+colonies-per-site
+colonies-per-site
 0
 1000
 500.0
@@ -471,10 +457,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-18
-353
-190
-386
+1123
+108
+1295
+141
 percentile-selector
 percentile-selector
 0
@@ -486,10 +472,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-15
-393
-190
-426
+1124
+221
+1296
+254
 release-type
 release-type
 0
@@ -500,39 +486,11 @@ release-type
 NIL
 HORIZONTAL
 
-SWITCH
-6
-627
-201
-660
-track-monitoring-area?
-track-monitoring-area?
-0
-1
--1000
-
-BUTTON
-68
-586
-193
-620
-NIL
-save-monitor
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 SLIDER
-17
-431
-190
-464
+1124
+166
+1297
+199
 periodicity
 periodicity
 0
@@ -544,10 +502,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-813
-90
-951
-123
+988
+285
+1159
+318
 homogenous?
 homogenous?
 1
@@ -555,10 +513,10 @@ homogenous?
 -1000
 
 SWITCH
-226
-535
-426
-568
+982
+485
+1174
+518
 use-kernel-method?
 use-kernel-method?
 1
@@ -566,10 +524,10 @@ use-kernel-method?
 -1000
 
 MONITOR
-226
-575
-315
-620
+1150
+551
+1239
+596
 kernel-area
 length kernel
 0
@@ -577,32 +535,32 @@ length kernel
 11
 
 SWITCH
-228
-487
-411
-520
-use-logistic-map?
-use-logistic-map?
-0
-1
--1000
-
-SWITCH
-229
+984
+413
+1176
 446
-423
-479
-use-stochastic-repro?
-use-stochastic-repro?
+use-logistic-map?
+use-logistic-map?
 0
 1
 -1000
 
 SWITCH
-478
-483
-588
-516
+13
+231
+183
+264
+stochastic-repro?
+stochastic-repro?
+1
+1
+-1000
+
+SWITCH
+821
+503
+931
+536
 debug?
 debug?
 1
@@ -610,10 +568,10 @@ debug?
 -1000
 
 SLIDER
-418
-589
-590
-622
+13
+361
+185
+394
 var-mean-ratio
 var-mean-ratio
 1
@@ -623,6 +581,301 @@ var-mean-ratio
 1
 NIL
 HORIZONTAL
+
+TEXTBOX
+1298
+29
+1364
+57
+how many \nlocations
+11
+0.0
+1
+
+TEXTBOX
+1297
+67
+1404
+95
+colonies' worth of \nwasps per site
+11
+0.0
+1
+
+TEXTBOX
+1298
+102
+1427
+144
+where in the habitat\ndistribution to select \nrelease sites
+11
+0.0
+1
+
+TEXTBOX
+1300
+170
+1468
+220
+how often to release wasps: \n0 =  never (or only at t0)\nn = every n years
+11
+0.0
+1
+
+TEXTBOX
+1300
+223
+1463
+279
+0 = wild; 1 = GM\nThis should usually be set to 1, but 0 can be used to explore invasion
+11
+0.0
+1
+
+SLIDER
+874
+30
+1100
+63
+max-capacity-per-sq-km
+max-capacity-per-sq-km
+500
+5000
+2000.0
+100
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+1161
+328
+1288
+356
+initialise with GM wasps everyhere
+11
+0.0
+1
+
+TEXTBOX
+1163
+288
+1280
+316
+initialise with same capacity everywhere
+11
+0.0
+1
+
+TEXTBOX
+984
+266
+1134
+284
+Special cases
+12
+0.0
+1
+
+TEXTBOX
+711
+21
+861
+51
+For replicability set a seed and use it!
+12
+0.0
+1
+
+SLIDER
+14
+104
+186
+137
+R-sd
+R-sd
+0
+0.5
+0.0
+0.001
+1
+NIL
+HORIZONTAL
+
+SLIDER
+13
+142
+185
+175
+mortality
+mortality
+0
+1
+0.0
+0.001
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+19
+69
+169
+97
+Surviving offspring per queen net of mortality
+11
+0.0
+1
+
+TEXTBOX
+12
+12
+162
+30
+Population dynamics
+14
+0.0
+1
+
+TEXTBOX
+19
+267
+188
+351
+Exp(N) each generation is R * pop. Stochastic option will vary this according to a Poisson distribution (vmr = 1) or a Negative Binomial (vmr > 1)
+11
+0.0
+1
+
+TEXTBOX
+7
+196
+157
+226
+Stochastic variation in reproduction
+12
+0.0
+1
+
+TEXTBOX
+10
+422
+160
+440
+Dispersal
+14
+0.0
+1
+
+TEXTBOX
+17
+481
+167
+509
+Mean distance (exponentially distributed)
+11
+0.0
+1
+
+TEXTBOX
+17
+554
+191
+610
+Probability of long distance dispersal to a randomly select road location
+11
+0.0
+1
+
+TEXTBOX
+824
+407
+974
+425
+Internal controls
+14
+0.0
+1
+
+TEXTBOX
+834
+428
+984
+484
+These will likely become internal global variables at some point - provided for experimentation
+11
+0.0
+1
+
+TEXTBOX
+990
+451
+1140
+469
+Almost always a yes!
+11
+0.0
+1
+
+TEXTBOX
+825
+542
+975
+598
+When we remember, debug messages can be shown in the command centre
+11
+0.0
+1
+
+TEXTBOX
+984
+523
+1134
+593
+Experimental - probably does not reliably produce the requested mean distances, and also seems to be slower...
+11
+0.0
+1
+
+TEXTBOX
+631
+187
+781
+215
+Reset to manually rerun a particular initial setup
+11
+0.0
+1
+
+TEXTBOX
+631
+228
+781
+246
+Display
+14
+0.0
+1
+
+TEXTBOX
+748
+295
+898
+337
+Population to show: 0 = wild, 1 = GM, 2 = sterile, 3 = total
+11
+0.0
+1
+
+TEXTBOX
+748
+245
+898
+287
+On = show populations\nOff = show red:blue mix of wild:GM
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?

@@ -23,30 +23,19 @@
 
 to go
   if total-pop > 0 [
-    ;;
-    ;; HERE: lambda-sd has been set to 0 - should it be?
-    ;;
-    let lambda random-normal lambda-mean lambda-sd
+    set R-annual random-normal R-mean R-sd
     ask the-habitable-land [ ;; patches with [capacity > 0] [
-      ;;
-      ;; HERE: should capacity be subject to variance?
-      ;; add variance to capacity -- Gaussian SD 
-      ;;
-      ifelse use-logistic-map?
-      [ set lambda-local lambda * (1 - pop / capacity) ]
-      [ set lambda-local 1 + (lambda - 1) * (1 - pop / capacity) ]
-     
       if pop > 0 [
         disperse
       ]
     ]
-    if member? "release sites" scenario [
+;    if member? "release sites" scenario [
       if periodicity > 0 [
         if ticks mod periodicity = 0 [
           release-gm-wasps false
         ]
       ]
-    ]
+;    ]
   ]
   update-populations
   color-patches
@@ -105,7 +94,7 @@ to reset-map
 end
 
 to save-monitor
-  let fname (word "monitor-dmean" d-mean "-pldd" p-ldd "-lambdamean" lambda-mean ".txt")
+  let fname (word "monitor-dmean" d-mean "-pldd" p-ldd "-rmean" R-mean ".txt")
   if file-exists? fname [
     file-delete fname
   ]
