@@ -28,7 +28,7 @@
 to disperse [use-kernel?]
   ;; next generation is a set of 3 numbers [wild GM sterile]
   ;; which we iterate over incrementing the index position each time
-  (foreach get-next-generation (n-values num-pops [i -> i]) [ [new-cases idx] ->
+  (foreach get-next-generation (n-values num-subpops [i -> i]) [ [new-cases idx] ->
     if new-cases > 0 [
       ;; determine any long-distance dispersals and apply them
       let n-ldds binomial new-cases p-ldd

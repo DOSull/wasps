@@ -21,7 +21,7 @@
 ;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 ;; DEALINGS IN THE SOFTWARE.
 
-to color-patches
+to colour-patches
   ;; something in the view updating is throwing the RNG off
   ;; no idea what, but use with-local-randomness to avoid
   with-local-randomness [
@@ -30,7 +30,7 @@ to color-patches
       let pal item show-pop pals
       let pop-patches the-land ;; with [pop > 0]
       ifelse any? pop-patches [
-        ifelse show-pop = num-pops [
+        ifelse show-pop = num-subpops [
           let mx-pop max [capacity] of patches
           let mn-pop min [capacity] of patches
           ask pop-patches [

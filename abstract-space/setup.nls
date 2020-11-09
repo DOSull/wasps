@@ -23,19 +23,102 @@
 ;; DEALINGS IN THE SOFTWARE.
 
 to setup
-  ca
+  clear-all
   reset-ticks
 
   if use-seed? [
     random-seed seed
   ]
+  ;; setting up a dispersal kernel is slow so only do it if needed
   if use-kernel-method? [ setup-kernel ]
 
-  set num-pops 3
+  ;; number of subpopulation is 3 in the wasp model
+  set num-subpops 3
+  ;; the corresponding brewer palettes (item 3 for total population)
   set pals ["OrRd" "PuBu" "BuGn" "BuPu"]
 
+  ;; setup capacities and roads
+  ;; in the full model these are read from ASCII raster data
   setup-capacities
+  setup-roads
+
+  ;; setup frequently used subsets of the patches
+  set the-land patches with [capacity >= 0]
+  set the-habitable-land the-land with [capacity > 0]
+  set the-sea patches with [capacity < 0]
+
+  ;; initialise the patch population lists
+  initialise-pops-to-zero
+
+  ;; now the various possible initialisations
+  if homogeneous? [ 
+    ; This works by making all the patch capacities the same
+    let mean-k mean [capacity] of the-habitable-land
+    ask the-habitable-land [
+      set capacity mean-k
+    ]
+    ;; could also set the sd-init-occ to zero
+    ;; buit that's probably one for the model user
+    ; set stdev-occupancy 0.0
+  ]
+  if member? "base" scenario [
+    ; this will initialize to N(mean-occupancy, stdev-occupancy) * capacity in all
+    ; the habitable patches. A proportion proportion-gm will be GM wasps
+    setup-patch-populations
+  ]
+  if member? "release sites" scenario [
+    ; this will lead to addition of wasps at a randomly selected range of locations
+    ; number-of-sites selected at random from the percentile-selector best locations
+    ; (defined by capacity). wasps-per-site will be added
+    release-gm-wasps true
+  ]
   
+  ;; initialise the monitoring area (not used in the abstract-space model
+  setup-monitoring-area
+
+  update-populations
+  ask the-habitable-land [
+    sprout-vizs 1 [
+      set shape "circle"
+    ]
+  ]
+  colour-patches
+  ask the-sea [set pcolor cyan + 4]
+
+  renew-plots
+end
+
+
+to setup-capacities
+;; For the realistic GIS space:  
+;  let ds gis:load-dataset "wasp-suitability.asc"
+;  gis:apply-raster ds capacity  
+  
+  ;; abstract space is a high to low west to east (left to right!) gradient
+  ;; with a little randomness
+  ask patches [
+    set capacity max-pxcor - pxcor + random 2
+  ]
+  repeat 5 [
+    diffuse capacity 0.5
+  ]
+  ;; scale it so the maximum capacity is the max requested
+  let max-k max [capacity] of patches
+  let multiple max-capacity-per-sq-km / max-k
+  ask patches [
+    ifelse (capacity >= 0)
+    [ set capacity ceiling (capacity * multiple) ]
+    [ set capacity -1 ]
+  ]
+end
+
+
+to setup-roads
+;; Roads
+;  set ds gis:load-dataset "roads-oblique.asc"
+;  gis:apply-raster ds road?
+  
+  ;; abstract space just a couple of straight lines
   ask patches [
     set road? pxcor = 43 or pycor = 6
   ]
@@ -47,99 +130,19 @@ to setup
       set size 0.85
     ]
   ]
-
-  set the-land patches with [capacity >= 0]
-  set the-habitable-land the-land with [capacity > 0]
-  set the-sea patches with [capacity < 0]
-;  set potential-release-sites patch-set nobody
-
-;  set pop-history []
-;  set wild-history []
-;  set gm-history []
-
-  initialise-pops-to-zero
-
-  if homogenous? [ ;; member? "homogeneous" scenario [
-    ; This works by making all the patch capacities the same
-    let mean-k mean [capacity] of the-habitable-land
-    ask the-habitable-land [
-      set capacity mean-k
-    ]
-    ;; could also set the sd-init-occ to zero
-    ;; buit that's probably one for the model user
-    ; set init-sd-occ 0.0
-  ]
-  if member? "base" scenario [
-    ; this will initialize to N(init-mean-occ, init-mean-occ) * capacity in all
-    ; the habitable patches. A proportion base-prop-gm will be GM wasps
-    setup-patch-populations
-  ]
-  if member? "release sites" scenario [
-    ; this will lead to addition of wasps at a randomly selected range of locations
-    ; number-of-sites selected at random from the percentile-selector best locations
-    ; (defined by capacity). wasps-per-site will be added, with proportion of them
-    ; GM given by prop-gm
-    release-gm-wasps true
-  ]
-  setup-monitoring-area
-
-  update-populations
-  ask the-habitable-land [
-    sprout-vizs 1 [
-      set shape "circle"
-    ]
-  ]
-  color-patches
-  ask the-sea [set pcolor cyan + 4]
-
-  ;; set distances array:from-list n-values 350 [i -> 0]
-  renew-plots
 end
 
-to setup-capacities
-;  let ds gis:load-dataset "wasp-suitability.asc"
-;  gis:apply-raster ds capacity  
-  ask patches [
-    set capacity max-pxcor - pxcor + random 2
-  ]
-  repeat 5 [
-    diffuse capacity 0.5
-  ]
-  let max-k max [capacity] of patches
-  let multiple max-capacity-per-sq-km / max-k
-  ask patches [
-    ifelse (capacity >= 0)
-    [ set capacity ceiling (capacity * multiple) ]
-    [ set capacity -1 ]
-  ]
-;;  set capacities sort remove-duplicates [capacity] of patches
-
-;  set ds gis:load-dataset "roads-oblique.asc"
-;  gis:apply-raster ds road?
-end
 
 to setup-patch-populations
+  let initial-rel-pops (list (1 - proportion-gm) 1 0)
   ask the-habitable-land [
-    repeat int (capacity * random-normal mean-occupancy stdev-occupancy) [
-      let species ifelse-value (random-float 1 < proportion-gm) [1] [0]
-      set next-pops replace-item species next-pops (item species next-pops + 1)
-    ]
+    set next-pops multinomial int (capacity * random-normal mean-occupancy stdev-occupancy) initial-rel-pops false
     set init-pops next-pops
     set init-pop sum next-pops
   ]
 end
 
 to release-gm-wasps [initialise?]
-;  if initialise? [
-;    ifelse percentile-selector = 0 [
-;      set potential-release-sites the-habitable-land
-;    ]
-;    [
-;      let n-percentile count the-habitable-land * (1 - percentile-selector)
-;      let min-capacity [capacity] of last sublist (reverse sort-on [capacity] the-habitable-land) 0 n-percentile
-;      set potential-release-sites the-habitable-land with [capacity >= min-capacity]
-;    ]
-;  ]
   let release-sites n-of number-of-sites potential-release-sites
   ask release-sites [
     set next-pops replace-item release-type next-pops (item release-type next-pops + colonies-per-site)
@@ -165,8 +168,8 @@ end
 
 to initialise-pops-to-zero
   ask the-land [
-    set pops n-values num-pops [ i -> 0 ]
-    set next-pops n-values num-pops [ i -> 0 ]
+    set pops n-values num-subpops [ i -> 0 ]
+    set next-pops n-values num-subpops [ i -> 0 ]
   ]
 end
 
@@ -184,13 +187,13 @@ to setup-monitoring-area
 end
 
 
-to make-movie [n]
-  vid:start-recorder
-  setup
-  vid:record-interface
-  repeat n [
-    go
-    vid:record-interface
-  ]
-  vid:save-recording "foo.mp4"
-end
+;to make-movie [n]
+;  vid:start-recorder
+;  setup
+;  vid:record-interface
+;  repeat n [
+;    go
+;    vid:record-interface
+;  ]
+;  vid:save-recording "foo.mp4"
+;end

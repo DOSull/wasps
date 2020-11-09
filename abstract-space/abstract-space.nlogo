@@ -22,58 +22,60 @@
 ;; DEALINGS IN THE SOFTWARE.
 
 __includes [
-  "setup.nls"
-  "main.nls"
-  "display.nls"
-  "dispersal.nls"
-  "reproduction.nls"
-  "profile.nls"
+  "setup.nls"            ;; model initialisation
+  "main.nls"             ;; the main model loop
+  "display.nls"          ;; display updates
+  "dispersal.nls"        ;; dispersal including calculation of kernels
+  "reproduction.nls"     ;; reproduction including needed statistical distros
+;;  "profile.nls"          ;; profilers for some parts of the model during development
 ]
 
-extensions [ palette vid gis profiler array rnd ]
+extensions [
+  palette                ;; Brewer colour palettes
+;;  vid                    ;; video recording
+;;  gis                    ;; GIS data
+;;  profiler               ;; profiling
+  rnd                    ;; weighted random draws from lists and agentsets
+]
 
-breed [ vizs viz ]
-breed [ roads road ]
+breed [ vizs viz ]       ;; to visualize population mix wild (red) vs GM (blue) across space
+breed [ roads road ]     ;; to visualize roads (and make it easy to turn them on/off
 
 globals [
-  R-annual ;; this season's R value
-  num-pops
-  total-pop
-  mean-occupancy-rate
+  R-annual               ;; this year's mean R value
+  num-subpops            ;; the number of subpopulations (3 in the wasps model)
+  total-pop              ;; total population across the landscape
+  mean-occupancy-rate    ;; the mean population as a proportion of capacity
 
   ;; dispersal related
-  total-extent
-  prop-occupied
+  total-extent           ;; the total number of patches with any wasps present
+  prop-occupied          ;; the proportion of all habitable patches with any wasps present
 
-  kernel-offsets
-  kernel-weights
-  conditional-kernel-weights
-  cumulative-kernel-weights
-  kernel
+  kernel-offsets         ;; list of [dx dy] values for the dispersal kernel
+  kernel-weights         ;; list of relative weights for kernel offsets (ordered per the offsets)
+  kernel                 ;; the list [kernel-offsets kernel-weights]
 
-  ;; colour palettes for display
-  pals
+  pals                   ;; colour palettes for display in the order wild, gm, sterile, total
 
   ;; subsets of the patches
-  the-land
-  the-sea
-  the-roads
-  the-habitable-land
-;  potential-release-sites
-  monitoring-area
+  the-land               ;; all non-sea patches
+  the-sea                ;; all sea patches
+  the-roads              ;; all patches with a road present
+  the-habitable-land     ;; all patches with capacity > 0
+  monitoring-area        ;; a subset of patches used to record time series data for model exploration
 ]
 
 patches-own [
-  capacity
-  pop
-  pops
-  next-pops
-  init-pop
-  init-pops
-  R-local
-  road?
-  history
-  my-kernel
+  capacity               ;; carrying capacity
+  pop                    ;; total population
+  pops                   ;; a list of subpopulations [wild GM sterile]
+  next-pops              ;; the populations that will exist next year
+  init-pop               ;; initial total population to enable quick restart
+  init-pops              ;; initial list of subpopulations to enable quick restart
+  R-local                ;; the local R value based on population and capacity constraint (1 - n/k)
+  road?                  ;; if a road is present
+  history                ;; a list recording population history for a patch in the monitoring area
+  my-kernel              ;; a local copy of the dispersal kernel (which removes non-land patches from the base kernel
 ]
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -261,7 +263,7 @@ SLIDER
 show-pop
 show-pop
 0
-num-pops
+num-subpops
 1.0
 1
 1
@@ -289,7 +291,7 @@ BUTTON
 744
 377
 redraw map
-color-patches\n
+colour-patches\n
 NIL
 1
 T
@@ -511,8 +513,8 @@ SWITCH
 285
 1159
 318
-homogenous?
-homogenous?
+homogeneous?
+homogeneous?
 1
 1
 -1000

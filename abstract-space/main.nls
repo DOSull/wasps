@@ -38,7 +38,7 @@ to go
 ;    ]
   ]
   update-populations
-  color-patches
+  colour-patches
   renew-plots
   tick
 end
@@ -47,7 +47,7 @@ to update-populations
   ask the-habitable-land [
     set pops next-pops
     set pop sum pops
-    set next-pops n-values num-pops [ i -> 0 ]
+    set next-pops n-values num-subpops [ i -> 0 ]
   ]
   ifelse any? the-habitable-land with [pop > 0] [
     set total-pop sum [pop] of the-habitable-land
@@ -89,7 +89,7 @@ to reset-map
     set pop init-pop
   ]
   set total-pop sum [pop] of patches
-  color-patches
+  colour-patches
   renew-plots
 end
 
