@@ -238,7 +238,7 @@ d-mean
 d-mean
 0.01
 10
-1.0
+6.5
 0.01
 1
 NIL
@@ -264,7 +264,7 @@ show-pop
 show-pop
 0
 num-subpops
-1.0
+3.0
 1
 1
 NIL
@@ -369,7 +369,7 @@ SWITCH
 124
 use-seed?
 use-seed?
-1
+0
 1
 -1000
 
@@ -382,7 +382,7 @@ mean-occupancy
 mean-occupancy
 0
 1
-0.57
+0.54
 0.01
 1
 NIL
@@ -526,7 +526,7 @@ SWITCH
 518
 use-kernel-method?
 use-kernel-method?
-0
+1
 1
 -1000
 
@@ -583,7 +583,7 @@ var-mean-ratio
 var-mean-ratio
 1
 5
-2.0
+1.0
 0.01
 1
 NIL
@@ -648,8 +648,8 @@ max-capacity-per-sq-km
 max-capacity-per-sq-km
 500
 5000
-2000.0
-100
+1470.0
+10
 1
 NIL
 HORIZONTAL

@@ -23,52 +23,49 @@
 
 to go
   if total-pop > 0 [
+    ;; model-wide mean R this year
     set R-annual random-normal R-mean R-sd
-    ask the-habitable-land [ ;; patches with [capacity > 0] [
+    ;; habitable patches might have population
+    ask the-habitable-land [
       if pop > 0 [
-        disperse use-kernel-method?
+        ;; get the next generation and disperse it
+        disperse next-generation
       ]
     ]
-;    if member? "release sites" scenario [
-      if periodicity > 0 [
-        if ticks mod periodicity = 0 [
-          release-gm-wasps false
-        ]
+    ;; if any regular wasp releases are requested do that now
+    if periodicity > 0 [
+      if ticks mod periodicity = 0 [
+        release-wasps false
       ]
-;    ]
+    ]
   ]
+  ;; update the numbers and the display and plots
   update-populations
   colour-patches
   renew-plots
   tick
 end
 
+;; this is basic housekeeping on the various totals
 to update-populations
   ask the-habitable-land [
     set pops next-pops
     set pop sum pops
     set next-pops n-values num-subpops [ i -> 0 ]
   ]
-  ifelse any? the-habitable-land with [pop > 0] [
+;  ifelse any? the-habitable-land with [pop > 0] [
     set total-pop sum [pop] of the-habitable-land
-;    set pop-history lput total-pop pop-history
-;    set wild-history lput sum [item 0 pops] of the-habitable-land wild-history
-;    set gm-history lput sum [item 1 pops] of the-habitable-land gm-history
-;    set pop-history lput total-pop pop-history
     set total-extent count the-habitable-land with [pop > 0]
     set prop-occupied total-extent / count the-land
     set mean-occupancy-rate mean [pop / capacity] of the-habitable-land
-  ]
-  [
-    set total-pop 0
-    set total-extent 0
-;    set min-d 0
-;    set mean-d 0
-;    set max-d 0
-    set prop-occupied 0
-    set mean-occupancy-rate 0
-    set total-extent 0
-  ]
+;  ]
+;  [
+;    set total-pop 0
+;    set total-extent 0
+;    set prop-occupied 0
+;    set mean-occupancy-rate 0
+;    set total-extent 0
+;  ]
   ask monitoring-area [
     set history lput pops history
   ]

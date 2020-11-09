@@ -22,7 +22,7 @@
 ;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 ;; DEALINGS IN THE SOFTWARE.
 
-to-report get-next-generation
+to-report next-generation
   ;; Assume THREE populations
   ;; only wild and GM reproduce
   let reproductive sum but-last pops

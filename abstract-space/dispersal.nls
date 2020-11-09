@@ -24,11 +24,13 @@
 ;; PATCH function
 ;; distributes the next generation to new locations
 ;; (which might be this patch in many cases!)
-;; according to a dispersal method requested
-to disperse [use-kernel?]
+to disperse [next-gen]
   ;; next generation is a set of 3 numbers [wild GM sterile]
   ;; which we iterate over incrementing the index position each time
-  (foreach get-next-generation (n-values num-subpops [i -> i]) [ [new-cases idx] ->
+  (foreach next-gen (n-values num-subpops [i -> i]) [ [new-cases idx] ->
+    ;; previously this was an ifelse clause
+    ;; IMPORTANT: that causes incorrect erasure of previously dispersed
+    ;; new-cases from patches processed earlier in the loop
     if new-cases > 0 [
       ;; determine any long-distance dispersals and apply them
       let n-ldds binomial new-cases p-ldd
@@ -36,10 +38,15 @@ to disperse [use-kernel?]
         disperse-to one-of roads 1 idx
       ]
       ;; now do the locals remaining (this will be most of them)
-      ifelse use-kernel?
+      ifelse  use-kernel-method?
       [ disperse-using-kernel (new-cases - n-ldds) idx]
       [ disperse-using-heading-and-distance (new-cases - n-ldds) idx ]
     ]
+    ;; DON'T reimplement this!
+;    [ ;; if for some reason you do, then use the increment-list-item version
+;      set next-pops increment-list-item next-pops idx 0
+;      set next-pops replace-item idx next-pops 0
+;    ]
   ])
 end
 
@@ -55,7 +62,7 @@ end
 ;; n is the number of individuals
 ;; idx is their type 0 = wild 1 = GM 2 = sterile
 ;;
-;; this appears to run more slowly than the simple heading and distance 
+;; this appears to run more slowly than the simple heading and distance
 ;; formula in spite of repeated efforts to speed it up
 ;; I think it's because often the kernel has several hundred bins
 ;; and so there is not much gained assigning cases to several hundred
@@ -93,12 +100,12 @@ end
 
 ;; PATCH function
 ;; disperse to the specified target patch
-;; the specified number of cases of the 
+;; the specified number of cases of the
 ;; specified type 0 = wild 1 = GM 2 = sterile
 to disperse-to [tgt num idx-type]
   ask tgt [
     if capacity > 0 [
-      set next-pops replace-item idx-type next-pops (item idx-type next-pops + num)
+      increment-population idx-type num
     ]
   ]
 end
@@ -109,9 +116,9 @@ end
 to-report get-dispersal-counts [n]
   let targets map [ x -> first x ] (rnd:weighted-n-of-list-with-repeats n my-kernel [p -> last p])
   let counts remove-duplicates targets
-  report map [ tgt -> (list tgt count-x-in-list targets tgt) ] counts 
+  report map [ tgt -> (list tgt count-x-in-list targets tgt) ] counts
 end
-    
+
 to-report count-x-in-list [L x]
   report length filter [ y -> y = x ] L
 end
@@ -123,15 +130,15 @@ to setup-kernel
   let r ceiling (min (list world-width world-height) / 2)
   let dxs n-values (2 * r + 1) [x -> x - r]
   let dys n-values (2 * r + 1) [y -> y - r]
-  
+
   ;; make empty lists
   set kernel-offsets []
   set kernel-weights []
-  
+
   ;; create the kernel offsets list
   foreach dxs [ x ->
     foreach dys [ y ->
-      set kernel-offsets lput (list x y) kernel-offsets 
+      set kernel-offsets lput (list x y) kernel-offsets
     ]
   ]
   ;; filter by distance and sort in order of distance from the origin
@@ -140,7 +147,7 @@ to setup-kernel
 
   ;; assign the relative weights
   ;; this doesn't seem to get the weights right essentially
-  ;; because the mean distance to origin of a unit square is not 
+  ;; because the mean distance to origin of a unit square is not
   ;; the distance at the centre
   set kernel-weights map [ xy -> 1 / d-mean / exp (dist xy / d-mean) ] kernel-offsets
   ;; normalise to sum to 1 and filter to keep only those with p > p-ldd
@@ -189,11 +196,10 @@ end
 ;;  py:set "kernel" kern
 ;;  py:set "w" wghts
 ;  py:set "n" n
-;  (py:run 
+;  (py:run
 ;    "offsets = random.choices(kernel, weights = weights, k = n)"
 ;    "offsets = [tuple(L) for L in offsets]"
 ;    "hist = Counter(offsets)"
 ;  )
 ;  report py:runresult "[z for z in zip([list(k) for k in hist.keys()], [v for v in hist.values()])]"
 ;end
-  
