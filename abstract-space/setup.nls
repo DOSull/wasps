@@ -29,6 +29,7 @@ to setup
   if use-seed? [
     random-seed seed
   ]
+  set central-p patch ((min-pxcor + max-pxcor) / 2) ((min-pycor + max-pycor) / 2)
   ;; setting up a dispersal kernel is slow so only do it if needed
   if use-kernel-method? [ setup-kernel ]
 
