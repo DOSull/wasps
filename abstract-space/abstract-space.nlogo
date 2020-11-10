@@ -41,6 +41,7 @@ extensions [
 breed [ vizs viz ]       ;; to visualize population mix wild (red) vs GM (blue) across space
 breed [ roads road ]     ;; to visualize roads (and make it easy to turn them on/off
 
+
 globals [
   R-annual               ;; this year's mean R value
   num-subpops            ;; the number of subpopulations (3 in the wasps model)
@@ -531,10 +532,10 @@ use-kernel-method?
 -1000
 
 MONITOR
-1150
-551
-1239
-596
+1185
+473
+1274
+518
 kernel-area
 length kernel
 0
@@ -835,13 +836,13 @@ When we remember, debug messages can be shown in the command centre
 1
 
 TEXTBOX
-984
-523
-1134
-593
-Experimental - probably does not reliably produce the requested mean distances, and also seems to be slower...
+987
+524
+1275
+608
+Experimental! Does not reliably produce expected mean distances. Discrete kernels are a complex problem see, e.g., Chipperfield, J. D. et al. (2011) ‘On the approximation of continuous dispersal kernels in discrete-space models’, Methods in Ecology and Evolution, 2(6), pp. 668–681.\n
 11
-0.0
+15.0
 1
 
 TEXTBOX
