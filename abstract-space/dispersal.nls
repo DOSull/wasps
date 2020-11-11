@@ -205,7 +205,8 @@ to show-kernel
 end
 
 to-report get-kernel-mean-d
-  report sum map [ xyw -> dist item 0 xyw * item 1 xyw ] kernel / sum map [ xyw -> item 1 xyw ] kernel
+;  report sum map [ xyw -> dist item 0 xyw * item 1 xyw ] kernel / sum map [ xyw -> item 1 xyw ] kernel
+  report sum map [ xyw -> (mean-d-in-patch-at item 0 xyw) * (item 1 xyw) ] kernel / sum map [ xyw -> item 1 xyw ] kernel
 end
 
 to-report get-coords [p]
