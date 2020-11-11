@@ -27,6 +27,7 @@ __includes [
   "display.nls"          ;; display updates
   "dispersal.nls"        ;; dispersal including calculation of kernels
   "reproduction.nls"     ;; reproduction including needed statistical distros
+  "patch-distances.nls"  ;; measurement of patch distances recognising they are areas not points
 ;;  "profile.nls"          ;; profilers for some parts of the model during development
 ]
 

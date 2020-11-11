@@ -1,0 +1,141 @@
+;; The MIT License (MIT)
+;;
+;; Copyright (c) 2020 David O'Sullivan
+;;
+;; Permission is hereby granted, free of charge, to any person
+;; obtaining a copy of this software and associated documentation
+;; files (the "Software"), to deal in the Software without restriction,
+;; including without limitation the rights to use, copy, modify, merge,
+;; publish, distribute, sublicense, and/or sell copies of the Software,
+;; and to  permit persons to whom the Software is furnished to do so,
+;; subject to the following conditions:
+;;
+;; The above copyright notice and this permission notice shall be included
+;; in all copies or substantial portions of the Software.
+;;
+;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+;; OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+;; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+;; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+;; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+;; DEALINGS IN THE SOFTWARE.
+
+;;
+;; utility functions for more precise measurement of inter-patch distances see 
+;; 
+;; Chipperfield JD, EP Holland, C Dytham, CD Thomas and T Hovestadt. 2011. 
+;; On the approximation of continuous dispersal kernels in discrete-space 
+;; models. Methods in Ecology and Evolution 2(6) 668–681.
+
+
+;; this method uses simulation
+;; the style is "cc" for centre to centre
+;;              "ca" pr "ac" for centre to anywhere (for completeness either will work)
+;;              "aa" for anyhere to anywhere
+to-report distance-between-patches [p1 p2 style]
+  ;; depending on the style we need different numbers of iterations
+  ;; to measure the distance between sample locations in the two patches
+  let numbers get-required-numbers style
+  let n1 item 0 numbers
+  let n2 item 1 numbers
+  let t1 measurement-turtle p1 n1
+  let t2 measurement-turtle p2 n2
+  let distances []
+  repeat n1 [
+    repeat n2 [
+      set distances lput ([distance t2] of t1) distances
+      ask t2 [ move-within-patch ]
+    ]
+    ask t1 [ move-within-patch ]
+  ]
+  ask t1 [die]
+  ask t2 [die]
+  report mean distances
+end
+
+;; makes and reports a turtle in the patch
+;; if n > 1 it will be shuffled to a random location in the patch
+to-report measurement-turtle [p n]
+  let t nobody
+  ask p [
+    sprout 1 [ 
+      if n > 1 [ move-within-patch ]
+      set t self
+    ]
+  ]
+  report t
+end
+
+;; move to a random location in the current patch
+to move-within-patch 
+  setxy pxcor + (random-float 1) - 0.5 pycor + (random-float 1) - 0.5
+end
+
+;; "cc" --> [1 1]
+;; "ca" --> [1 10000]
+;; "ac" --> [10000 1]
+;; "aa" --> [100 100]
+to-report get-required-numbers [s]
+  let src item 0 s
+  let dest item 1 s
+  ifelse src = "c" [
+    ifelse dest = "c"
+    [ report [1 1] ]
+    [ report [1 10000] ]
+  ]
+  [
+    ifelse dest = "c" 
+    [ report [10000 1] ]
+    [ report [100 100] ]
+  ]
+end
+
+;; this uses an integration determined by mathematica
+;; 0 coordinates are problematic for the calculation so
+;; approximate this by 
+to-report mean-d-in-patch-at [a b]
+  ifelse a = 0 and b = 0
+  [ report 4 * mean-d-in-subpatch-at 1e-8 1e-8 0.5 ]
+  [ report mean-d-in-subpatch-at (abs a - 0.5) (abs b - 0.5) 1 ] 
+end
+
+;; reports the mean distance of a square region
+;; of side a with lower left corner at x0 y0
+;; x0 and y0 must be strictly positive (x0 > 0 y0 > 0)
+;; with lower left corner at x0 y0
+;; the maths here is based on an integration of
+;;
+;; Int_y0^y0+a Int_x0^x0+a sqrt(x^2 + y^2) dx dy
+;;
+;; performed in mathematica and factorised a little
+to-report mean-d-in-square-at [x0 y0 a]
+  let axy1 sqrt (a ^ 2 + 2 * a * x0 + x0 ^ 2 + y0 ^ 2)
+  let axy2 sqrt (2 * a ^ 2 + x0 ^ 2 + y0 ^ 2 + 2 * a * (x0 + y0))
+  let axy3 sqrt (a ^ 2 + x0 ^ 2 + 2 * a * y0 + y0 ^ 2)
+  let r00 dist (list x0 y0)
+  
+  report (   
+      8 * x0 * y0 * (r00 - axy1 + axy2 - axy3)
+    - 8 * a * y0 * (axy1 - axy2) 
+    - 8 * a * x0 * (axy3 - axy2) 
+    + 8 * a ^ 2 * axy2 
+    +   (x0 ^ 3 + 3 * a * x0 ^ 2 + 3 * a ^ 2 * x0 + a ^ 3) * (ln (axy2 - a - y0) - ln (axy1 - y0))
+    + 4 * (a ^ 3 + 3 * a ^ 2 * y0 + 3 * a * y0 ^ 2 + y0 ^ 3) * (ln (a + x0 + axy2) - ln (x0 + axy3))
+    + 5 * (a ^ 3 + 3 * a ^ 2 * x0 + 3 * a * x0 ^ 2 + x0 ^ 3) * (ln (a + y0 + axy2) - ln (y0 + axy1))
+    + 2 * x0 ^ 3 * asinh (y0 / x0) 
+    - 2 * x0 ^ 3 * asinh ((a + y0) / x0)
+    + 2 * x0 ^ 3 * ln (r00 - y0)
+    + 4 * x0 ^ 3 * ln (y0 + r00) 
+    + 4 * y0 ^ 3 * ln (x0 + r00) 
+    - 2 * x0 ^ 3 * ln (axy3 - a - y0) 
+    - 4 * x0 ^ 3 * ln (a + y0 + axy3) 
+    - 4 * y0 ^ 3 * ln (a + x0 + axy1) 
+  ) / 24
+end
+
+;; Inverse hyperbolic sine required by mean-d-in-square-at
+to-report asinh [z]
+  report ln (z + sqrt (1 + z ^ 2))
+end
+
