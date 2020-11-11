@@ -21,6 +21,7 @@
 ;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 ;; DEALINGS IN THE SOFTWARE.
 
+
 ;; PATCH function
 ;; distributes the next generation to new locations
 ;; (which might be this patch in many cases!)
@@ -50,11 +51,13 @@ to disperse [next-gen]
   ])
 end
 
+
 ;; PATCH function
 ;; convenience reporter for patch-at from a coordinate pair list
 to-report my-patch-at [xy]
   report patch-at item 0 xy item 1 xy
 end
+
 
 ;; PATCH function
 ;; uses a kernel which is list of lists
@@ -112,6 +115,7 @@ to-report get-dispersal-counts [n]
   report map [ tgt -> (list tgt count-x-in-list targets tgt) ] counts
 end
 
+
 to-report count-x-in-list [L x]
   report length filter [ y -> y = x ] L
 end
@@ -119,36 +123,11 @@ end
 
 ;; setup dispersal kernels
 to setup-kernel
-;  setup-kernel-lists
   simulate-kernel
   reduce-kernel
   setup-patch-kernels
 end
 
-;to setup-kernel-lists
-;  ;; make a offset coordinate lists
-;  let r ceiling (min (list world-width world-height) / 2)
-;  let dxs n-values (2 * r + 1) [x -> x - r]
-;  let dys n-values (2 * r + 1) [y -> y - r]
-;
-;  ;; make empty lists
-;  set kernel-offsets []
-;  set kernel-weights []
-;
-;  ;; create the kernel offsets list
-;  foreach dxs [ x ->
-;    foreach dys [ y ->
-;      set kernel-offsets lput (list x y) kernel-offsets
-;    ]
-;  ]
-;  ;; sort in order of distance from the origin
-;  set kernel-offsets sort-by [ [xy1 xy2] -> dist xy1 < dist xy2 ] kernel-offsets
-;  if debug? [
-;    show dxs
-;    show dys
-;    show sublist kernel-offsets 0 10
-;  ]
-;end
 
 to simulate-kernel
   ask patches [ set freq 0 ]
@@ -190,12 +169,14 @@ to reduce-kernel
   set kernel zip kernel-offsets kernel-weights
 end
 
+
 to setup-patch-kernels
   ;; make patch local copy masked to only include patches that exist in the world
   ask patches [
     set my-kernel filter [ xyp -> my-patch-at item 0 xyp != nobody ] kernel
   ]
 end
+
 
 to show-kernel
   let mx-f max [ln (freq + 1)] of patches
@@ -204,34 +185,40 @@ to show-kernel
   ]
 end
 
+
 to-report get-kernel-mean-d
-;  report sum map [ xyw -> dist item 0 xyw * item 1 xyw ] kernel / sum map [ xyw -> item 1 xyw ] kernel
-  report sum map [ xyw -> (mean-d-in-patch-at item 0 xyw) * (item 1 xyw) ] kernel / sum map [ xyw -> item 1 xyw ] kernel
+  report sum map [ xyw -> (mean-d-to-patch-at item 0 xyw) * (item 1 xyw) ] kernel / sum map [ xyw -> item 1 xyw ] kernel
 end
+
 
 to-report get-coords [p]
   report (list ([pxcor] of p) ([pycor] of p))
 end
+
 
 ;; convenience distance reporter for coordinate pair
 to-report dist [xy]
   report sqrt (item 0 xy ^ 2 + item 1 xy ^ 2)
 end
 
+
 ;; utility function to zip two lists into a list of pairs
 to-report zip [L1 L2]
   report (map [ [a b] -> (list a b) ] L1 L2)
 end
+
 
 ;; transpose a list of lists
 to-report transpose [LL]
   report map [ i -> map [ a -> item i a ] LL ] index-list LL
 end
 
+
 ;; get a list of index positions for the supplied list
 to-report index-list [L]
   report n-values length first L [i -> i]
 end
+
 
 to-report eight-fold [xy]
   let x item 0 xy
@@ -240,26 +227,7 @@ to-report eight-fold [xy]
                (list y x) (list y (- x)) (list (- y) x) (list (- y) (- x)))
 end
 
+
 to-report patches-at [L p]
   report map [ xy -> [my-patch-at xy] of p ] L
 end
-
-;to setup-python
-;  py:setup py:python3
-;  py:run "import random"
-;  py:set "kernel" kernel-offsets
-;  py:set "weights" kernel-weights
-;  py:run "from collections import Counter"
-;end
-;
-;to-report py-multinomial [n]
-;;  py:set "kernel" kern
-;;  py:set "w" wghts
-;  py:set "n" n
-;  (py:run
-;    "offsets = random.choices(kernel, weights = weights, k = n)"
-;    "offsets = [tuple(L) for L in offsets]"
-;    "hist = Counter(offsets)"
-;  )
-;  report py:runresult "[z for z in zip([list(k) for k in hist.keys()], [v for v in hist.values()])]"
-;end

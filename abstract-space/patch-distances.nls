@@ -101,7 +101,7 @@ to-report mean-d-to-patch-at [xy]
   let y item 1 xy
   ifelse x = 0 and y = 0
   [ report 4 * mean-d-to-square-at 1e-8 1e-8 0.5 ]
-  [ report mean-d-in-square-at (abs x - 0.5) (abs y - 0.5) 1 ] 
+  [ report mean-d-to-square-at (abs x - 0.5) (abs y - 0.5) 1 ] 
 end
 
 ;; reports the mean distance of a square region
