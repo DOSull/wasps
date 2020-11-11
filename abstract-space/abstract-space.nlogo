@@ -84,8 +84,8 @@ patches-own [
 GRAPHICS-WINDOW
 198
 8
-615
-426
+614
+425
 -1
 -1
 8.0
@@ -215,7 +215,7 @@ p-ldd
 p-ldd
 0
 0.001
-1.0E-4
+0.0
 0.00001
 1
 NIL
@@ -267,7 +267,7 @@ show-pop
 show-pop
 0
 num-subpops
-1.0
+3.0
 1
 1
 NIL
@@ -385,7 +385,7 @@ mean-occupancy
 mean-occupancy
 0
 1
-0.54
+0.57
 0.01
 1
 NIL
@@ -913,6 +913,17 @@ NIL
 NIL
 NIL
 1
+
+MONITOR
+1182
+475
+1291
+520
+kernel-mean-d
+get-kernel-mean-d
+4
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?

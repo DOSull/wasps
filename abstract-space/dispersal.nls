@@ -143,7 +143,7 @@ end
 ;  ]
 ;  ;; sort in order of distance from the origin
 ;  set kernel-offsets sort-by [ [xy1 xy2] -> dist xy1 < dist xy2 ] kernel-offsets
-;  if debug? [ 
+;  if debug? [
 ;    show dxs
 ;    show dys
 ;    show sublist kernel-offsets 0 10
@@ -162,7 +162,7 @@ to simulate-kernel
       ]
     ]
   ]
-  set kernel-offsets [dxdy central-p self] of patches with [freq > 0] 
+  set kernel-offsets [dxdy central-p self] of patches with [freq > 0]
   set kernel-offsets sort-by [ [a b] -> dist a < dist b ] kernel-offsets
   set kernel-weights map [ xy -> mean map [ptch -> [freq] of ptch] (patches-at eight-fold xy central-p) ] kernel-offsets
 end
@@ -200,8 +200,12 @@ end
 to show-kernel
   let mx-f max [ln (freq + 1)] of patches
   ask patches [
-    set pcolor scale-color cyan ln (freq + 1) mx-f 0 
+    set pcolor scale-color cyan ln (freq + 1) mx-f 0
   ]
+end
+
+to-report get-kernel-mean-d
+  report sum map [ xyw -> dist item 0 xyw * item 1 xyw ] kernel / sum map [ xyw -> item 1 xyw ] kernel
 end
 
 to-report get-coords [p]
@@ -233,10 +237,98 @@ to-report eight-fold [xy]
   let y item 1 xy
   report (list (list x y) (list (- x) y) (list x (- y)) (list (- x) (- y))
                (list y x) (list y (- x)) (list (- y) x) (list (- y) (- x)))
-end 
+end
 
 to-report patches-at [L p]
   report map [ xy -> [my-patch-at xy] of p ] L
+end
+
+to-report mean-d-in-patch-at [a b]
+  ifelse a = 0 and b = 0
+  [ report 4 * mean-d-in-subpatch-at 0.000001 0.000001 0.5 ]
+  [ report mean-d-in-subpatch-at (a - 0.5) (b - 0.5) 1 ] 
+end
+
+to-report mean-d-in-subpatch-at [x0 y0 a]
+  let axy1 sqrt (a ^ 2 + 2 * a * x0 + x0 ^ 2 + y0 ^ 2)
+  let axy2 sqrt (2 * a ^ 2 + x0 ^ 2 + y0 ^ 2 + 2 * a * (x0 + y0))
+  let axy3 sqrt (a ^ 2 + x0 ^ 2 + 2 * a * y0 + y0 ^ 2)
+  let r00 dist (list x0 y0)
+  
+  report (   
+      8 * x0 * y0 * (r00 - axy1 + axy2 - axy3)
+    - 8 * a * y0 * (axy1 - axy2) 
+    - 8 * a * x0 * (axy3 - axy2) 
+    + 8 * a ^ 2 * axy2 
+    +   (x0 ^ 3 + 3 * a * x0 ^ 2 + 3 * a ^ 2 * x0 + a ^ 3) * (ln (axy2 - a - y0) - ln (axy1 - y0))
+    + 4 * (a ^ 3 + 3 * a ^ 2 * y0 + 3 * a * y0 ^ 2 + y0 ^ 3) * (ln (a + x0 + axy2) - ln (x0 + axy3))
+    + 5 * (a ^ 3 + 3 * a ^ 2 * x0 + 3 * a * x0 ^ 2 + x0 ^ 3) * (ln (a + y0 + axy2) - ln (y0 + axy1))
+    + 2 * x0 ^ 3 * asinh (y0 / x0) 
+    - 2 * x0 ^ 3 * asinh ((a + y0) / x0)
+    + 2 * x0 ^ 3 * ln (r00 - y0)
+    + 4 * x0 ^ 3 * ln (y0 + r00) 
+    + 4 * y0 ^ 3 * ln (x0 + r00) 
+    - 2 * x0 ^ 3 * ln (axy3 - a - y0) 
+    - 4 * x0 ^ 3 * ln (a + y0 + axy3) 
+    - 4 * y0 ^ 3 * ln (a + x0 + axy1) 
+  ) / 24
+end
+
+to-report asinh [z]
+  report ln (z + sqrt (1 + z ^ 2))
+end
+
+to-report distance-between-patches [p1 p2 style]
+  let numbers get-required-numbers style
+  let n1 item 0 numbers
+  let n2 item 1 numbers
+  let t1 measurement-turtles p1 n1
+  let t2 measurement-turtles p2 n2
+  let distances []
+  ask t1 [
+    ask t2 [
+      set distances lput distance myself distances
+      if n1 > 1 [
+        ask myself [ shuffle-in-patch ]
+      ]
+      if n2 > 1 and n1 > 1 [
+        shuffle-in-patch
+      ]
+    ]
+  ]
+  ask t1 [die]
+  ask t2 [die]
+  report mean distances
+end
+
+to-report measurement-turtles [p n]
+  let ts turtle-set nobody
+  ask p [
+    sprout n [ 
+      if n > 1 [ shuffle-in-patch ]
+      set ts (turtle-set ts self)
+    ]
+  ]
+  report ts
+end
+
+to shuffle-in-patch 
+  setxy pxcor + (random-float 1) - 0.5 pycor + (random-float 1) - 0.5
+end
+
+to-report get-required-numbers [s]
+  let src item 0 s
+  let dest item 1 s
+  ifelse src = "c" [
+    ifelse dest = "c"
+    [ report [1 1] ]
+    [ report [1 2500] ]
+  ]
+  [
+    ifelse dest = "c" 
+    [ report [2500 1] ]
+    [ report [50 50] ]
+  ]
 end
 
 ;to setup-python
