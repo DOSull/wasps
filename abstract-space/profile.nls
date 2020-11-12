@@ -40,14 +40,14 @@ to profile-get-binomial [n]
 end
 
 
-to profile-multinomial [n]
-  profiler:start
-  let pb n-values n [multinomial 100 n-values 3 [i -> random 10 + 1] true]
-  profiler:stop
-  print profiler:report
-  profiler:reset
-end
-
+;to profile-multinomial [n]
+;  profiler:start
+;  let pb n-values n [multinomial 100 n-values 3 [i -> random 10 + 1] true]
+;  profiler:stop
+;  print profiler:report
+;  profiler:reset
+;end
+;
 
 to profile-one-of-roads [n]
   profiler:start
@@ -66,4 +66,50 @@ to profile-setup
   setup
   profiler:stop
   print profiler:report
+end
+
+
+to profile-conditional-probs [n]
+  profiler:start
+  let x n-values 1000 [i -> random-poisson 10]
+  repeat n [
+    let a get-conditional-binom-probs x
+    let c conditional-probabilities x 
+  ]
+  profiler:stop
+  print profiler:report
+  profiler:reset
+end
+
+
+to profile-multinomial [n]
+  profiler:start
+  let x n-values 1000 [i -> random-poisson 10]
+  repeat n [
+    let a multinomial-float 100 x true
+    let c multinomial-int 100 x true 
+  ]
+  profiler:stop
+  print profiler:report
+  profiler:reset
+end
+
+
+to compare-dispersal [n]
+  set use-kernel-method? true
+  setup
+
+  profiler:start
+  repeat n [ go ]
+  profiler:stop
+  print profiler:report
+  profiler:reset
+
+  reset-map
+  set use-kernel-method? false
+  profiler:start
+  repeat n [ go ]
+  profiler:stop
+  print profiler:report
+  profiler:reset
 end

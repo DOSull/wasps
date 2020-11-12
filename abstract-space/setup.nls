@@ -87,6 +87,7 @@ to setup
   ask the-sea [set pcolor cyan + 4]
 
   renew-plots
+  if debug? [ reset-timer ]
 end
 
 
@@ -138,7 +139,7 @@ end
 to setup-patch-populations
   let initial-rel-pops (list (1 - proportion-gm) 1 0)
   ask the-habitable-land [
-    set next-pops multinomial int (capacity * random-normal mean-occupancy stdev-occupancy) initial-rel-pops false
+    set next-pops multinomial-int int (capacity * random-normal mean-occupancy stdev-occupancy) initial-rel-pops false
     set init-pops next-pops
     set init-pop sum next-pops
   ]

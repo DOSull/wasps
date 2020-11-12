@@ -57,7 +57,7 @@ to-report next-generation
   ;; the proportions of these in each of wild, GM and sterile
   ;; determined by w^2, 2gw, g^2
   let pop-rel binom-expansion but-last pops
-  report multinomial new-pop pop-rel true
+  report multinomial-int new-pop pop-rel true
 end
 
 ;; report binomial coefficients [x_0^2 2x-0x_1 x_1^2]
@@ -99,7 +99,7 @@ end
 to-report nbinomial-with-mean-vmr [m vmr]
   let r m / (vmr - 1)
   let p 1 - 1 / vmr 
-  if debug? [ show (word "m: " m "v " (vmr * m) " r: " r " p: " p) ]
+;  if debug? [ show (word "m: " m "v " (vmr * m) " r: " r " p: " p) ]
   report random-nbinomial r p
 end
 
@@ -113,16 +113,16 @@ end
 
 ;; perform repeated binomial draws from population n
 ;; without replacement, with p based on ratios determined 
-;; from the list of values in frequencies
+;; from the list of frequencies supplied - these can be floats 
 ;; rescale allows pre-calculation of the relative frequencies
 ;; if true the provided frequencies need to be calculated as we go
 ;; if false the provided frequencies can be used as-is
 ;; this is potentially useful for the spatial kernel where the frequencies 
 ;; remain fixed (not currently used...)
-to-report multinomial [n frequencies rescale?]
+to-report multinomial-float [n frequencies rescale?]
   let conditional-freqs []
   ifelse rescale? 
-  [ set conditional-freqs get-conditional-binom-probs frequencies ]
+  [ set conditional-freqs conditional-probabilities frequencies ]
   [ set conditional-freqs frequencies ]
   ;; empty list for the results
   let result []
@@ -136,7 +136,9 @@ to-report multinomial [n frequencies rescale?]
     ;; then it will be n1 / (total - n0), and so on
     let px first conditional-freqs
     ;; meanwhile the number remaining to be drawn is n - sum result, so...
-    set result sentence result binomial (n - sum result) px
+    ifelse px > 0
+    [ set result sentence result binomial (n - sum result) px ]
+    [ set result sentence result 0 ]
     set conditional-freqs but-first conditional-freqs
   ]
   ;; if the result is not the required length then pack it with zeros
@@ -144,6 +146,19 @@ to-report multinomial [n frequencies rescale?]
   [ report pack-zeros result num-values true]
   [ report result ]
 end
+
+;; this works ONLY with integer frequencies
+;; because that way we are guaranteed to get 
+;; a final probability of 1 (because floating-point 
+;; arithmetic with small numbers is a bit unreliable)
+to-report multinomial-int [n frequencies rescale?]
+  let conditional-freqs []
+  ifelse rescale? 
+  [ set conditional-freqs conditional-probabilities frequencies ]
+  [ set conditional-freqs frequencies ]
+  report reduce [ [a b] -> lput (ifelse-value (b > 0) [binomial (n - sum a) b] [0]) a] fput [] conditional-freqs
+end
+
 
 ;; reports the conditional probabilities required
 ;; for the multinomial generator
@@ -161,6 +176,15 @@ to-report get-conditional-binom-probs [frequencies]
   [ report rescaled ]  
 end
 
+
+to-report decrement [L]
+  report but-last reduce [ [a b] -> lput (last a - b) a ] fput (list sum L) L
+end
+
+;; this is much quicker (also hella hard to understand)
+to-report conditional-probabilities [frequencies]
+  report (map [ [f s] -> ifelse-value (s > 0) [f / s] [0] ] frequencies decrement frequencies)
+end
 
 ;; pack list out to length 0 with zeros
 ;; either post-pack or pre-pack depending on post

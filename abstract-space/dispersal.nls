@@ -74,10 +74,14 @@ end
 ;; by manipulating the kernel weights
 to disperse-using-kernel [n idx]
   if n > 0 [
-    foreach rnd:weighted-n-of-list-with-repeats n my-kernel [p -> last p] [ t ->
-      let xy item 0 t
-      disperse-to my-patch-at xy 1 idx
+    foreach rnd:weighted-n-of-list-with-repeats n my-kernel [p -> last p] [ pf ->
+      disperse-to item 0 pf 1 idx
     ]
+    ;; OD matrix method
+;    let w-pj matrix:get-row pathways id
+;    foreach rnd:weighted-n-of-list-with-repeats n patch-list [p -> item ([id] of p) w-pj] [ p ->
+;      disperse-to p 1 idx
+;    ]
   ]
 end
 
@@ -123,13 +127,13 @@ end
 
 ;; setup dispersal kernels
 to setup-kernel
-  if debug? [ reset-timer ] 
+  if debug? [ reset-timer ]
   simulate-kernel
   reduce-kernel
-  if debug? [ show (word "simulated kernel: " timer) ] 
-  if debug? [ reset-timer ] 
+  if debug? [ show (word "simulated kernel: " timer) ]
+  if debug? [ reset-timer ]
   setup-patch-kernels
-  if debug? [ show (word "set patch kernels: " timer) ] 
+  if debug? [ show (word "set patch kernels: " timer) ]
 end
 
 
@@ -147,7 +151,8 @@ to simulate-kernel
   ]
   set kernel-offsets [dxdy central-p self] of patches with [freq > 0]
   set kernel-offsets sort-by [ [a b] -> dist a < dist b ] kernel-offsets
-  set kernel-weights map [ xy -> mean map [ptch -> [freq] of ptch] (patches-at eight-fold xy central-p) ] kernel-offsets
+  ;; note that we use a sum here not a mean to ensure integers
+  set kernel-weights map [ xy -> sum map [ptch -> [freq] of ptch] (patches-at eight-fold xy central-p) ] kernel-offsets
 end
 
 
@@ -174,15 +179,31 @@ to setup-patch-kernels
   ;; make patch local copy masked to only include patches that exist in the world
   ask patches [
     set my-kernel filter [ xyp -> my-patch-at item 0 xyp != nobody ] kernel
-;    set my-kernel map [ xyp -> mask-missing-patches xyp ] kernel
+    set my-kernel map [ xyp -> replace-item 0 xyp my-patch-at item 0 xyp ] my-kernel
   ]
+  ;; this code will initialise a OD matrix for patches with
+  ;; entries given by the simulated kernel counts - initialisation is fast, but
+  ;; can't find a way to make it run similarly quickly
+;  set pathways matrix:make-constant count patches count patches 0
+;  set patch-list sort patches
+;  (foreach patch-list n-values count patches [i -> i] [ [p i] -> ask p [ set id i ] ])
+;  ask patches [
+;    let row array:from-list matrix:get-row pathways id
+;    foreach kernel [ xyn ->
+;      let p my-patch-at item 0 xyn
+;      if p != nobody [
+;        array:set row ([id] of p) (item 1 xyn)
+;      ]
+;    ]
+;    matrix:set-row pathways id array:to-list row
+;  ]
 end
 
-to-report mask-missing-patches [xyp]
-  ifelse my-patch-at item 0 xyp = nobody 
-  [ report replace-item 1 xyp 0 ]
-  [ report xyp ]
-end
+;to-report mask-missing-patches [xyp]
+;  ifelse my-patch-at item 0 xyp = nobody
+;  [ report replace-item 1 xyp 0 ]
+;  [ report xyp ]
+;end
 
 
 to show-kernel

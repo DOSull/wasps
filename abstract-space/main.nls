@@ -44,6 +44,7 @@ to go
   colour-patches
   renew-plots
   tick
+  if debug? and ticks mod 10 = 0 [ show (word ticks ": " timer) ]
 end
 
 ;; this is basic housekeeping on the various totals

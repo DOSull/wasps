@@ -28,20 +28,22 @@ __includes [
   "dispersal.nls"        ;; dispersal including calculation of kernels
   "reproduction.nls"     ;; reproduction including needed statistical distros
   "patch-distances.nls"  ;; measurement of patch distances recognising they are areas not points
-;;  "profile.nls"          ;; profilers for some parts of the model during development
+  "profile.nls"          ;; profilers for some parts of the model during development
 ]
 
 extensions [
   palette                ;; Brewer colour palettes
-;;  vid                    ;; video recording
-;;  gis                    ;; GIS data
-;;  profiler               ;; profiling
+  profiler               ;; profiling
   rnd                    ;; weighted random draws from lists and agentsets
+;  vid                    ;; video recording
+;  gis                    ;; GIS data
+;; needed for OD matrix method
+;  matrix
+;  array
 ]
 
 breed [ vizs viz ]       ;; to visualize population mix wild (red) vs GM (blue) across space
 breed [ roads road ]     ;; to visualize roads (and make it easy to turn them on/off
-
 
 globals [
   R-annual               ;; this year's mean R value
@@ -66,6 +68,9 @@ globals [
   the-habitable-land     ;; all patches with capacity > 0
   monitoring-area        ;; a subset of patches used to record time series data for model exploration
   central-p
+;; OD matrix method
+;  patch-list
+;  pathways
 ]
 
 patches-own [
@@ -80,6 +85,8 @@ patches-own [
   road?                  ;; if a road is present
   history                ;; a list recording population history for a patch in the monitoring area
   my-kernel              ;; a local copy of the dispersal kernel (which removes non-land patches from the base kernel
+;; OD matrix method
+;  id
 ]
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -216,7 +223,7 @@ p-ldd
 p-ldd
 0
 0.001
-0.0
+1.0E-4
 0.00001
 1
 NIL
@@ -242,7 +249,7 @@ d-mean
 d-mean
 0.01
 10
-1.47
+1.0
 0.01
 1
 NIL
@@ -373,7 +380,7 @@ SWITCH
 124
 use-seed?
 use-seed?
-1
+0
 1
 -1000
 
@@ -530,7 +537,7 @@ SWITCH
 518
 use-kernel-method?
 use-kernel-method?
-0
+1
 1
 -1000
 
@@ -552,7 +559,7 @@ SWITCH
 446
 use-logistic-map?
 use-logistic-map?
-1
+0
 1
 -1000
 
@@ -574,7 +581,7 @@ SWITCH
 536
 debug?
 debug?
-0
+1
 1
 -1000
 
@@ -587,7 +594,7 @@ var-mean-ratio
 var-mean-ratio
 1
 5
-1.0
+1.95
 0.01
 1
 NIL
