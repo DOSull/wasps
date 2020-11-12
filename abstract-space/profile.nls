@@ -69,19 +69,6 @@ to profile-setup
 end
 
 
-to profile-conditional-probs [n]
-  profiler:start
-  let x n-values 1000 [i -> random-poisson 10]
-  repeat n [
-    let a get-conditional-binom-probs x
-    let c conditional-probabilities x 
-  ]
-  profiler:stop
-  print profiler:report
-  profiler:reset
-end
-
-
 to profile-multinomial [n]
   profiler:start
   let x n-values 1000 [i -> random-poisson 10]
@@ -113,3 +100,15 @@ to compare-dispersal [n]
   print profiler:report
   profiler:reset
 end
+
+to compare-count-matches [n]
+  profiler:start
+  let L n-values 1000 [i -> random-poisson 5]
+  repeat n [ 
+    let y count-x-in-list-r L 1
+    let z count-x-in-list L 1
+  ]
+  profiler:stop
+  print profiler:report
+  profiler:reset
+end  

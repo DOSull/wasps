@@ -38,31 +38,27 @@ to-report next-generation
     set R-local (1 - mortality) + (R-annual + mortality) * (1 - pop / capacity) 
   ]
   
-  let new-pop (R-local * reproductive)
-  if new-pop < 1 [
+  let expected-new-pop (R-local * reproductive)
+  if expected-new-pop < 1 [
     report [0 0 0]
   ]
+  let actual-new-pop expected-new-pop
   if stochastic-repro? [ 
     ifelse var-mean-ratio = 1 
-    [ set new-pop random-poisson new-pop ]
-    [ set new-pop nbinomial-with-mean-vmr new-pop var-mean-ratio ]
+    [ set actual-new-pop random-poisson expected-new-pop ]
+    [ set actual-new-pop nbinomial-with-mean-vmr expected-new-pop var-mean-ratio ]
   ]
-  
-  ;; where lambda is effectively old-lambda - 1
-  ;; (and perhaps should be redesignated r)
-  ;;
-  ;; let new-pop random-poisson (lambda * reproductive)
-  
-  ;; let new-pop reproductive + random-poisson (lambda * reproductive)
-  ;; the proportions of these in each of wild, GM and sterile
-  ;; determined by w^2, 2gw, g^2
-  let pop-rel binom-expansion but-last pops
-  report multinomial-int new-pop pop-rel true
+  ;; the proportions of actual-new-pop in each of wild, GM and sterile
+  ;; determined by w^2, 2gw, g^2 i.e. binomial expansion of (w + gm)^2
+  let pop-rel binomial-expansion but-last pops
+  report multinomial-int actual-new-pop pop-rel true
 end
 
 ;; report binomial coefficients [x_0^2 2x-0x_1 x_1^2]
 ;; from an input list [x0 x1]
-to-report binom-expansion [x]
+;; there is probably a way to generalise this to more terms
+;; using a reduce operation, but hey, life's too short
+to-report binomial-expansion [x]
   let x0 item 0 x
   let x1 item 1 x
   report (list (x0 * x0) (2 * x0 * x1) (x1 * x1))
@@ -114,11 +110,13 @@ end
 ;; perform repeated binomial draws from population n
 ;; without replacement, with p based on ratios determined 
 ;; from the list of frequencies supplied - these can be floats 
-;; rescale allows pre-calculation of the relative frequencies
-;; if true the provided frequencies need to be calculated as we go
+;; although if ints can be arranged, then use multinomial-int 
+;; instead as it will be quicker
+;; rescale? allows pre-calculation of the relative frequencies
+;; if true the provided frequencies are calculated as we go
 ;; if false the provided frequencies can be used as-is
-;; this is potentially useful for the spatial kernel where the frequencies 
-;; remain fixed (not currently used...)
+;; this could be useful for the spatial kernel where the frequencies 
+;; do not change
 to-report multinomial-float [n frequencies rescale?]
   let conditional-freqs []
   ifelse rescale? 
@@ -147,44 +145,39 @@ to-report multinomial-float [n frequencies rescale?]
   [ report result ]
 end
 
-;; this works ONLY with integer frequencies
-;; because that way we are guaranteed to get 
-;; a final probability of 1 (because floating-point 
-;; arithmetic with small numbers is a bit unreliable)
+;; this works ONLY with integer frequencies but is faster than the -float version
+;; because that way we are guaranteed to get a final probability of 1 
+;; (because floating-point arithmetic with small numbers is unreliable
+;; and will often produce rescaled probabilities that terminate with
+;; a value greater or less than 1. Greater than will cause an error
+;; in the binomial draw and less than may cause the total not to sum
+;; to n, since there is a small probability the last case won't happen
 to-report multinomial-int [n frequencies rescale?]
   let conditional-freqs []
   ifelse rescale? 
   [ set conditional-freqs conditional-probabilities frequencies ]
   [ set conditional-freqs frequencies ]
-  report reduce [ [a b] -> lput (ifelse-value (b > 0) [binomial (n - sum a) b] [0]) a] fput [] conditional-freqs
+  report reduce [ [a p] -> lput (ifelse-value (p > 0) [binomial (n - sum a) p] [0]) a] fput [] conditional-freqs
 end
 
 
-;; reports the conditional probabilities required
-;; for the multinomial generator
-to-report get-conditional-binom-probs [frequencies]
-  let length-reqd length frequencies
-  let rescaled []
-  let f 0
-  while [sum frequencies > 0] [
-    set f first frequencies
-    set rescaled lput (f / sum frequencies) rescaled
-    set frequencies but-first frequencies
-  ]
-  ifelse length rescaled < length-reqd 
-  [ report pack-zeros rescaled length-reqd true ]
-  [ report rescaled ]  
+;; for a provided list of relative frequencies [f_i] 
+;; returns the conditional probabilities [f_i / sum_i..n f_i]
+to-report conditional-probabilities [frequencies]
+  report (map [ [f s] -> ifelse-value (s > 0) [f / s] [0] ] frequencies cumulative-remainder frequencies)
 end
 
-
-to-report decrement [L]
+;; for a list [x_i] returns [sum_i..n x_i]
+;; e.g. 1 2 3 4 5 6 --> 21 20 18 15 11 6
+;; same as reverse cumulative-sum reverse L
+to-report cumulative-remainder [L]
   report but-last reduce [ [a b] -> lput (last a - b) a ] fput (list sum L) L
 end
 
-;; this is much quicker (also hella hard to understand)
-to-report conditional-probabilities [frequencies]
-  report (map [ [f s] -> ifelse-value (s > 0) [f / s] [0] ] frequencies decrement frequencies)
+to-report cumulative-sum [L]
+  report but-first reduce [ [a b] -> lput (last a + b) a ] fput [0] L
 end
+
 
 ;; pack list out to length 0 with zeros
 ;; either post-pack or pre-pack depending on post

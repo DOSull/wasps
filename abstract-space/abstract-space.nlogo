@@ -37,9 +37,12 @@ extensions [
   rnd                    ;; weighted random draws from lists and agentsets
 ;  vid                    ;; video recording
 ;  gis                    ;; GIS data
-;; needed for OD matrix method
-;  matrix
+
+;; ----------------
+;; OD matrix method
+  matrix
 ;  array
+;; ----------------
 ]
 
 breed [ vizs viz ]       ;; to visualize population mix wild (red) vs GM (blue) across space
@@ -68,9 +71,12 @@ globals [
   the-habitable-land     ;; all patches with capacity > 0
   monitoring-area        ;; a subset of patches used to record time series data for model exploration
   central-p
+
+;; ----------------
 ;; OD matrix method
 ;  patch-list
 ;  pathways
+;; ----------------
 ]
 
 patches-own [
@@ -85,8 +91,11 @@ patches-own [
   road?                  ;; if a road is present
   history                ;; a list recording population history for a patch in the monitoring area
   my-kernel              ;; a local copy of the dispersal kernel (which removes non-land patches from the base kernel
+
+;; ----------------
 ;; OD matrix method
 ;  id
+;; ----------------
 ]
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -537,7 +546,7 @@ SWITCH
 518
 use-kernel-method?
 use-kernel-method?
-1
+0
 1
 -1000
 
