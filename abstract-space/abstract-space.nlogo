@@ -242,7 +242,7 @@ d-mean
 d-mean
 0.01
 10
-0.79
+1.47
 0.01
 1
 NIL
@@ -552,7 +552,7 @@ SWITCH
 446
 use-logistic-map?
 use-logistic-map?
-0
+1
 1
 -1000
 
@@ -574,7 +574,7 @@ SWITCH
 536
 debug?
 debug?
-1
+0
 1
 -1000
 

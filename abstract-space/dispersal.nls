@@ -123,9 +123,13 @@ end
 
 ;; setup dispersal kernels
 to setup-kernel
+  if debug? [ reset-timer ] 
   simulate-kernel
   reduce-kernel
+  if debug? [ show (word "simulated kernel: " timer) ] 
+  if debug? [ reset-timer ] 
   setup-patch-kernels
+  if debug? [ show (word "set patch kernels: " timer) ] 
 end
 
 
@@ -155,17 +159,13 @@ end
 
 
 to reduce-kernel
-  ;; assign the relative weights
-  ;; this doesn't seem to get the weights right essentially
-  ;; because the mean distance to origin of a unit square is not
-  ;; the distance at the centre
-  ;set kernel-weights map [ xy -> 1 / d-mean / exp (dist xy / d-mean) ] kernel-offsets
   ;; normalise to sum to 1 and filter to keep only those with p > p-ldd
   let total-w sum kernel-weights
   set kernel-weights filter [ w -> w / total-w > p-ldd ] kernel-weights
   ;; apply corresponding filter to the offsets
   let kernel-size length kernel-weights
   set kernel-offsets sublist kernel-offsets 0 kernel-size
+  ;; zip them together into a single list of two lists
   set kernel zip kernel-offsets kernel-weights
 end
 
@@ -174,7 +174,14 @@ to setup-patch-kernels
   ;; make patch local copy masked to only include patches that exist in the world
   ask patches [
     set my-kernel filter [ xyp -> my-patch-at item 0 xyp != nobody ] kernel
+;    set my-kernel map [ xyp -> mask-missing-patches xyp ] kernel
   ]
+end
+
+to-report mask-missing-patches [xyp]
+  ifelse my-patch-at item 0 xyp = nobody 
+  [ report replace-item 1 xyp 0 ]
+  [ report xyp ]
 end
 
 
