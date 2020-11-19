@@ -21,107 +21,255 @@
 ;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 ;; DEALINGS IN THE SOFTWARE.
 
-to disperse
-  (foreach (get-next-generation) (n-values num-pops [i -> i]) [
-    [new-cases idx] ->
-    ifelse new-cases > 0 [
+
+;; PATCH function
+;; distributes the next generation to new locations
+;; (which might be this patch in many cases!)
+to disperse [next-gen]
+  ;; next generation is a set of 3 numbers [wild GM sterile]
+  ;; which we iterate over incrementing the index position each time
+  (foreach next-gen (n-values num-subpops [i -> i]) [ [new-cases idx] ->
+    ;; previously this was an ifelse clause
+    ;; IMPORTANT: that causes incorrect erasure of previously dispersed
+    ;; new-cases from patches processed earlier in the loop
+    if new-cases > 0 [
+      ;; determine any long-distance dispersals and apply them
       let n-ldds binomial new-cases p-ldd
       repeat n-ldds [
         disperse-to one-of roads 1 idx
       ]
-      ifelse use-kernel-method? [
-        if new-cases > n-ldds [
-          let targets rnd:weighted-n-of-list-with-repeats (new-cases - n-ldds) my-kernel [p -> last p]
-;          let targets rnd:weighted-n-of-list-with-repeats (new-cases - n-ldds) kernel [p -> ifelse-value (my-patch-at first p = nobody) [0] [last p]]
-          foreach targets [
-            t ->
-            let xy item 0 t
-            let x item 0 xy
-            let y item 1 xy
-            disperse-to patch-at x y 1 idx
-          ]
-        ]
-      ]
-      [
-        repeat (new-cases - n-ldds) [
-          let target nobody
-          while [target = nobody] [
-            set target patch-at-heading-and-distance (random-float 360) (random-exponential d-mean)
-          ]
-          ask target [
-            if capacity > 0 [
-              set next-pops replace-item idx next-pops (item idx next-pops + 1)
-            ]
-          ]
-        ]
-      ]
+      ;; now do the locals remaining (this will be most of them)
+      ifelse  use-kernel-method?
+      [ disperse-using-kernel (new-cases - n-ldds) idx]
+      [ disperse-using-heading-and-distance (new-cases - n-ldds) idx ]
     ]
-    [
-      set next-pops replace-item idx next-pops 0
-    ]
+    ;; DON'T reimplement this!
+;    [ ;; if for some reason you do, then use the increment-list-item version
+;      set next-pops increment-list-item next-pops idx 0
+;      set next-pops replace-item idx next-pops 0
+;    ]
   ])
 end
 
 
+;; PATCH function
+;; convenience reporter for patch-at from a coordinate pair list
 to-report my-patch-at [xy]
   report patch-at item 0 xy item 1 xy
 end
 
 
+;; PATCH function
+;; uses a kernel which is list of lists
+;; [[ offset-x offset-y ] weight ]
+;; n is the number of individuals
+;; idx is their type 0 = wild 1 = GM 2 = sterile
+;;
+;; this appears to run more slowly than the simple heading and distance
+;; formula in spite of repeated efforts to speed it up
+;; I think it's because often the kernel has several hundred bins
+;; and so there is not much gained assigning cases to several hundred
+;; bins versus a thousand or so random heading distance draws
+;; Also problematic is that it is difficult to get the right mean distance
+;; by manipulating the kernel weights
+to disperse-using-kernel [n idx]
+  if n > 0 [
+    foreach rnd:weighted-n-of-list-with-repeats n my-kernel [p -> last p] [ pf ->
+      disperse-to item 0 pf 1 idx
+    ]
+  ]
+;; ----------------
+;; OD matrix method
+;    let w-pj matrix:get-row pathways id
+;    foreach rnd:weighted-n-of-list-with-repeats n patch-list [p -> item ([id] of p) w-pj] [ p ->
+;      disperse-to p 1 idx
+;    ]
+;; ----------------
+end
+
+;; PATCH function
+;; simple dispersal by selection of random heading and distance
+to disperse-using-heading-and-distance [n idx]
+  repeat n [
+    let target nobody
+    while [target = nobody] [
+      set target patch-at-heading-and-distance (random-float 360) (random-exponential d-mean)
+    ]
+    disperse-to target 1 idx
+  ]
+end
+
+
+;; PATCH function
+;; disperse to the specified target patch
+;; the specified number of cases of the
+;; specified type 0 = wild 1 = GM 2 = sterile
 to disperse-to [tgt num idx-type]
-  if tgt != nobody [
-    ask tgt [
-      if capacity > 0 [
-        set next-pops replace-item idx-type next-pops (item idx-type next-pops + num)
+  ask tgt [
+    if capacity > 0 [
+      increment-population idx-type num
+    ]
+  ]
+end
+
+
+;; counts items matching x in list L
+to-report count-x-in-list-r [L x]
+  report reduce [ [a b] -> ifelse-value (b = x) [a + 1] [a] ] fput 0 L 
+end
+;; FASTER!
+to-report count-x-in-list [L x]
+  report length filter [ y -> y = x ] L
+end
+
+
+;; setup dispersal kernels
+;; makes a 'universal' kernel by simulation 
+;; kernel is two lists kernel-offsets and kernel-weights
+;; offsets stores [dx dy] pairs and weights the number of dispersals n from [0 0] that 'hit' them
+;; these are then zipped into a list of [[dx dy] n] pairs (for convenience)
+;; the universal kernel is then applied to each patch, removing any missing patches, i.e.
+;; those that are outside the world or inaccessible for some other reason
+;; the local patch kernels also resolve the [dx dy] entries to actual patches
+to setup-kernel
+  if debug? [ reset-timer ]
+  simulate-kernel
+  reduce-kernel
+  if debug? [ show (word "simulated kernel: " timer) ]
+  if debug? [ reset-timer ]
+  setup-patch-kernels
+  if debug? [ show (word "set patch kernels: " timer) ]
+end
+
+;; run 1 million dispersals from some central patch and 
+;; build offset and weights lists accordingly
+to simulate-kernel
+  ask patches [ set freq 0 ]
+  ask central-p [
+    repeat 1000000 [
+      let tgt patch-at-heading-and-distance random 360 random-exponential d-mean
+      if tgt != nobody [
+        ask tgt [
+          set freq freq + 1
+        ]
       ]
     ]
   ]
+  set kernel-offsets [dxdy central-p self] of patches with [freq > 0]
+  set kernel-offsets sort-by [ [a b] -> dist a < dist b ] kernel-offsets
+  ;; note that we use a sum here not a mean to ensure integers
+  ;; integer counts are easier to deal with in some of the probabilistic
+  ;; random selection stuff later...
+  ;; eight-fold averages the hits by 45deg symmetries of the grid
+  set kernel-weights map [ xy -> sum map [ptch -> [freq] of ptch] (patches-at eight-fold xy central-p) ] kernel-offsets
 end
 
-
-to-report get-dispersal-counts [n]
-  let targets rnd:weighted-n-of-list-with-repeats n kernel [p -> last p]
-  set targets map [ xy -> first xy ] targets
-  let unique-targets remove-duplicates targets
-  report map [tgt -> (list tgt (length filter [xy -> xy = tgt] targets)) ] unique-targets 
+;; reports the dx dy offset of p2 from p1 as a pair of coordinates
+to-report dxdy [p1 p2]
+  let xy1 get-coords p1
+  let xy2 get-coords p2
+  report (list (item 0 xy2 - item 0 xy1) (item 1 xy2 - item 1 xy1))
 end
 
-
-to setup-kernels
-  let r ceiling d-mean * 5
-  let dxs n-values (2 * r + 1) [x -> x - r]
-  let dys n-values (2 * r + 1) [y -> y - r]
-  
-  set kernel-offsets []
-  set kernel-weights []
-  
-  foreach dxs [ x ->
-    foreach dys [ y ->
-      set kernel-offsets lput (list x y) kernel-offsets 
-    ]
-  ]
-  set kernel-offsets filter [ xy -> dist xy <= r ] kernel-offsets
-  set kernel-offsets sort-by [ [xy1 xy2] -> dist xy1 < dist xy2 ] kernel-offsets
-  set kernel-weights map [ xy -> 1 / d-mean / exp (dist xy / d-mean) ] kernel-offsets
+;;only retain entries where prob is greater than p-ldd
+;; THIS MIGHT NOT MAKE COMPLETE SENSE - rethink?
+to reduce-kernel
+  ;; zip them together into a single list of pairs
+  set kernel zip kernel-offsets kernel-weights
+  ;; normalise to sum to 1 and filter to keep only those with p > p-ldd
   let total-w sum kernel-weights
-  set kernel-weights filter [ w -> w / total-w > p-ldd ] kernel-weights
-  let kernel-size length kernel-weights
-  set kernel-offsets sublist kernel-offsets 0 kernel-size
-;  set conditional-kernel-weights get-conditional-binom-probs kernel-weights
-;  set cumulative-kernel-weights cum-frequencies kernel-weights
-  set kernel (map [ [o p] -> (list o p) ] kernel-offsets kernel-weights) 
+  set kernel filter [ xyw -> item 1 xyw / total-w > p-ldd ] kernel
+end
+
+
+;; local kernels
+to setup-patch-kernels
+  ;; make patch local copy masked to only include patches that exist in the world
   ask patches [
-    set my-kernel filter [ xyp -> my-patch-at item 0 xyp != nobody and [capacity] of my-patch-at item 0 xyp > 0 ] kernel
+    set my-kernel filter [ xyp -> my-patch-at item 0 xyp != nobody ] kernel
+    ;; also replace the offset dx dy pairs with actual patches
+    set my-kernel map [ xyp -> replace-item 0 xyp my-patch-at item 0 xyp ] my-kernel
+  ]
+;; ----------------
+;; OD matrix method
+;; this code will initialise a OD matrix for patches with
+;; entries given by the simulated kernel counts - initialisation is fast, but
+;; can't find a way to make it run similarly quickly
+;  set pathways matrix:make-constant count patches count patches 0
+;  set patch-list sort patches
+;  (foreach patch-list n-values count patches [i -> i] [ [p i] -> ask p [ set id i ] ])
+;  ask patches [
+;    let row array:from-list matrix:get-row pathways id
+;    foreach kernel [ xyn ->
+;      let p my-patch-at item 0 xyn
+;      if p != nobody [
+;        array:set row ([id] of p) (item 1 xyn)
+;      ]
+;    ]
+;    matrix:set-row pathways id array:to-list row
+;  ]
+;; ----------------
+end
+
+
+;; displays the kernel (log scaled)
+to show-kernel
+  let mx-f max [ln (freq + 1)] of patches
+  ask patches [
+    set pcolor scale-color cyan ln (freq + 1) mx-f 0
   ]
 end
 
+;; estimates the mean distance represented by the dispersal kernel
+;; it's not entirely reliable due to (i) long jumps lost because they
+;; escape the world, and (ii) underestimation of the distance to patches
+;; because these are scaled as if probability in a patch was even - which
+;; is clearly not the case given the exponential kernel
+to-report get-kernel-mean-d
+  report sum map [ xyw -> (mean-d-to-patch-at item 0 xyw) * (item 1 xyw) ] kernel / sum map [ xyw -> item 1 xyw ] kernel
+end
+
+
+;; returns coodinates of a patch as a list
+to-report get-coords [p]
+  report (list ([pxcor] of p) ([pycor] of p))
+end
+
+
+;; convenience distance reporter for coordinate pair
 to-report dist [xy]
   report sqrt (item 0 xy ^ 2 + item 1 xy ^ 2)
 end
 
 
-to-report cum-frequencies [k]
-  let total-freqs sum k
-  let freqs map [ f -> f / total-freqs ] k
-  report reduce [ [a b] -> lput (last a + b) a ] (fput (list first freqs) but-first freqs)  
+;; utility function to zip two lists into a list of pairs
+to-report zip [L1 L2]
+  report (map [ [a b] -> (list a b) ] L1 L2)
+end
+
+
+;; transpose a list of lists
+;; note that this can be used to unzip a previously zipped pair of lists 
+to-report transpose [LL]
+  let index n-values length first LL [i -> i]
+  report map [ i -> map [ x -> item i x ] LL ] index
+end
+
+
+;; for cordinate pair xy reports the 8 symmetric coordinate pairs
+;; from reflection in the axes and in the lines x = y and x = -y
+to-report eight-fold [xy]
+  let x item 0 xy
+  let y item 1 xy
+  report (list (list x y) (list (- x) y) (list x (- y)) (list (- x) (- y))
+               (list y x) (list y (- x)) (list (- y) x) (list (- y) (- x)))
+end
+
+;; reports a list of patches at the supplied offsets from the requested patch
+to-report patches-at [L p]
+  report map [ xy -> [my-patch-at xy] of p ] L
+end
+
+to-report my-patches-at [L]
+  report patches-at L self
 end

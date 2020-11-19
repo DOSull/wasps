@@ -21,72 +21,89 @@
 ;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 ;; DEALINGS IN THE SOFTWARE.
 
-__includes [ "setup.nls" "main.nls" "display.nls"
-  "dispersal.nls" "reproduction.nls"
-  "profile.nls" ]
+__includes [
+  "setup.nls"            ;; model initialisation
+  "main.nls"             ;; the main model loop
+  "display.nls"          ;; display updates
+  "dispersal.nls"        ;; dispersal including calculation of kernels
+  "reproduction.nls"     ;; reproduction including needed statistical distros
+  "patch-distances.nls"  ;; measurement of patch distances recognising they are areas not points
+  "profile.nls"          ;; profilers for some parts of the model during development
+]
 
-extensions [ palette vid gis profiler array rnd ]
+extensions [
+  palette                ;; Brewer colour palettes
+  profiler               ;; profiling
+  rnd                    ;; weighted random draws from lists and agentsets
+;  vid                    ;; video recording
+  gis                    ;; GIS data
 
-breed [ vizs viz ]
-breed [ roads road ]
+;; ----------------
+;; OD matrix method
+  matrix
+;  array
+;; ----------------
+]
+
+breed [ vizs viz ]       ;; to visualize population mix wild (red) vs GM (blue) across space
+breed [ roads road ]     ;; to visualize roads (and make it easy to turn them on/off
 
 globals [
-  ;; population related
-  num-pops
-  total-pop
-  capacities
-  mean-occupancy-rate
+  R-annual               ;; this year's mean R value
+  num-subpops            ;; the number of subpopulations (3 in the wasps model)
+  total-pop              ;; total population across the landscape
+  mean-occupancy-rate    ;; the mean population as a proportion of capacity
 
   ;; dispersal related
-  total-extent
-  prop-occupied
+  total-extent           ;; the total number of patches with any wasps present
+  prop-occupied          ;; the proportion of all habitable patches with any wasps present
 
-  ;mean-d
-  ;min-d
-  ;max-d
-  source
+  kernel-offsets         ;; list of [dx dy] values for the dispersal kernel
+  kernel-weights         ;; list of relative weights for kernel offsets (ordered per the offsets)
+  kernel                 ;; the list [kernel-offsets kernel-weights]
 
-  kernel-offsets
-  kernel-weights
-  kernel
-
-  ;; colour palettes for display
-  pals
+  pals                   ;; colour palettes for display in the order wild, gm, sterile, total
 
   ;; subsets of the patches
-  the-land
-  the-sea
-  the-roads
-  the-habitable-land
-  potential-release-sites
-  monitoring-area
+  the-land               ;; all non-sea patches
+  the-sea                ;; all sea patches
+  the-roads              ;; all patches with a road present
+  the-habitable-land     ;; all patches with capacity > 0
+  monitoring-area        ;; a subset of patches used to record time series data for model exploration
+  central-p
 
-  ;; distances of successful dispersals
-  ;; distances
-
-  ;; history of populations
-;  pop-history
-;  wild-history
-;  gm-history
+  use-kernel-method?
+  debug?
+;; ----------------
+;; OD matrix method
+;  patch-list
+;  pathways
+;; ----------------
 ]
 
 patches-own [
-  capacity
-  pop
-  pops
-  next-pops
-  init-pop
-  init-pops
-  lambda-local
-  road?
-  history
-  my-kernel
+  freq                   ;; used to initialise the dispersal kernel
+  capacity               ;; carrying capacity
+  pop                    ;; total population
+  pops                   ;; a list of subpopulations [wild GM sterile]
+  next-pops              ;; the populations that will exist next year
+  init-pop               ;; initial total population to enable quick restart
+  init-pops              ;; initial list of subpopulations to enable quick restart
+  R-local                ;; the local R value based on population and capacity constraint (1 - n/k)
+  road?                  ;; if a road is present
+  history                ;; a list recording population history for a patch in the monitoring area
+  my-kernel              ;; a local copy of the dispersal kernel (which removes non-land patches from the base kernel
+
+;; ----------------
+;; OD matrix method
+;  id
+;; ----------------
 ]
 @#$#@#$#@
 GRAPHICS-WINDOW
-207
+193
 10
-633
+619
 671
 -1
 -1
@@ -108,13 +125,13 @@ GRAPHICS-WINDOW
 1
 1
 ticks
-30.0
+100.0
 
 BUTTON
-646
-13
-709
-46
+625
+17
+688
+50
 NIL
 setup
 NIL
@@ -128,25 +145,25 @@ NIL
 1
 
 SLIDER
-27
-10
-199
-43
-lambda-mean
-lambda-mean
+13
+32
+185
+65
+R-mean
+R-mean
 1.0
 4
-2.3
+1.3
 0.01
 1
 NIL
 HORIZONTAL
 
 BUTTON
-646
-50
-709
-83
+625
+54
+688
+87
 step
 go
 NIL
@@ -160,10 +177,10 @@ NIL
 1
 
 BUTTON
-646
-86
-709
-119
+625
+90
+688
+123
 NIL
 go
 T
@@ -177,10 +194,10 @@ NIL
 1
 
 MONITOR
-17
-480
-85
-525
+1063
+426
+1181
+471
 NIL
 total-pop
 0
@@ -188,10 +205,10 @@ total-pop
 11
 
 PLOT
-638
-283
-954
-617
+628
+426
+1054
+672
 Populations
 NIL
 NIL
@@ -209,25 +226,25 @@ PENS
 "dying" 1.0 0 -13840069 true "" ""
 
 SLIDER
-25
-141
-197
-174
+13
+548
+185
+581
 p-ldd
 p-ldd
 0
 0.001
-1.0E-4
+0.001
 0.00001
 1
 NIL
 HORIZONTAL
 
 MONITOR
-91
-480
-196
-525
+1063
+475
+1182
+520
 NIL
 prop-occupied
 3
@@ -235,40 +252,25 @@ prop-occupied
 11
 
 SLIDER
-26
-47
-198
-80
-lambda-sd
-lambda-sd
-0
-0.25
-0.0
-0.001
-1
-NIL
-HORIZONTAL
-
-SLIDER
-26
-99
-198
-132
+16
+473
+188
+506
 d-mean
 d-mean
 0.01
 10
-1.22
+1.0
 0.01
 1
 NIL
 HORIZONTAL
 
 MONITOR
-43
-530
-197
-575
+1062
+525
+1200
+570
 mean-occupancy-rate
 mean-occupancy-rate
 3
@@ -276,29 +278,29 @@ mean-occupancy-rate
 11
 
 SLIDER
-654
-199
-773
-232
+625
+295
+744
+328
 show-pop
 show-pop
 0
-num-pops
-3.0
+num-subpops
+0.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-681
-164
-820
-197
-base-prop-gm
-base-prop-gm
+988
+325
+1159
+358
+proportion-gm
+proportion-gm
 0
-0.5
+1
 0.0
 0.01
 1
@@ -306,12 +308,12 @@ NIL
 HORIZONTAL
 
 BUTTON
-788
-241
-920
-275
-NIL
-color-patches\n
+627
+343
+744
+377
+redraw map
+colour-patches\n
 NIL
 1
 T
@@ -323,10 +325,10 @@ NIL
 1
 
 SWITCH
-777
-199
-917
-232
+625
+246
+745
+279
 show-pop?
 show-pop?
 0
@@ -334,10 +336,10 @@ show-pop?
 -1000
 
 BUTTON
-717
-13
-823
-47
+626
+149
+732
+183
 NIL
 reset-map
 NIL
@@ -351,11 +353,11 @@ NIL
 1
 
 BUTTON
-640
-242
-782
-276
-toggle-roads
+628
+383
+743
+417
+toggle roads
 ask roads [set hidden? not hidden?]
 NIL
 1
@@ -368,76 +370,76 @@ NIL
 1
 
 SLIDER
-844
-15
-951
-48
+708
+53
+847
+86
 seed
 seed
 0
 1000
-1.0
+0.0
 1
 1
 NIL
 HORIZONTAL
 
 SWITCH
-811
-53
-953
-86
+707
+91
+849
+124
 use-seed?
 use-seed?
-1
+0
 1
 -1000
 
 SLIDER
-823
-126
-952
-159
-init-mean-occ
-init-mean-occ
+874
+70
+1039
+103
+mean-occupancy
+mean-occupancy
 0
 1
-0.5
+0.57
 0.01
 1
 NIL
 HORIZONTAL
 
 SLIDER
-823
-162
-951
-195
-init-sd-occ
-init-sd-occ
+874
+107
+1040
+140
+stdev-occupancy
+stdev-occupancy
 0
 0.5
-0.0
+0.05
 0.001
 1
 NIL
 HORIZONTAL
 
 CHOOSER
-20
-189
-196
-234
+874
+170
+1050
+215
 scenario
 scenario
 "base plus release sites" "release sites only" "base only"
 0
 
 SLIDER
-18
-277
-190
-310
+1123
+32
+1295
+65
 number-of-sites
 number-of-sites
 0
@@ -449,32 +451,32 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-22
-240
-172
-270
-Parameters for \"release sites\" scenario
+1119
+10
+1424
+28
+Parameters for any \"release sites\" scenario
 12
 0.0
 1
 
 TEXTBOX
-750
-122
-820
-152
-Base pop initialisation
-12
+877
+10
+1040
+28
+Population initialisation
+14
 0.0
 1
 
 SLIDER
-18
-315
-190
-348
-wasps-per-site
-wasps-per-site
+1123
+70
+1294
+103
+colonies-per-site
+colonies-per-site
 0
 1000
 500.0
@@ -484,10 +486,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-18
-353
-190
-386
+1123
+108
+1295
+141
 percentile-selector
 percentile-selector
 0
@@ -499,10 +501,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-15
-393
-190
-426
+1124
+221
+1296
+254
 release-type
 release-type
 0
@@ -513,39 +515,11 @@ release-type
 NIL
 HORIZONTAL
 
-SWITCH
-6
-640
-201
-673
-track-monitoring-area?
-track-monitoring-area?
-0
-1
--1000
-
-BUTTON
-68
-599
-193
-633
-NIL
-save-monitor
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 SLIDER
-17
-431
-190
-464
+1124
+166
+1297
+199
 periodicity
 periodicity
 0
@@ -557,75 +531,404 @@ NIL
 HORIZONTAL
 
 SWITCH
-813
-90
-951
-123
-homogenous?
-homogenous?
+988
+285
+1159
+318
+homogeneous?
+homogeneous?
 1
 1
 -1000
 
 SWITCH
-650
-636
-850
-669
-use-kernel-method?
-use-kernel-method?
-1
+1275
+522
+1467
+555
+use-logistic-map?
+use-logistic-map?
+0
 1
 -1000
 
-MONITOR
-863
-637
-951
-682
-kernel-area
-length kernel
+SWITCH
+13
+260
+183
+293
+stochastic-repro?
+stochastic-repro?
 0
 1
+-1000
+
+SLIDER
+13
+390
+185
+423
+var-mean-ratio
+var-mean-ratio
+1
+5
+2.0
+0.01
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+1298
+29
+1364
+57
+how many \nlocations
 11
+0.0
+1
+
+TEXTBOX
+1297
+67
+1404
+95
+colonies' worth of \nwasps per site
+11
+0.0
+1
+
+TEXTBOX
+1298
+102
+1427
+144
+where in the habitat\ndistribution to select \nrelease sites
+11
+0.0
+1
+
+TEXTBOX
+1300
+170
+1468
+220
+how often to release wasps: \n0 =  never (or only at t0)\nn = every n years
+11
+0.0
+1
+
+TEXTBOX
+1300
+223
+1463
+279
+0 = wild; 1 = GM\nThis should usually be set to 1, but 0 can be used to explore invasion
+11
+0.0
+1
+
+SLIDER
+874
+30
+1100
+63
+max-capacity-per-sq-km
+max-capacity-per-sq-km
+500
+5000
+1470.0
+10
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+1161
+328
+1288
+356
+initialise with GM wasps everyhere
+11
+0.0
+1
+
+TEXTBOX
+1163
+288
+1280
+316
+initialise with same capacity everywhere
+11
+0.0
+1
+
+TEXTBOX
+984
+266
+1134
+284
+Special cases
+12
+0.0
+1
+
+TEXTBOX
+711
+21
+861
+51
+For replicability set a seed and use it!
+12
+0.0
+1
+
+SLIDER
+14
+116
+186
+149
+R-sd
+R-sd
+0
+0.5
+0.0
+0.001
+1
+NIL
+HORIZONTAL
+
+SLIDER
+13
+171
+185
+204
+mortality
+mortality
+0
+1
+1.0
+0.001
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+19
+69
+169
+111
+Surviving offspring per queen net of mortality - for logistic map M = 1
+11
+0.0
+1
+
+TEXTBOX
+12
+12
+162
+30
+Population dynamics
+14
+0.0
+1
+
+TEXTBOX
+19
+296
+188
+380
+Exp(N) each generation is R * pop. Stochastic option will vary this according to a Poisson distribution (vmr = 1) or a Negative Binomial (vmr > 1)
+11
+0.0
+1
+
+TEXTBOX
+7
+225
+157
+255
+Stochastic variation in reproduction
+12
+0.0
+1
+
+TEXTBOX
+10
+451
+160
+469
+Dispersal
+14
+0.0
+1
+
+TEXTBOX
+17
+510
+167
+538
+Mean distance (exponentially distributed)
+11
+0.0
+1
+
+TEXTBOX
+17
+583
+191
+639
+Probability of long distance dispersal to a randomly select road location
+11
+0.0
+1
+
+TEXTBOX
+1273
+436
+1423
+454
+Internal controls
+14
+0.0
+1
+
+TEXTBOX
+1283
+457
+1433
+513
+These will likely become internal global variables at some point - provided for experimentation
+11
+0.0
+1
+
+TEXTBOX
+1281
+560
+1431
+578
+Almost always a yes!
+11
+0.0
+1
+
+TEXTBOX
+631
+187
+781
+215
+Reset to manually rerun a particular initial setup
+11
+0.0
+1
+
+TEXTBOX
+631
+228
+781
+246
+Display
+14
+0.0
+1
+
+TEXTBOX
+748
+295
+898
+337
+Population to show: 0 = wild, 1 = GM, 2 = sterile, 3 = total
+11
+0.0
+1
+
+TEXTBOX
+748
+245
+898
+287
+On = show populations\nOff = show red:blue mix of wild:GM
+11
+0.0
+1
+
+TEXTBOX
+19
+153
+169
+171
+Annual variability in R
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
-A model of wasp control by a potential gene drive in the upper South Island of Aotearoa New Zealand, as reported in 
+A model of wasp control by a potential gene drive in the upper South Island of Aotearoa New Zealand.
 
-* Lester PJ, D O'Sullivan and GLW Perry. Submitted. Gene drives for invasive pest
-control: extinction is unlikely, with suppression levels dependent on local dispersal
-and intrinsic growth rates. _Biology Letters_
+This version is in an abstract 50 x 50km space.
 
 ## HOW IT WORKS
 ### Overview
-Each 1km grid cell location in the model study area has an associated population carrying **`capacity`** which controls the population dynamics of the area. 
+Each 1km grid cell location in the model study area has an associated population carrying **`capacity`** which controls the population dynamics of the area. The maximum possible carrying capacity is set by the **max-capacity-per-sq-km** control. In this abstract space, the capacity is decreases linearly from west to east.
 
 ### Population dynamics
-At any given moment the the number of wasp nests (i.e. queens) in a grid cell is contained in the list `pops` which records respectively the number of wild, gene-drive modified and sterile queens in the cell. The reproductive population is given by 
+At any given moment the the number of wasp nests (i.e. queens) in a grid cell is contained in the patch list variable **pops** which records respectively the number of *wild* (W), *gene-drive modified* (G) and *sterile* (S) queens in the cell. The reproductive population is given by W + G, which in model code is
 
-    set reproductive sum but-last pops ;; i.e. item 0 + item 1
+    set reproductive sum but-last pops
 
-The local growth rate of the cell `lambda-loc` is determined from the parameter setting **`lambda-mean`** and **`lambda-sd`** each year by draw from a normal distribution.
+The mean annual reproductive rate of all cells in a given year is determined from the parameter setting **R-mean** and **R-sd** by drawing from a normal distribution.
 
-    set lamdba-loc random-normal lambda-mean lambda-sd
+    set R-annual random-normal R-mean R-sd
 
-These are combined to determine the total population of queens in the next generation according to 
+This is modified locally per patch based on the current population and capacity according to 
 
-    set new-pop random-poisson lambda-loc * reproductive * (capacity - sum pops) / capacity
+    set R-local (1 - mortality) + (R-annual + mortality) * (1 - pop / capacity)
 
-The total **`new-pop`** is then allocated to wild, GM and sterile sub-populations by repeated draws from a Binomial distribution. This is implemented by code in **`reproduction.nls`** which has been commented in detail. Note that a binomial random generator has been coded in place of a naive implementation requiring _n_ random numbers to be generated for Bin(_n_, _p_), which would work but is slow for large _n_ and low _p_.
+where **mortality** will usually be set to 1 (since wasps are an annual species with no overlap between generations) and the boosting of R by the amount of the mortality setting ensures that **R-mean** is an expected number of surviving new queens *net* of mortality of the current generation. When **mortality** is set to 1 this formulation is equivalent to a logistic map.
+
+The expected new population in a cell is given by
+
+    set new-pop R-local * reproductive
+
+Stochastic variation is optionally applied when **stochastic-repro?** is set On, using either
+
+    set new-pop random-poisson new-pop
+
+or
+
+    set new-pop nbinmoial-with-mean-vmr new-pop var-mean-ratio
+
+The former is used when **var-mean-ratio** is set to 1, while the latter is applied with any higher value. The **nbinomial-with-mean-vmr** reporter converts specified mean *m* and variance mean ratio *vmr* to the *r* and *p* parameters of the Negative Binomial according to *r = m / (vmr - 1)* and *p = 1 - (1 / vmr)*  and invokes *random-nbinomial* which converts this to an appropriate composite Gamma-Poisson mixture (see https://en.wikipedia.org/wiki/Negative_binomial_distribution#Gamma%E2%80%93Poisson_mixture).
+
+### Genetics
+The total **new-pop** *N*<sup>+</sup> is split into wild, GM and sterile sub-populations by a multinomial draw with weights given by 
+    
+  *p<sub>W</sub>* = *W*<sup>2</sup>
+  *p<sub>G</sub>* = 2*WG*, and
+  *p<sub>S</sub>* = *G*<sup>2</sup>
+
+Note that a binomial random generator has been coded in place of a naive implementation requiring _n_ random numbers to be generated for Bin(_n_, _p_), which would work but is slow for large _n_ and low _p_.
+
+This is also the basis for an implementation of a multinomial variate draw, which distributes a requested _n_ items among categories weighted according to the wild, GM and sterile weights calculated above. The reporter works by repeated conditional binomial draws where each draw is based on the current remaining items to be drawn, and weight of the current category relative to the total weight of all categories (including the present one), i.e.,
+
+  *W*<sup>+</sup> ~ Bin(*n*, *p<sub>W</sub>* / (*p<sub>W</sub>* + *p<sub>G</sub>*))
+  *G*<sup>+</sup> ~ Bin(*n* - *W*<sup>+</sup>, *p*<sub>G</sub>* / (1 - *p*<sub>W</sub>))
+  *S*<sup>+</sup> = *N<sup>+</sup> - *W*<sup>+</sup> - *G*<sup>+</sup> 
+
+Note that for assignment to just three categories the reporter seems to be faster than the extension based **rnd:rnd:weighted-n-of-list-with-repeats** function.
 
 ### Dispersal
-New population may disperse to new locations. Each member of the population draws a random distance **`random-exponential d-mean`** and heading **`random 360`** and attempts to move to that location. If the location happens to have 0 **`capacity`** the dispersing population is lost. 
+New population may disperse to new locations. 
+
+Each member of the population draws a random distance **`random-exponential d-mean`** and heading **`random 360`** and attempts to move to that location. If the location happens to have 0 **`capacity`** the dispersing population is lost. 
 
 With low probability **`p-ldd`** the dispersal may be _long distance_ meaning that the destination location will be a randomly selected road cell, which could be anywhere on the map.
 
-## CREDITS AND REFERENCES
+An alternative implementation based on calculation of a dispersal kernel and the **rnd:weighted-n-of-list-with-repeats** reporter has been tried, but does not appear to run as quickly as this implementation.
 
-Lester PJ, D O'Sullivan and GLW Perry. Submitted. Gene drives for invasive pest
-control: extinction is unlikely, with suppression levels dependent on local dispersal
-and intrinsic growth rates. _Biology Letters_
+## CREDITS AND REFERENCES
 @#$#@#$#@
 default
 true

@@ -21,7 +21,7 @@
 ;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 ;; DEALINGS IN THE SOFTWARE.
 
-to color-patches
+to colour-patches
   ;; something in the view updating is throwing the RNG off
   ;; no idea what, but use with-local-randomness to avoid
   with-local-randomness [
@@ -30,9 +30,9 @@ to color-patches
       let pal item show-pop pals
       let pop-patches the-land ;; with [pop > 0]
       ifelse any? pop-patches [
-        ifelse show-pop = num-pops [
-          let mx-pop max capacities
-          let mn-pop min capacities
+        ifelse show-pop = num-subpops [
+          let mx-pop max [capacity] of patches
+          let mn-pop min [capacity] of patches
           ask pop-patches [
             set pcolor palette:scale-scheme "Sequential" pal 9 pop mn-pop mx-pop
           ]
@@ -53,8 +53,8 @@ to color-patches
       ]
     ]
     [
-      let mx-q max capacities
-      let mn-q min capacities
+      let mx-q max [capacity] of patches
+      let mn-q min [capacity] of patches
       ask the-land [
         set pcolor palette:scale-gradient [[255 255 255] [153 153 153]] capacity mx-q mn-q
       ]

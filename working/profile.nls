@@ -40,16 +40,16 @@ to profile-get-binomial [n]
 end
 
 
-to profile-multinomial [n]
-  profiler:start
-  let pb n-values n [multinomial 100 n-values 3 [i -> random 10 + 1] true]
-  profiler:stop
-  print profiler:report
-  profiler:reset
-end
+;to profile-multinomial [n]
+;  profiler:start
+;  let pb n-values n [multinomial 100 n-values 3 [i -> random 10 + 1] true]
+;  profiler:stop
+;  print profiler:report
+;  profiler:reset
+;end
+;
 
-
-to profile:one-of-roads [n]
+to profile-one-of-roads [n]
   profiler:start
   repeat n [ one-of-roads ]
   profiler:stop
@@ -60,3 +60,55 @@ end
 to one-of-roads
   let x one-of roads
 end
+
+to profile-setup
+  profiler:start
+  setup
+  profiler:stop
+  print profiler:report
+end
+
+
+to profile-multinomial [n]
+  profiler:start
+  let x n-values 1000 [i -> random-poisson 10]
+  repeat n [
+    let a multinomial-float 100 x true
+    let c multinomial-int 100 x true 
+  ]
+  profiler:stop
+  print profiler:report
+  profiler:reset
+end
+
+
+to compare-dispersal [n]
+  set use-kernel-method? true
+  setup
+
+  profiler:start
+  repeat n [ go ]
+  profiler:stop
+  print profiler:report
+  profiler:reset
+
+  reset-map
+  set use-kernel-method? false
+  profiler:start
+  repeat n [ go ]
+  profiler:stop
+  print profiler:report
+  profiler:reset
+end
+
+to compare-count-matches [n]
+  profiler:start
+  let L n-values 1000 [i -> random-poisson 5]
+  repeat n [ 
+    let y count-x-in-list-r L 1
+    let z count-x-in-list L 1
+  ]
+  profiler:stop
+  print profiler:report
+  profiler:reset
+end  

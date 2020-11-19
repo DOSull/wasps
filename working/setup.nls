@@ -23,53 +23,37 @@
 ;; DEALINGS IN THE SOFTWARE.
 
 to setup
-  ca
+  clear-all
   reset-ticks
 
   if use-seed? [
     random-seed seed
   ]
-  
-  set num-pops 3
+  set central-p patch ((min-pxcor + max-pxcor) / 2) ((min-pycor + max-pycor) / 2)
+  ;; setting up a dispersal kernel is slow so only do it if needed
+  set use-kernel-method? false
+  set debug? false
+
+  ;; number of subpopulation is 3 in the wasp model
+  set num-subpops 3
+  ;; the corresponding brewer palettes (item 3 for total population)
   set pals ["OrRd" "PuBu" "BuGn" "BuPu"]
 
-  let ds gis:load-dataset "wasp-suitability.asc"
-  gis:apply-raster ds capacity
-  ask patches [
-    ifelse (capacity >= 0)
-    [ set capacity ceiling (capacity * 100) ]
-    [ set capacity -1 ]
-  ]
-  set capacities sort remove-duplicates [capacity] of patches
+  ;; setup capacities and roads
+  ;; in the full model these are read from ASCII raster data
+  setup-capacities
+  setup-roads
 
-  set ds gis:load-dataset "roads-oblique.asc"
-  gis:apply-raster ds road?
-  ask patches [
-    set road? road? >= 0
-  ]
-  set the-roads patches with [road?]
-  ask the-roads [
-    sprout-roads 1 [
-      set color grey - 2
-      set shape "square"
-      set size 0.8
-    ]
-  ]
-
+  ;; setup frequently used subsets of the patches
   set the-land patches with [capacity >= 0]
   set the-habitable-land the-land with [capacity > 0]
   set the-sea patches with [capacity < 0]
-  set potential-release-sites patch-set nobody
 
-;  setup-kernels
-
-;  set pop-history []
-;  set wild-history []
-;  set gm-history []
-
+  ;; initialise the patch population lists
   initialise-pops-to-zero
 
-  if homogenous? [ ;; member? "homogeneous" scenario [
+  ;; now the various possible initialisations
+  if homogeneous? [ 
     ; This works by making all the patch capacities the same
     let mean-k mean [capacity] of the-habitable-land
     ask the-habitable-land [
@@ -77,20 +61,21 @@ to setup
     ]
     ;; could also set the sd-init-occ to zero
     ;; buit that's probably one for the model user
-    ; set init-sd-occ 0.0
+    ; set stdev-occupancy 0.0
   ]
   if member? "base" scenario [
-    ; this will initialize to N(init-mean-occ, init-mean-occ) * capacity in all
-    ; the habitable patches. A proportion base-prop-gm will be GM wasps
+    ; this will initialize to N(mean-occupancy, stdev-occupancy) * capacity in all
+    ; the habitable patches. A proportion proportion-gm will be GM wasps
     setup-patch-populations
   ]
   if member? "release sites" scenario [
     ; this will lead to addition of wasps at a randomly selected range of locations
     ; number-of-sites selected at random from the percentile-selector best locations
-    ; (defined by capacity). wasps-per-site will be added, with proportion of them
-    ; GM given by prop-gm
-    release-gm-wasps true
+    ; (defined by capacity). wasps-per-site will be added
+    release-wasps true
   ]
+  
+  ;; initialise the monitoring area (not used in the abstract-space model
   setup-monitoring-area
 
   update-populations
@@ -99,75 +84,131 @@ to setup
       set shape "circle"
     ]
   ]
-  color-patches
-  ask the-sea [set pcolor cyan + 4]
+  colour-patches
+  ask the-sea [set pcolor cyan + 2]
 
-  ;; set distances array:from-list n-values 350 [i -> 0]
   renew-plots
+  if debug? [ reset-timer ]
+end
+
+
+to setup-capacities
+;; For the realistic GIS space:  
+  let ds gis:load-dataset "wasp-suitability.asc"
+  gis:apply-raster ds capacity  
+  
+;  ;; abstract space is a high to low west to east (left to right!) gradient
+;  ;; with a little randomness
+;  ask patches [
+;    set capacity max-pxcor - pxcor + random 2
+;  ]
+;  repeat 5 [
+;    diffuse capacity 0.5
+;  ]
+  ;; scale it so the maximum capacity is the max requested
+  let max-k max [capacity] of patches
+  let multiple max-capacity-per-sq-km / max-k
+  if debug? [ show multiple ]
+  ask patches [
+    ifelse (capacity >= 0)
+    [ set capacity ceiling (capacity * multiple) ]
+    [ set capacity -1 ]
+  ]
+end
+
+
+to setup-roads
+;; Roads
+  let ds gis:load-dataset "roads-oblique.asc"
+  gis:apply-raster ds road?
+  ask patches [
+    set road? (road? = 0)
+  ]
+  
+;  ;; abstract space just a couple of straight lines
+;  ask patches [
+;    set road? pxcor = 43 or pycor = 6
+;  ]
+  set the-roads patches with [road?]
+  ask the-roads [
+    sprout-roads 1 [
+      set color grey - 2
+      set shape "square"
+      set size 0.85
+    ]
+  ]
 end
 
 
 to setup-patch-populations
+  let initial-rel-pops (list (1 - proportion-gm) 1 0)
   ask the-habitable-land [
-    repeat int (capacity * random-normal init-mean-occ init-sd-occ) [
-      let species ifelse-value (random-float 1 < base-prop-gm) [1] [0]
-      set next-pops replace-item species next-pops (item species next-pops + 1)
-    ]
+    set next-pops multinomial-int int (capacity * random-normal mean-occupancy stdev-occupancy) initial-rel-pops false
     set init-pops next-pops
     set init-pop sum next-pops
   ]
 end
 
-to release-gm-wasps [initialise?]
-  if initialise? [
-    ifelse percentile-selector = 0 [
-      set potential-release-sites the-habitable-land
-    ]
-    [
-      let n-percentile count the-habitable-land * (1 - percentile-selector)
-      let min-capacity [capacity] of last sublist (reverse sort-on [capacity] the-habitable-land) 0 n-percentile
-      set potential-release-sites the-habitable-land with [capacity >= min-capacity]
-    ]
-  ]
-  let release-sites n-of number-of-sites potential-release-sites
-  ask release-sites [
-    set next-pops replace-item release-type next-pops (item release-type next-pops + wasps-per-site)
-  ]
-  if initialise? [
-    ask release-sites [
+;; PATCH function
+to increment-population [subpop n]
+  set next-pops replace-item subpop next-pops (item subpop next-pops + n)
+end
+
+
+;; releast GM wasps per the UI settings 
+;; initialise? is true if this is during setup
+;;                false if while model is running
+to release-wasps [initialise?]
+  ask n-of number-of-sites potential-release-sites [
+    increment-population release-type colonies-per-site
+    if initialise? [
       set init-pops next-pops
       set init-pop sum init-pops
     ]
   ]
 end
 
-to initialise-pops-to-zero
-  ask the-land [
-    set pops n-values num-pops [ i -> 0 ]
-    set next-pops n-values num-pops [ i -> 0 ]
+;; get release sits from the specified upper percentil of capacities
+to-report potential-release-sites 
+  ifelse percentile-selector = 0 [
+    report the-habitable-land
+  ]
+  [
+    let n-percentile count the-habitable-land * (1 - percentile-selector)
+    let cutoff-capacity [capacity] of item n-percentile (reverse sort-on [capacity] the-habitable-land)
+    report the-habitable-land with [capacity >= cutoff-capacity]
   ]
 end
 
 
+to initialise-pops-to-zero
+  ask the-land [
+    set pops n-values num-subpops [ i -> 0 ]
+    set next-pops n-values num-subpops [ i -> 0 ]
+  ]
+end
+
+
+
 to setup-monitoring-area
   set monitoring-area patch-set nobody
-  if track-monitoring-area? [
-    set monitoring-area the-land with [pxcor < 100 and pycor > 150 ]
+;  if track-monitoring-area? [
+;    set monitoring-area the-land with [pxcor < 100 and pycor > 150 ]
 ;    set monitoring-area patches with [pxcor > 35 and pxcor < 61 and pycor > 170 and pycor < 196]
-  ]
+;  ]
   ask monitoring-area [
     set history []
   ]
 end
 
 
-to make-movie [n]
-  vid:start-recorder
-  setup
-  vid:record-interface
-  repeat n [
-    go
-    vid:record-interface
-  ]
-  vid:save-recording "foo.mp4"
-end
+;to make-movie [n]
+;  vid:start-recorder
+;  setup
+;  vid:record-interface
+;  repeat n [
+;    go
+;    vid:record-interface
+;  ]
+;  vid:save-recording "foo.mp4"
+;end
