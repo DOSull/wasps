@@ -151,7 +151,7 @@ R-mean
 R-mean
 1.0
 4
-1.3
+1.1
 0.01
 1
 NIL
@@ -232,7 +232,7 @@ p-ldd
 p-ldd
 0
 0.001
-1.0E-4
+0.01
 0.00001
 1
 NIL
@@ -258,7 +258,7 @@ d-mean
 d-mean
 0.01
 10
-1.0
+0.5
 0.01
 1
 NIL
@@ -376,7 +376,7 @@ seed
 seed
 0
 1000
-0.0
+1.0
 1
 1
 NIL
@@ -417,7 +417,7 @@ stdev-occupancy
 stdev-occupancy
 0
 0.5
-0.05
+0.0
 0.001
 1
 NIL
@@ -1907,7 +1907,7 @@ NetLogo 6.1.0
       <value value="&quot;base plus release sites&quot;"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="CONTROL-EXPERIMENT-RELEASE-AND-FORGET" repetitions="1" runMetricsEveryStep="true">
+  <experiment name="CONTROL-EXPERIMENT-RELEASE-AND-FORGET-ABSTRACT-SPACE" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="250"/>
@@ -1915,7 +1915,7 @@ NetLogo 6.1.0
     <metric>prop-occupied</metric>
     <metric>sum [item 1 pops] of the-habitable-land</metric>
     <metric>sum [item 2 pops] of the-habitable-land</metric>
-    <enumeratedValueSet variable="lambda-1">
+    <enumeratedValueSet variable="d-mean">
       <value value="0.5"/>
       <value value="2"/>
       <value value="5"/>
@@ -1924,30 +1924,27 @@ NetLogo 6.1.0
       <value value="true"/>
     </enumeratedValueSet>
     <steppedValueSet variable="seed" first="1" step="1" last="30"/>
-    <enumeratedValueSet variable="init-sd-occ">
+    <enumeratedValueSet variable="stdev-occupancy">
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="percentile-selector">
       <value value="0.95"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="homogenous?">
+    <enumeratedValueSet variable="homogeneous?">
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="show-pop">
-      <value value="0"/>
+      <value value="3"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="number-of-sites">
       <value value="20"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="track-monitoring-area?">
-      <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="p-ldd">
       <value value="0.01"/>
       <value value="1.0E-4"/>
       <value value="1.0E-6"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="base-prop-gm">
+    <enumeratedValueSet variable="proportion-gm">
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="release-type">
@@ -1956,25 +1953,40 @@ NetLogo 6.1.0
     <enumeratedValueSet variable="show-pop?">
       <value value="true"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="r-mean">
+    <enumeratedValueSet variable="R-mean">
+      <value value="1.1"/>
+      <value value="1.3"/>
       <value value="1.5"/>
-      <value value="2"/>
-      <value value="2.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="periodicity">
       <value value="0"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="wasps-per-site">
+    <enumeratedValueSet variable="colonies-per-site">
       <value value="500"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="init-mean-occ">
+    <enumeratedValueSet variable="mean-occupancy">
       <value value="0.5"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="r-sd">
+    <enumeratedValueSet variable="R-sd">
       <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mortality">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-logistic-map?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-kernel-method?">
+      <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="scenario">
       <value value="&quot;base plus release sites&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="stochastic-repro?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="var-mean-ratio">
+      <value value="2"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
