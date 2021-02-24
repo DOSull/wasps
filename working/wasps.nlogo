@@ -260,7 +260,7 @@ d-mean
 d-mean
 0.01
 10
-1.0
+0.5
 0.01
 1
 NIL
@@ -378,7 +378,7 @@ seed
 seed
 0
 1000
-0.0
+1.0
 1
 1
 NIL
@@ -419,7 +419,7 @@ stdev-occupancy
 stdev-occupancy
 0
 0.5
-0.05
+0.0
 0.001
 1
 NIL
@@ -444,7 +444,7 @@ number-of-sites
 number-of-sites
 0
 50
-20.0
+1.0
 1
 1
 NIL
@@ -494,7 +494,7 @@ percentile-selector
 percentile-selector
 0
 1
-0.95
+0.0
 0.01
 1
 NIL
@@ -863,6 +863,17 @@ Annual variability in R
 0.0
 1
 
+SWITCH
+987
+368
+1207
+401
+track-monitoring-area?
+track-monitoring-area?
+1
+1
+-1000
+
 @#$#@#$#@
 ## WHAT IS IT?
 A model of wasp control by a potential gene drive in the upper South Island of Aotearoa New Zealand.
@@ -1224,473 +1235,81 @@ NetLogo 6.1.0
     <exitCondition>prop-occupied = 0 or prop-occupied &gt;= 0.95</exitCondition>
     <metric>total-pop</metric>
     <metric>prop-occupied</metric>
-    <enumeratedValueSet variable="lambda-1">
+    <enumeratedValueSet variable="R-mean">
+      <value value="1.5"/>
+      <value value="2"/>
+      <value value="2.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="R-sd">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mortality">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-logisitic-map?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="stochastic-repro?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="var-mean-ratio">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="d-mean">
       <value value="0.5"/>
       <value value="2"/>
       <value value="5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="use-seed?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="seed" first="1" step="1" last="30"/>
-    <enumeratedValueSet variable="init-sd-occ">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="percentile-selector">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="homogenous?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="show-pop">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-sites">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="track-monitoring-area?">
-      <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="p-ldd">
       <value value="0.01"/>
       <value value="1.0E-4"/>
       <value value="1.0E-6"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="base-prop-gm">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="release-type">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="show-pop?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="r-mean">
-      <value value="1.5"/>
-      <value value="2"/>
-      <value value="2.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="periodicity">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="wasps-per-site">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="init-mean-occ">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="r-sd">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="scenario">
-      <value value="&quot;base plus release sites&quot;"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="gc-19-base" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="150"/>
-    <metric>total-pop</metric>
-    <metric>prop-occupied</metric>
-    <metric>sum [item 0 pops] of the-land</metric>
-    <metric>sum [item 1 pops] of the-land</metric>
-    <enumeratedValueSet variable="lambda-1">
-      <value value="0.25"/>
-      <value value="0.5"/>
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="use-seed?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="seed">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="init-sd-occ">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="percentile-selector">
-      <value value="0.95"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="homogenous?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="show-pop">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-sites">
-      <value value="20"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="track-monitoring-area?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="p-ldd">
-      <value value="1.0E-5"/>
-      <value value="1.0E-4"/>
-      <value value="0.001"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="base-prop-gm">
-      <value value="0.3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="release-prop-gm">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="show-pop?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="r-mean">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="periodicity">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="wasps-per-site">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="init-mean-occ">
-      <value value="0.075"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="r-sd">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="scenario">
-      <value value="&quot;base only&quot;"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="gc-19-collapse" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="150"/>
-    <metric>total-pop</metric>
-    <metric>prop-occupied</metric>
-    <metric>sum [item 0 pops] of the-land</metric>
-    <metric>sum [item 1 pops] of the-land</metric>
-    <enumeratedValueSet variable="lambda-1">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="use-seed?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="seed">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="init-sd-occ">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="percentile-selector">
-      <value value="0.95"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="homogenous?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="show-pop">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-sites">
-      <value value="20"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="track-monitoring-area?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="p-ldd">
-      <value value="1.0E-4"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="base-prop-gm">
-      <value value="0.01"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="release-prop-gm">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="show-pop?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="r-mean">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="periodicity">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="wasps-per-site">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="init-mean-occ">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="r-sd">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="scenario">
-      <value value="&quot;base only&quot;"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="gc-19-introductions" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <final>save-monitor</final>
-    <timeLimit steps="150"/>
-    <metric>total-pop</metric>
-    <metric>prop-occupied</metric>
-    <metric>sum [item 0 pops] of the-land</metric>
-    <metric>sum [item 1 pops] of the-land</metric>
-    <enumeratedValueSet variable="lambda-1">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="use-seed?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="seed">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="init-sd-occ">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="percentile-selector">
-      <value value="0.95"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="homogenous?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="show-pop">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-sites">
-      <value value="10"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="track-monitoring-area?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="p-ldd">
-      <value value="1.0E-4"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="base-prop-gm">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="release-prop-gm">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="show-pop?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="r-mean">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="periodicity">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="wasps-per-site">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="init-mean-occ">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="r-sd">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="scenario">
-      <value value="&quot;base plus release sites&quot;"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="experiment-1" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="250"/>
-    <exitCondition>prop-occupied = 0.95 or total-pop = 0</exitCondition>
-    <metric>total-pop</metric>
-    <metric>prop-occupied</metric>
-    <enumeratedValueSet variable="r-mean">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="r-sd">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="lambda-1">
-      <value value="0.5"/>
-      <value value="1"/>
-      <value value="2"/>
-      <value value="3"/>
-      <value value="5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="p-ldd">
-      <value value="0"/>
-      <value value="1.0E-5"/>
-      <value value="1.0E-4"/>
-      <value value="3.0E-4"/>
-      <value value="0.001"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="use-seed?">
-      <value value="true"/>
-    </enumeratedValueSet>
     <steppedValueSet variable="seed" first="1" step="1" last="30"/>
+    <enumeratedValueSet variable="use-seed?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-capacity-per-sq-km">
+      <value value="1380"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-occupancy">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="stdev-occupancy">
+      <value value="0"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="scenario">
       <value value="&quot;release sites only&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="number-of-sites">
       <value value="1"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="wasps-per-site">
+    <enumeratedValueSet variable="colonies-per-site">
       <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="percentile-selector">
       <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="init-sd-occ">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="homogenous?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="show-pop">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="track-monitoring-area?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="base-prop-gm">
-      <value value="0.01"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="release-prop-gm">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="show-pop?">
-      <value value="true"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="periodicity">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="init-mean-occ">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="experiment-nozero" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="10"/>
-    <exitCondition>total-pop = 0 or prop-occupied &gt; 0.95 or ticks &gt; 100</exitCondition>
-    <metric>total-pop</metric>
-    <metric>prop-occupied</metric>
-    <steppedValueSet variable="lambda-1" first="0.5" step="0.5" last="3"/>
-    <enumeratedValueSet variable="use-seed?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="seed" first="1" step="1" last="30"/>
-    <enumeratedValueSet variable="init-sd-occ">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="percentile-selector">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="homogenous?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="show-pop">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-sites">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="track-monitoring-area?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="p-ldd">
-      <value value="1.0E-4"/>
-      <value value="0.001"/>
-      <value value="0.01"/>
-      <value value="0.1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="base-prop-gm">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="release-prop-gm">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="show-pop?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="r-mean" first="1.6" step="0.2" last="2.4"/>
-    <enumeratedValueSet variable="periodicity">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="wasps-per-site">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="init-mean-occ">
-      <value value="0.075"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="r-sd">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="scenario">
-      <value value="&quot;release sites only&quot;"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="time-series-by-lambda-pldd-71-100-t250" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="250"/>
-    <metric>total-pop</metric>
-    <metric>prop-occupied</metric>
-    <metric>sum [item 1 pops] of the-habitable-land</metric>
-    <metric>sum [item 2 pops] of the-habitable-land</metric>
-    <enumeratedValueSet variable="lambda-1">
-      <value value="0.5"/>
-      <value value="1"/>
-      <value value="2"/>
-      <value value="3"/>
-      <value value="5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="use-seed?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="seed" first="71" step="1" last="80"/>
-    <enumeratedValueSet variable="init-sd-occ">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="percentile-selector">
-      <value value="0.95"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="homogenous?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="show-pop">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-sites">
-      <value value="20"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="track-monitoring-area?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="p-ldd">
-      <value value="0.01"/>
-      <value value="0.001"/>
-      <value value="1.0E-4"/>
-      <value value="1.0E-5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="base-prop-gm">
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="release-type">
-      <value value="1"/>
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="homogeneous?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proportion-gm">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="track-monitoring-area?">
+      <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="show-pop?">
       <value value="true"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="r-mean">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="periodicity">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="wasps-per-site">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="init-mean-occ">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="r-sd">
+    <enumeratedValueSet variable="show-pop">
       <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="scenario">
-      <value value="&quot;base plus release sites&quot;"/>
     </enumeratedValueSet>
   </experiment>
   <experiment name="CONTROL-EXPERIMENT" repetitions="1" runMetricsEveryStep="true">
@@ -1745,71 +1364,6 @@ NetLogo 6.1.0
     <enumeratedValueSet variable="r-mean">
       <value value="1.5"/>
       <value value="2"/>
-      <value value="2.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="periodicity">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="wasps-per-site">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="init-mean-occ">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="r-sd">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="scenario">
-      <value value="&quot;base plus release sites&quot;"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="MONITOR" repetitions="1" runMetricsEveryStep="false">
-    <setup>setup</setup>
-    <go>go</go>
-    <final>save-monitor</final>
-    <timeLimit steps="250"/>
-    <enumeratedValueSet variable="lambda-1">
-      <value value="0.5"/>
-      <value value="5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="use-seed?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="seed">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="init-sd-occ">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="percentile-selector">
-      <value value="0.95"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="homogenous?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="show-pop">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="number-of-sites">
-      <value value="20"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="track-monitoring-area?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="p-ldd">
-      <value value="1.0E-4"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="base-prop-gm">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="release-type">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="show-pop?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="r-mean">
-      <value value="1.5"/>
       <value value="2.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="periodicity">
