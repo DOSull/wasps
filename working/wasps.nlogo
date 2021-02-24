@@ -153,7 +153,7 @@ R-mean
 R-mean
 1.0
 4
-1.3
+1.5
 0.01
 1
 NIL
@@ -1246,7 +1246,7 @@ NetLogo 6.1.0
     <enumeratedValueSet variable="mortality">
       <value value="1"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="use-logisitic-map?">
+    <enumeratedValueSet variable="use-logistic-map?">
       <value value="true"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="stochastic-repro?">
