@@ -284,7 +284,7 @@ show-pop
 show-pop
 0
 num-subpops
-3.0
+1.0
 1
 1
 NIL
@@ -389,7 +389,7 @@ SWITCH
 124
 use-seed?
 use-seed?
-0
+1
 1
 -1000
 
@@ -402,7 +402,7 @@ mean-occupancy
 mean-occupancy
 0
 1
-0.57
+0.5
 0.01
 1
 NIL
@@ -477,7 +477,7 @@ colonies-per-site
 colonies-per-site
 0
 1000
-500.0
+1.0
 1
 1
 NIL
@@ -546,7 +546,7 @@ SWITCH
 518
 use-kernel-method?
 use-kernel-method?
-0
+1
 1
 -1000
 
@@ -579,7 +579,7 @@ SWITCH
 293
 stochastic-repro?
 stochastic-repro?
-0
+1
 1
 -1000
 
@@ -668,7 +668,7 @@ max-capacity-per-sq-km
 max-capacity-per-sq-km
 500
 5000
-1470.0
+500.0
 10
 1
 NIL
@@ -941,6 +941,17 @@ get-kernel-mean-d
 4
 1
 11
+
+SWITCH
+1341
+398
+1446
+431
+roads?
+roads?
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1291,7 +1302,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.1.0
+NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

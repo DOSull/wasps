@@ -123,7 +123,9 @@ to setup-roads
   
   ;; abstract space just a couple of straight lines
   ask patches [
-    set road? pxcor = 43 or pycor = 6
+    ifelse roads?
+    [ set road? pxcor = 43 or pycor = 6 ]      
+    [ set road? random-float 1 < (2 / world-width) ]
   ]
   set the-roads patches with [road?]
   ask the-roads [

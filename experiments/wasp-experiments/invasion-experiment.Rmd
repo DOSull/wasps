@@ -1,0 +1,79 @@
+---
+title: "Analysis of invasion times"
+output:
+  pdf_document: default
+---
+
+Data are time series of single site invasions from 30 randomly selected locations (same 30 sites for each parameter combination).
+
+Load some libraries
+
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+
+Navigate to folder and read the data.
+
+```{r}
+setwd('~/Documents/code/wasps/experiments/wasp-experiments')
+wasps.invasion <- read.csv("wasps INVASION-EXPERIMENT-table.csv", skip=6)
+```
+
+Select only variables we need.
+
+```{r}
+wasps.sel <- wasps.invasion %>%
+  select(X.step., prop.occupied, R.mean, X.run.number., d.mean, p.ldd)
+```
+
+## Time series plots
+
+Panel plot of time series, lines coloured by intrinsic growth-rate `R.mean`, panels arranged by local mean dispersal distance `d.mean` and probability of long distance dispersal `p.ldd`.
+
+```{r}
+ggplot(wasps.sel, aes(x = X.step., y = prop.occupied, colour = R.mean)) + 
+  geom_line(aes(group = X.run.number.), lwd = .35, alpha = 0.5) + 
+  xlim(0, 150) + ylim(0, 1) +
+  labs(x = 'Time, years', y = 'Proportion of land occupied') +
+  scale_color_viridis_c(option = 'D') + 
+  facet_grid(p.ldd ~ d.mean, labeller = label_both, as.table = FALSE) +
+  theme_dark()
+```
+
+## Trends in time to 50% occupancy
+
+Determine times taken to 50% occupancy. These will be the last time step in each case, when `prop.occupied` >=0.5 at that time, since experiment runs used this as stopping criterion.
+
+```{r}
+wasps.t <- wasps.sel %>% 
+  group_by(X.run.number., R.mean) %>%
+  summarise_at('X.step.', max) %>%
+  merge(wasps.invasion) %>%
+  filter(prop.occupied >= 0.5)
+```
+
+And plot it
+
+```{r}
+ggplot(wasps.t, aes(x = d.mean, y = X.step.)) + 
+  geom_point(aes(colour = as.factor(p.ldd)), width = .05, height = 0) +
+  scale_color_brewer(palette = "BuGn", direction = -1, name = "p.ldd") +
+  facet_wrap(vars(R.mean), nrow = 1, labeller = label_both) +
+  labs(y = 'Time to 50% occupied', x = 'Local mean dispersal distance, km') +
+  theme_dark()
+```
+
+### Need more data to fit curves
+
+To fit curves to these data we need more values of `d.mean` than $\{0.5,2,5\}$ to avoid warnings about near-singularities with the default Loess fitting, and also unlikely 'kinks' in the curves. But we can probably get a general idea of sensible dispersal and reproduction settings.
+
+```{r message=FALSE, warning=FALSE}
+ggplot(wasps.t, aes(x = d.mean, y = X.step., colour = as.factor(p.ldd))) + 
+  geom_smooth(aes(group = p.ldd), colour = 'blue') +
+  geom_point() +
+  scale_colour_brewer(palette = "BuGn", direction = -1, name = "p.ldd") +
+  facet_wrap(vars(R.mean), nrow = 1, labeller = label_both) +
+  labs(y = 'Time to 50% occupied', x = 'Local mean dispersal distance, km') +
+  theme_dark()
+```
