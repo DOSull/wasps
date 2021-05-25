@@ -35,7 +35,7 @@ extensions [
   palette                ;; Brewer colour palettes
   profiler               ;; profiling
   rnd                    ;; weighted random draws from lists and agentsets
-;  vid                    ;; video recording
+  vid                    ;; video recording
 ;  gis                    ;; GIS data
 
 ;; ----------------
@@ -603,7 +603,7 @@ var-mean-ratio
 var-mean-ratio
 1
 5
-1.95
+2.0
 0.01
 1
 NIL

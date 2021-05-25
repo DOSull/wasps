@@ -112,3 +112,14 @@ to save-monitor
   ]
   file-close
 end
+
+to record-video [n]
+  setup
+  (vid:start-recorder 102 102)
+  repeat n [
+    vid:record-view 
+    go
+  ]
+  vid:save-recording "sample-run.mp4"
+  vid:reset-recorder
+end
