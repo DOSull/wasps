@@ -41,7 +41,7 @@ to setup
   ;; setup capacities and roads
   ;; in the full model these are read from ASCII raster data
   setup-capacities
-  setup-roads
+  if LDD != "untargetted" [ setup-ldd-targets ]
 
   ;; setup frequently used subsets of the patches
   set the-land patches with [capacity >= 0]
@@ -86,6 +86,7 @@ to setup
   colour-patches
   ask the-sea [set pcolor cyan + 4]
 
+  set show-contours? false
   renew-plots
   if debug? [ reset-timer ]
 end
@@ -98,41 +99,68 @@ to setup-capacities
   
   ;; abstract space is a high to low west to east (left to right!) gradient
   ;; with a little randomness
-  ask patches [
-    set capacity max-pxcor - pxcor + random 2
+  if spatial-setup = "random-correlated" [
+    ask patches [
+      set capacity random-float 1
+    ]
+    repeat distribution-scale [
+      diffuse capacity 0.5
+    ]
+    rescale-capacities
   ]
-  repeat 5 [
-    diffuse capacity 0.5
+  if spatial-setup = "homogeneous" [ 
+    ask patches [
+      set capacity max-capacity-per-sq-km / 2
+    ] 
   ]
-  ;; scale it so the maximum capacity is the max requested
-  let max-k max [capacity] of patches
-  let multiple max-capacity-per-sq-km / max-k
-  if debug? [ show multiple ]
-  ask patches [
-    ifelse (capacity >= 0)
-    [ set capacity ceiling (capacity * multiple) ]
-    [ set capacity -1 ]
+  if spatial-setup = "e-w-trend" [
+    ask patches [
+      set capacity max-pxcor - pxcor
+    ]
+    rescale-capacities
   ]
 end
 
 
-to setup-roads
+to rescale-capacities 
+  ;; scale it so the maximum capacity is the max requested
+  let max-k max [capacity] of patches 
+  let min-k min [capacity] of patches
+  let mean-k mean [capacity] of patches
+  let multiple max-capacity-per-sq-km / (max-k - min-k) 
+  if debug? [ show multiple ]
+  ask patches [
+    ifelse (capacity >= 0)
+    [ ifelse capacity > mean-k 
+      [ set capacity floor (rescale capacity min-k max-k 1 max-capacity-per-sq-km) ]
+      [ set capacity ceiling (rescale capacity min-k max-k 1 max-capacity-per-sq-km) ]
+    ]
+    [ set capacity -1 ]
+  ]    
+end
+
+to-report rescale [x min-domain max-domain min-codomain max-codomain]
+  let scale-factor (max-codomain - min-codomain) / (max-domain - min-domain)
+  report min-codomain + (x - min-domain) * scale-factor
+end
+
+to setup-ldd-targets
 ;; Roads
 ;  set ds gis:load-dataset "roads-oblique.asc"
 ;  gis:apply-raster ds road?
   
   ;; abstract space just a couple of straight lines
   ask patches [
-    ifelse roads?
-    [ set road? pxcor = 43 or pycor = 6 ]      
-    [ set road? random-float 1 < (2 / world-width) ]
+    ifelse LDD = "targetted-roads"
+    [ set preferred-site? pxcor = 43 or pycor = 6 ]      
+    [ set preferred-site? random-float 1 < (2 / world-width) ]
   ]
-  set the-roads patches with [road?]
-  ask the-roads [
-    sprout-roads 1 [
-      set color grey - 2
-      set shape "square"
-      set size 0.85
+  set preferred-sites patches with [preferred-site?]
+  ask preferred-sites [
+    sprout-ldd-targets 1 [
+      set color grey - 3
+      set shape "x"
+      set size 0.9
     ]
   ]
 end
@@ -187,26 +215,23 @@ to initialise-pops-to-zero
 end
 
 
-
 to setup-monitoring-area
-  set monitoring-area patch-set nobody
-;  if track-monitoring-area? [
-;    set monitoring-area the-land with [pxcor < 100 and pycor > 150 ]
-;    set monitoring-area patches with [pxcor > 35 and pxcor < 61 and pycor > 170 and pycor < 196]
-;  ]
-  ask monitoring-area [
-    set history []
+  set monitoring-area patches
+  if track-monitoring-area? [
+    ask monitoring-area [
+      set history []
+    ]
   ]
 end
 
 
-;to make-movie [n]
-;  vid:start-recorder
-;  setup
-;  vid:record-interface
-;  repeat n [
-;    go
-;    vid:record-interface
-;  ]
-;  vid:save-recording "foo.mp4"
-;end
+to make-movie [n]
+  vid:start-recorder
+  setup
+  vid:record-interface
+  repeat n [
+    go
+    vid:record-interface
+  ]
+  vid:save-recording "foo.mp4"
+end

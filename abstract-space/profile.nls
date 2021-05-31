@@ -49,18 +49,6 @@ end
 ;end
 ;
 
-to profile-one-of-roads [n]
-  profiler:start
-  repeat n [ one-of-roads ]
-  profiler:stop
-  print profiler:report
-  profiler:reset
-end
-
-to one-of-roads
-  let x one-of roads
-end
-
 to profile-setup
   profiler:start
   setup

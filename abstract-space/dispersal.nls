@@ -36,7 +36,9 @@ to disperse [next-gen]
       ;; determine any long-distance dispersals and apply them
       let n-ldds binomial new-cases p-ldd
       repeat n-ldds [
-        disperse-to one-of roads 1 idx
+        ifelse member? "targetted-" LDD 
+        [ disperse-to one-of preferred-sites 1 idx ]
+        [ disperse-to one-of (other patches) 1 idx ]
       ]
       ;; now do the locals remaining (this will be most of them)
       ifelse  use-kernel-method?

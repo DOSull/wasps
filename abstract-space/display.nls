@@ -72,6 +72,58 @@ to colour-patches
   ]
 end
 
+to draw-contours
+  let contour-pen nobody
+  create-turtles 1 [
+    set color black
+    set contour-pen self
+  ]
+  let breaks n-values 10 [i -> i / 10 * max-capacity-per-sq-km]
+  ask patches [
+    set temp get-bin capacity breaks
+  ]
+  foreach sort patches [ this-patch ->
+    ask this-patch [
+      ask contour-pen [
+        move-to myself
+      ]
+      let my-temp temp
+      let lower filter [p -> p != nobody and [temp] of p < my-temp] (map [dxy -> patch-at item 0 dxy item 1 dxy] (list [1 0] [0 1]))
+      let upper filter [p -> p != nobody and [temp] of p > my-temp] (map [dxy -> patch-at item 0 dxy item 1 dxy] (list [1 0] [0 1]))
+      ask contour-pen [
+        set color red - 5 + (temp - 1)
+        foreach lower [ p -> 
+          draw-boundary-with p
+        ]
+        set color red - 5 + temp
+        foreach upper [ p -> 
+          draw-boundary-with p
+        ]
+      ]
+    ]
+  ]
+  ask contour-pen [ die ]
+end
+
+to-report get-bin [x breaks]
+  report length filter [v -> x > v] breaks 
+end
+
+to draw-boundary-with [p]
+  face p
+  fd 0.5
+  rt 90
+  fd 0.5
+  rt 180
+  pd
+  fd 1
+  pu
+  rt 180
+  fd 0.5
+  rt 90 
+  fd 0.5
+end  
+
 
 to renew-plots
   set-current-plot "Populations"
@@ -83,11 +135,4 @@ to renew-plots
   plot sum [item 1 pops] of the-land
   set-current-plot-pen "dying"
   plot sum [item 2 pops] of the-land
-
-;  set-current-plot "Dispersal distances"
-;  clear-plot
-;  (foreach (n-values 350 [x -> x]) (array:to-list distances) [
-;    [x y] ->
-;      plotxy x ln (y + 1)
-;  ])
 end

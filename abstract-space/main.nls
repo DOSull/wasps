@@ -54,21 +54,15 @@ to update-populations
     set pop sum pops
     set next-pops n-values num-subpops [ i -> 0 ]
   ]
-;  ifelse any? the-habitable-land with [pop > 0] [
-    set total-pop sum [pop] of the-habitable-land
-    set total-extent count the-habitable-land with [pop > 0]
-    set prop-occupied total-extent / count the-land
-    set mean-occupancy-rate mean [pop / capacity] of the-habitable-land
-;  ]
-;  [
-;    set total-pop 0
-;    set total-extent 0
-;    set prop-occupied 0
-;    set mean-occupancy-rate 0
-;    set total-extent 0
-;  ]
-  ask monitoring-area [
-    set history lput pops history
+  set total-pop sum [pop] of the-habitable-land
+  set total-extent count the-habitable-land with [pop > 0]
+  set prop-occupied total-extent / count the-land
+  set mean-occupancy-rate mean [pop / capacity] of the-habitable-land
+
+  if track-monitoring-area? [
+    ask monitoring-area [
+      set history lput pops history
+    ]
   ]
 end
 
@@ -92,7 +86,7 @@ to reset-map
 end
 
 to save-monitor
-  let fname (word "monitor-dmean" d-mean "-pldd" p-ldd "-rmean" R-mean ".txt")
+  let fname (word "monitor-dmean" d-mean "-pldd" p-ldd "-rmean" R-mean "-" timestamp ".txt")
   if file-exists? fname [
     file-delete fname
   ]
@@ -113,13 +107,17 @@ to save-monitor
   file-close
 end
 
-to record-video [n]
+to-report timestamp
+  report replace-item 15 replace-item 12 date-and-time "_" "_" 
+end
+
+to record-video [n fname]
   setup
   (vid:start-recorder 102 102)
   repeat n [
     vid:record-view 
     go
   ]
-  vid:save-recording "sample-run.mp4"
+  vid:save-recording fname
   vid:reset-recorder
 end

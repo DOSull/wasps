@@ -46,7 +46,7 @@ extensions [
 ]
 
 breed [ vizs viz ]       ;; to visualize population mix wild (red) vs GM (blue) across space
-breed [ roads road ]     ;; to visualize roads (and make it easy to turn them on/off
+breed [ ldd-targets ldd-target ]
 
 globals [
   R-annual               ;; this year's mean R value
@@ -67,11 +67,12 @@ globals [
   ;; subsets of the patches
   the-land               ;; all non-sea patches
   the-sea                ;; all sea patches
-  the-roads              ;; all patches with a road present
+  preferred-sites        ;; preferred-sites for LDD dispersal (may be roads or other)
   the-habitable-land     ;; all patches with capacity > 0
   monitoring-area        ;; a subset of patches used to record time series data for model exploration
   central-p
 
+  show-contours?
 ;; ----------------
 ;; OD matrix method
 ;  patch-list
@@ -88,10 +89,10 @@ patches-own [
   init-pop               ;; initial total population to enable quick restart
   init-pops              ;; initial list of subpopulations to enable quick restart
   R-local                ;; the local R value based on population and capacity constraint (1 - n/k)
-  road?                  ;; if a road is present
+  preferred-site?        ;; preferred for LDD
   history                ;; a list recording population history for a patch in the monitoring area
   my-kernel              ;; a local copy of the dispersal kernel (which removes non-land patches from the base kernel
-
+  temp ;; useful to have
 ;; ----------------
 ;; OD matrix method
 ;  id
@@ -284,7 +285,7 @@ show-pop
 show-pop
 0
 num-subpops
-1.0
+0.0
 1
 1
 NIL
@@ -356,7 +357,7 @@ BUTTON
 743
 417
 toggle roads
-ask roads [set hidden? not hidden?]
+ask ldd-targets [set hidden? not hidden?]
 NIL
 1
 T
@@ -442,7 +443,7 @@ number-of-sites
 number-of-sites
 0
 50
-20.0
+10.0
 1
 1
 NIL
@@ -579,7 +580,7 @@ SWITCH
 293
 stochastic-repro?
 stochastic-repro?
-1
+0
 1
 -1000
 
@@ -942,16 +943,95 @@ get-kernel-mean-d
 1
 11
 
+SLIDER
+1366
+486
+1544
+520
+distribution-scale
+distribution-scale
+1
+50
+20.0
+1
+1
+NIL
+HORIZONTAL
+
+CHOOSER
+1367
+524
+1545
+569
+LDD
+LDD
+"targetted-roads" "targetted-random" "untargetted"
+1
+
+BUTTON
+1425
+620
+1551
+654
+NIL
+save-monitor
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+TEXTBOX
+1352
+399
+1460
+432
+Spatial characteristics
+14
+0.0
+1
+
 SWITCH
-1341
-398
-1446
-431
-roads?
-roads?
+1367
+580
+1552
+614
+track-monitoring-area?
+track-monitoring-area?
 1
 1
 -1000
+
+CHOOSER
+1365
+435
+1545
+480
+spatial-setup
+spatial-setup
+"homogeneous" "random-correlated" "e-w-trend"
+1
+
+BUTTON
+628
+425
+744
+459
+show contours
+ifelse show-contours?\n[ clear-drawing ] \n[ draw-contours ]\nset show-contours? not show-contours?
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1302,7 +1382,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.1.1
+NetLogo 6.1.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
