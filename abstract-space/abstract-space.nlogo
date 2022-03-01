@@ -49,6 +49,7 @@ breed [ vizs viz ]       ;; to visualize population mix wild (red) vs GM (blue) 
 breed [ ldd-targets ldd-target ]
 
 globals [
+  R-mean
   R-annual               ;; this year's mean R value
   num-subpops            ;; the number of subpopulations (3 in the wasps model)
   total-pop              ;; total population across the landscape
@@ -148,11 +149,11 @@ SLIDER
 32
 185
 65
-R-mean
-R-mean
-1.0
+birth-rate
+birth-rate
+0.25
 4
-1.1
+2.5
 0.01
 1
 NIL
@@ -225,10 +226,10 @@ PENS
 "dying" 1.0 0 -13840069 true "" ""
 
 SLIDER
-13
-548
-185
-581
+15
+565
+187
+598
 p-ldd
 p-ldd
 0
@@ -251,15 +252,15 @@ prop-occupied
 11
 
 SLIDER
-16
-473
-188
-506
+13
+490
+185
+523
 d-mean
 d-mean
 0.01
 10
-0.5
+5.0
 0.01
 1
 NIL
@@ -377,7 +378,7 @@ seed
 seed
 0
 1000
-1.0
+10.0
 1
 1
 NIL
@@ -390,7 +391,7 @@ SWITCH
 124
 use-seed?
 use-seed?
-1
+0
 1
 -1000
 
@@ -478,7 +479,7 @@ colonies-per-site
 colonies-per-site
 0
 1000
-1.0
+5.0
 1
 1
 NIL
@@ -563,21 +564,10 @@ length kernel
 11
 
 SWITCH
-984
-413
-1176
-446
-use-logistic-map?
-use-logistic-map?
-0
-1
--1000
-
-SWITCH
-13
-260
-183
-293
+15
+291
+185
+324
 stochastic-repro?
 stochastic-repro?
 0
@@ -596,15 +586,15 @@ debug?
 -1000
 
 SLIDER
-13
-390
-185
-423
+15
+421
+187
+454
 var-mean-ratio
 var-mean-ratio
 1
 5
-2.0
+1.0
 0.01
 1
 NIL
@@ -667,9 +657,9 @@ SLIDER
 63
 max-capacity-per-sq-km
 max-capacity-per-sq-km
-500
+100
 5000
-500.0
+100.0
 10
 1
 NIL
@@ -716,12 +706,12 @@ For replicability set a seed and use it!
 1
 
 SLIDER
-14
-116
-186
-149
-R-sd
-R-sd
+12
+175
+184
+208
+pop-sd
+pop-sd
 0
 0.5
 0.0
@@ -731,10 +721,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-13
-171
-185
-204
+12
+105
+184
+138
 mortality
 mortality
 0
@@ -748,9 +738,9 @@ HORIZONTAL
 TEXTBOX
 19
 69
-169
-111
-Surviving offspring per queen net of mortality - for logistic map M = 1
+183
+98
+New colonies per reproductive queen
 11
 0.0
 1
@@ -766,50 +756,50 @@ Population dynamics
 1
 
 TEXTBOX
-19
-296
-188
-380
+21
+327
+190
+411
 Exp(N) each generation is R * pop. Stochastic option will vary this according to a Poisson distribution (vmr = 1) or a Negative Binomial (vmr > 1)
 11
 0.0
 1
 
 TEXTBOX
-7
-225
-157
-255
+9
+256
+159
+286
 Stochastic variation in reproduction
 12
 0.0
 1
 
 TEXTBOX
-10
-451
-160
-469
+12
+468
+162
+486
 Dispersal
 14
 0.0
 1
 
 TEXTBOX
-17
-510
-167
-538
+19
+527
+169
+555
 Mean distance (exponentially distributed)
 11
 0.0
 1
 
 TEXTBOX
-17
-583
-191
-639
+19
+600
+193
+656
 Probability of long distance dispersal to a randomly select road location
 11
 0.0
@@ -831,16 +821,6 @@ TEXTBOX
 984
 484
 These will likely become internal global variables at some point - provided for experimentation
-11
-0.0
-1
-
-TEXTBOX
-990
-451
-1140
-469
-Almost always a yes!
 11
 0.0
 1
@@ -906,11 +886,11 @@ On = show populations\nOff = show red:blue mix of wild:GM
 1
 
 TEXTBOX
-19
-153
-169
-171
-Annual variability in R
+17
+212
+167
+240
+Annual variability in population parameters
 11
 0.0
 1
@@ -966,7 +946,7 @@ CHOOSER
 LDD
 LDD
 "targetted-roads" "targetted-random" "untargetted"
-1
+0
 
 BUTTON
 1425
@@ -1031,6 +1011,16 @@ NIL
 NIL
 NIL
 NIL
+1
+
+TEXTBOX
+21
+144
+171
+172
+Annual mortality of queens (usu. 1)
+11
+0.0
 1
 
 @#$#@#$#@
@@ -1386,6 +1376,105 @@ NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="80"/>
+    <metric>total-pop</metric>
+    <metric>prop-occupied</metric>
+    <metric>sum [item 1 pops] of the-habitable-land</metric>
+    <metric>sum [item 2 pops] of the-habitable-land</metric>
+    <enumeratedValueSet variable="pop-sd">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="var-mean-ratio">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="stdev-occupancy">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="distribution-scale">
+      <value value="20"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-seed?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="spatial-setup">
+      <value value="&quot;random-correlated&quot;"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="seed" first="1" step="1" last="10"/>
+    <enumeratedValueSet variable="percentile-selector">
+      <value value="0.95"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proportion-gm">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="number-of-sites">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="stochastic-repro?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-capacity-per-sq-km">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="p-ldd">
+      <value value="1.0E-6"/>
+      <value value="1.0E-4"/>
+      <value value="0.01"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="colonies-per-site">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodicity">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="LDD">
+      <value value="&quot;targetted-roads&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="release-type">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-occupancy">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mortality">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-kernel-method?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="homogeneous?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="d-mean">
+      <value value="0.5"/>
+      <value value="2"/>
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="track-monitoring-area?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="birth-rate">
+      <value value="1.5"/>
+      <value value="2"/>
+      <value value="2.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="debug?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="scenario">
+      <value value="&quot;base plus release sites&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default

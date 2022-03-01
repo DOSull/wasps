@@ -24,7 +24,8 @@
 to go
   if total-pop > 0 [
     ;; model-wide mean R this year
-    set R-annual random-normal R-mean R-sd
+    set R-mean birth-rate - mortality
+    set R-annual random-normal R-mean pop-sd
     ;; habitable patches might have population
     ask the-habitable-land [
       if pop > 0 [

@@ -28,25 +28,16 @@ to-report next-generation
   let reproductive sum but-last pops
   ;; from which we get the new-population
   ;; determine local R
-  ;; we allow for both 'standard' discrete logistic pop model and logistic map
-  ifelse use-logistic-map? 
-  [ ;; logistic map means no survivors and we use raw R + 1
-    ;; because there is no persistence of population in this model
-    set R-local (1 + R-annual) * (1 - pop / capacity) 
-  ]
-  [ ;; standard logistic, we apply mortality and boost R to get desired net R
-    set R-local (1 - mortality) + (R-annual + mortality) * (1 - pop / capacity) 
-  ]
-  
-  let expected-new-pop (R-local * reproductive)
-  if expected-new-pop < 1 [
+  set R-local R-annual * (1 - pop / capacity) 
+  let expected-next-pop sum pops + R-local * reproductive - (mortality * last pops)
+  if expected-next-pop < 1 [
     report [0 0 0]
   ]
-  let actual-new-pop expected-new-pop
+  let actual-new-pop expected-next-pop
   if stochastic-repro? [ 
     ifelse var-mean-ratio = 1 
-    [ set actual-new-pop random-poisson expected-new-pop ]
-    [ set actual-new-pop nbinomial-with-mean-vmr expected-new-pop var-mean-ratio ]
+    [ set actual-new-pop random-poisson expected-next-pop ]
+    [ set actual-new-pop nbinomial-with-mean-vmr expected-next-pop var-mean-ratio ]
   ]
   ;; the proportions of actual-new-pop in each of wild, GM and sterile
   ;; determined by w^2, 2gw, g^2 i.e. binomial expansion of (w + gm)^2

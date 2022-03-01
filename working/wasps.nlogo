@@ -49,6 +49,7 @@ breed [ vizs viz ]       ;; to visualize population mix wild (red) vs GM (blue) 
 breed [ roads road ]     ;; to visualize roads (and make it easy to turn them on/off
 
 globals [
+  R-mean
   R-annual               ;; this year's mean R value
   num-subpops            ;; the number of subpopulations (3 in the wasps model)
   total-pop              ;; total population across the landscape
@@ -149,9 +150,9 @@ SLIDER
 32
 185
 65
-R-mean
-R-mean
-1.0
+birth-rate
+birth-rate
+0.25
 4
 1.5
 0.01
@@ -195,9 +196,9 @@ NIL
 
 MONITOR
 1063
-426
+627
 1181
-471
+672
 NIL
 total-pop
 0
@@ -206,7 +207,7 @@ total-pop
 
 PLOT
 628
-426
+388
 1054
 672
 Populations
@@ -226,10 +227,10 @@ PENS
 "dying" 1.0 0 -13840069 true "" ""
 
 SLIDER
-13
-548
-185
-581
+11
+587
+183
+620
 p-ldd
 p-ldd
 0
@@ -241,10 +242,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-1063
-475
-1182
-520
+1062
+522
+1181
+567
 NIL
 prop-occupied
 3
@@ -252,10 +253,10 @@ prop-occupied
 11
 
 SLIDER
-16
-473
-188
-506
+14
+512
+186
+545
 d-mean
 d-mean
 0.01
@@ -268,9 +269,9 @@ HORIZONTAL
 
 MONITOR
 1062
-525
+574
 1200
-570
+619
 mean-occupancy-rate
 mean-occupancy-rate
 3
@@ -293,10 +294,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-988
-325
-1159
-358
+1099
+352
+1272
+385
 proportion-gm
 proportion-gm
 0
@@ -353,10 +354,10 @@ NIL
 1
 
 BUTTON
-628
-383
-743
-417
+749
+344
+864
+378
 toggle roads
 ask roads [set hidden? not hidden?]
 NIL
@@ -396,24 +397,24 @@ use-seed?
 -1000
 
 SLIDER
-874
+862
 70
-1039
+1027
 103
 mean-occupancy
 mean-occupancy
 0
 1
-0.5
+0.9
 0.01
 1
 NIL
 HORIZONTAL
 
 SLIDER
-874
+862
 107
-1040
+1028
 140
 stdev-occupancy
 stdev-occupancy
@@ -426,9 +427,9 @@ NIL
 HORIZONTAL
 
 CHOOSER
-874
+862
 170
-1050
+1038
 215
 scenario
 scenario
@@ -436,9 +437,9 @@ scenario
 0
 
 SLIDER
-1123
+1099
 32
-1295
+1271
 65
 number-of-sites
 number-of-sites
@@ -451,9 +452,9 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-1119
+1095
 10
-1424
+1400
 28
 Parameters for any \"release sites\" scenario
 12
@@ -461,9 +462,9 @@ Parameters for any \"release sites\" scenario
 1
 
 TEXTBOX
-877
+865
 10
-1040
+1028
 28
 Population initialisation
 14
@@ -471,9 +472,9 @@ Population initialisation
 1
 
 SLIDER
-1123
+1099
 70
-1294
+1270
 103
 colonies-per-site
 colonies-per-site
@@ -486,9 +487,9 @@ NIL
 HORIZONTAL
 
 SLIDER
-1123
+1099
 108
-1295
+1271
 141
 percentile-selector
 percentile-selector
@@ -501,9 +502,9 @@ NIL
 HORIZONTAL
 
 SLIDER
-1124
+1100
 221
-1296
+1272
 254
 release-type
 release-type
@@ -516,9 +517,9 @@ NIL
 HORIZONTAL
 
 SLIDER
-1124
+1100
 166
-1297
+1273
 199
 periodicity
 periodicity
@@ -531,10 +532,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-988
-285
-1159
-318
+1099
+312
+1270
+345
 homogeneous?
 homogeneous?
 1
@@ -542,32 +543,21 @@ homogeneous?
 -1000
 
 SWITCH
-1275
-522
-1467
-555
-use-logistic-map?
-use-logistic-map?
+12
+289
+182
+322
+stochastic-repro?
+stochastic-repro?
 0
 1
 -1000
 
-SWITCH
-13
-260
-183
-293
-stochastic-repro?
-stochastic-repro?
-1
-1
--1000
-
 SLIDER
-13
-390
-185
-423
+12
+419
+184
+452
 var-mean-ratio
 var-mean-ratio
 1
@@ -579,9 +569,9 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-1298
+1274
 29
-1364
+1340
 57
 how many \nlocations
 11
@@ -589,9 +579,9 @@ how many \nlocations
 1
 
 TEXTBOX
-1297
+1273
 67
-1404
+1380
 95
 colonies' worth of \nwasps per site
 11
@@ -599,9 +589,9 @@ colonies' worth of \nwasps per site
 1
 
 TEXTBOX
-1298
+1274
 102
-1427
+1403
 144
 where in the habitat\ndistribution to select \nrelease sites
 11
@@ -609,9 +599,9 @@ where in the habitat\ndistribution to select \nrelease sites
 1
 
 TEXTBOX
-1300
+1276
 170
-1468
+1444
 220
 how often to release wasps: \n0 =  never (or only at t0)\nn = every n years
 11
@@ -619,9 +609,9 @@ how often to release wasps: \n0 =  never (or only at t0)\nn = every n years
 1
 
 TEXTBOX
-1300
+1276
 223
-1463
+1439
 279
 0 = wild; 1 = GM\nThis should usually be set to 1, but 0 can be used to explore invasion
 11
@@ -629,9 +619,9 @@ TEXTBOX
 1
 
 SLIDER
-874
+862
 30
-1100
+1088
 63
 max-capacity-per-sq-km
 max-capacity-per-sq-km
@@ -644,30 +634,30 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-1161
-328
-1288
-356
+1284
+354
+1411
+382
 initialise with GM wasps everyhere
 11
 0.0
 1
 
 TEXTBOX
-1163
-288
-1280
-316
+1286
+314
+1403
+342
 initialise with same capacity everywhere
 11
 0.0
 1
 
 TEXTBOX
-984
-266
-1134
-284
+1101
+291
+1251
+309
 Special cases
 12
 0.0
@@ -684,12 +674,12 @@ For replicability set a seed and use it!
 1
 
 SLIDER
-14
-116
-186
-149
-R-sd
-R-sd
+9
+171
+181
+204
+pop-sd
+pop-sd
 0
 0.5
 0.0
@@ -699,10 +689,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-13
-171
-185
-204
+11
+101
+183
+134
 mortality
 mortality
 0
@@ -718,7 +708,7 @@ TEXTBOX
 69
 169
 111
-Surviving offspring per queen net of mortality - for logistic map M = 1
+New colonies per reproductive queen
 11
 0.0
 1
@@ -734,81 +724,51 @@ Population dynamics
 1
 
 TEXTBOX
-19
-296
-188
-380
+18
+325
+187
+409
 Exp(N) each generation is R * pop. Stochastic option will vary this according to a Poisson distribution (vmr = 1) or a Negative Binomial (vmr > 1)
 11
 0.0
 1
 
 TEXTBOX
-7
-225
-157
-255
+6
+254
+156
+284
 Stochastic variation in reproduction
 12
 0.0
 1
 
 TEXTBOX
-10
-451
-160
-469
+8
+490
+158
+508
 Dispersal
 14
 0.0
 1
 
 TEXTBOX
-17
-510
-167
-538
+15
+549
+165
+577
 Mean distance (exponentially distributed)
 11
 0.0
 1
 
 TEXTBOX
-17
-583
-191
-639
+15
+622
+189
+678
 Probability of long distance dispersal to a randomly select road location
-11
-0.0
-1
-
-TEXTBOX
-1273
-436
-1423
-454
-Internal controls
-14
-0.0
-1
-
-TEXTBOX
-1283
-457
-1433
-513
-These will likely become internal global variables at some point - provided for experimentation
-11
-0.0
-1
-
-TEXTBOX
-1281
-560
-1431
-578
-Almost always a yes!
 11
 0.0
 1
@@ -854,25 +814,35 @@ On = show populations\nOff = show red:blue mix of wild:GM
 1
 
 TEXTBOX
-19
-153
-169
-171
+14
+208
+164
+226
 Annual variability in R
 11
 0.0
 1
 
 SWITCH
-987
-368
-1207
-401
+1098
+394
+1318
+427
 track-monitoring-area?
 track-monitoring-area?
 1
 1
 -1000
+
+TEXTBOX
+18
+139
+168
+167
+Annual mortality of queens (usu. 1)
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1228,10 +1198,10 @@ NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="NEW-CONTROL-EXPERIMENT" repetitions="1" runMetricsEveryStep="true">
+  <experiment name="CONTROL-EXPERIMENT" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <timeLimit steps="250"/>
+    <timeLimit steps="200"/>
     <metric>total-pop</metric>
     <metric>prop-occupied</metric>
     <metric>sum [item 1 pops] of the-habitable-land</metric>
@@ -1240,9 +1210,9 @@ NetLogo 6.2.0
       <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="mean-occupancy">
-      <value value="0.5"/>
+      <value value="0.9"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="R-sd">
+    <enumeratedValueSet variable="pop-sd">
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="stdev-occupancy">
@@ -1271,13 +1241,10 @@ NetLogo 6.2.0
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="stochastic-repro?">
-      <value value="false"/>
+      <value value="true"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="show-pop">
       <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="use-logistic-map?">
-      <value value="true"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="d-mean">
       <value value="0.5"/>
@@ -1287,7 +1254,7 @@ NetLogo 6.2.0
     <enumeratedValueSet variable="track-monitoring-area?">
       <value value="false"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="R-mean">
+    <enumeratedValueSet variable="birth-rate">
       <value value="1.5"/>
       <value value="2"/>
       <value value="2.5"/>
