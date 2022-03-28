@@ -53,15 +53,12 @@ globals [
   R-annual               ;; this year's mean R value
   num-subpops            ;; the number of subpopulations (3 in the wasps model)
   total-pop              ;; total population across the landscape
+  total-wild             ;; total wild population
   mean-occupancy-rate    ;; the mean population as a proportion of capacity
 
   ;; dispersal related
   total-extent           ;; the total number of patches with any wasps present
   prop-occupied          ;; the proportion of all habitable patches with any wasps present
-
-  kernel-offsets         ;; list of [dx dy] values for the dispersal kernel
-  kernel-weights         ;; list of relative weights for kernel offsets (ordered per the offsets)
-  kernel                 ;; the list [kernel-offsets kernel-weights]
 
   pals                   ;; colour palettes for display in the order wild, gm, sterile, total
 
@@ -71,15 +68,8 @@ globals [
   the-roads              ;; all patches with a road present
   the-habitable-land     ;; all patches with capacity > 0
   monitoring-area        ;; a subset of patches used to record time series data for model exploration
-  central-p
 
-  use-kernel-method?
   debug?
-;; ----------------
-;; OD matrix method
-;  patch-list
-;  pathways
-;; ----------------
 ]
 
 patches-own [
@@ -93,12 +83,6 @@ patches-own [
   R-local                ;; the local R value based on population and capacity constraint (1 - n/k)
   road?                  ;; if a road is present
   history                ;; a list recording population history for a patch in the monitoring area
-  my-kernel              ;; a local copy of the dispersal kernel (which removes non-land patches from the base kernel
-
-;; ----------------
-;; OD matrix method
-;  id
-;; ----------------
 ]
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -195,10 +179,10 @@ NIL
 1
 
 MONITOR
-1063
-627
-1181
-672
+1065
+508
+1183
+553
 NIL
 total-pop
 0
@@ -224,7 +208,7 @@ PENS
 "total" 1.0 0 -8630108 true "" ""
 "wild" 1.0 0 -2674135 true "" ""
 "GM" 1.0 0 -13791810 true "" ""
-"dying" 1.0 0 -13840069 true "" ""
+"sterile" 1.0 0 -13840069 true "" ""
 
 SLIDER
 11
@@ -235,17 +219,17 @@ p-ldd
 p-ldd
 0
 0.001
-0.01
+1.0E-4
 0.00001
 1
 NIL
 HORIZONTAL
 
 MONITOR
-1062
-522
-1181
-567
+1064
+403
+1183
+448
 NIL
 prop-occupied
 3
@@ -261,17 +245,17 @@ d-mean
 d-mean
 0.01
 10
-0.5
+1.92
 0.01
 1
 NIL
 HORIZONTAL
 
 MONITOR
-1062
-574
-1200
-619
+1064
+455
+1202
+500
 mean-occupancy-rate
 mean-occupancy-rate
 3
@@ -294,10 +278,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1099
-352
-1272
-385
+862
+152
+1010
+185
 proportion-gm
 proportion-gm
 0
@@ -427,20 +411,20 @@ NIL
 HORIZONTAL
 
 CHOOSER
-862
-170
-1038
-215
+1101
+31
+1277
+76
 scenario
 scenario
 "base plus release sites" "release sites only" "base only"
 0
 
 SLIDER
-1099
-32
-1271
-65
+1287
+134
+1433
+167
 number-of-sites
 number-of-sites
 0
@@ -452,10 +436,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-1095
-10
-1400
-28
+1110
+180
+1415
+198
 Parameters for any \"release sites\" scenario
 12
 0.0
@@ -472,40 +456,40 @@ Population initialisation
 1
 
 SLIDER
-1099
-70
-1270
-103
+1107
+205
+1278
+238
 colonies-per-site
 colonies-per-site
 0
 1000
-500.0
+100.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-1099
-108
-1271
-141
+1107
+243
+1279
+276
 percentile-selector
 percentile-selector
 0
 1
-0.95
+0.0
 0.01
 1
 NIL
 HORIZONTAL
 
 SLIDER
-1100
-221
-1272
-254
+1107
+340
+1279
+373
 release-type
 release-type
 0
@@ -517,25 +501,25 @@ NIL
 HORIZONTAL
 
 SLIDER
-1100
-166
-1273
-199
+1107
+285
+1280
+318
 periodicity
 periodicity
 0
 10
-0.0
+1.0
 1
 1
 NIL
 HORIZONTAL
 
 SWITCH
-1099
-312
-1270
-345
+911
+262
+1082
+295
 homogeneous?
 homogeneous?
 1
@@ -569,50 +553,50 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-1274
-29
-1340
-57
-how many \nlocations
+1298
+115
+1419
+133
+how many locations
 11
 0.0
 1
 
 TEXTBOX
-1273
-67
-1380
-95
+1281
+202
+1388
+230
 colonies' worth of \nwasps per site
 11
 0.0
 1
 
 TEXTBOX
-1274
-102
-1403
-144
+1282
+237
+1411
+279
 where in the habitat\ndistribution to select \nrelease sites
 11
 0.0
 1
 
 TEXTBOX
-1276
-170
-1444
-220
+1283
+289
+1451
+339
 how often to release wasps: \n0 =  never (or only at t0)\nn = every n years
 11
 0.0
 1
 
 TEXTBOX
-1276
-223
-1439
-279
+1283
+342
+1446
+398
 0 = wild; 1 = GM\nThis should usually be set to 1, but 0 can be used to explore invasion
 11
 0.0
@@ -627,37 +611,37 @@ max-capacity-per-sq-km
 max-capacity-per-sq-km
 500
 5000
-1380.0
+500.0
 10
 1
 NIL
 HORIZONTAL
 
 TEXTBOX
-1284
-354
-1411
-382
+866
+190
+1004
+218
 initialise with GM wasps everyhere
 11
 0.0
 1
 
 TEXTBOX
-1286
-314
-1403
-342
-initialise with same capacity everywhere
+915
+301
+1076
+319
+same capacity everywhere
 11
 0.0
 1
 
 TEXTBOX
-1101
-291
-1251
-309
+913
+241
+1063
+259
 Special cases
 12
 0.0
@@ -766,8 +750,8 @@ Mean distance (exponentially distributed)
 TEXTBOX
 15
 622
-189
-678
+173
+662
 Probability of long distance dispersal to a randomly select road location
 11
 0.0
@@ -824,12 +808,12 @@ Annual variability in R
 1
 
 SWITCH
-1098
-394
-1318
-427
-track-monitoring-area?
-track-monitoring-area?
+1282
+527
+1422
+560
+monitor-area?
+monitor-area?
 1
 1
 -1000
@@ -842,6 +826,80 @@ TEXTBOX
 Annual mortality of queens (usu. 1)
 11
 0.0
+1
+
+MONITOR
+1065
+562
+1177
+607
+NIL
+total-wild
+0
+1
+11
+
+TEXTBOX
+1254
+144
+1281
+162
+OR
+14
+0.0
+1
+
+SLIDER
+1107
+134
+1241
+167
+grid-resolution
+grid-resolution
+1
+50
+5.0
+1
+1
+NIL
+HORIZONTAL
+
+SWITCH
+1107
+92
+1265
+125
+grid-releases?
+grid-releases?
+0
+1
+-1000
+
+TEXTBOX
+1309
+39
+1396
+71
+Release of GM wasps
+14
+0.0
+1
+
+BUTTON
+1288
+569
+1413
+602
+NIL
+save-monitor
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
 1
 
 @#$#@#$#@
@@ -1193,7 +1251,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.1.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

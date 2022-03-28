@@ -22,7 +22,7 @@
 ;; DEALINGS IN THE SOFTWARE.
 
 to go
-  if total-pop > 0 [
+  ifelse total-pop > 0 [
     ;; model-wide mean R this year
     set R-mean birth-rate - mortality
     set R-annual random-normal R-mean pop-sd
@@ -34,12 +34,13 @@ to go
       ]
     ]
     ;; if any regular wasp releases are requested do that now
-    if periodicity > 0 [
+    if periodicity > 0 and total-wild > 0 [
       if ticks mod periodicity = 0 [
         release-wasps false
       ]
     ]
   ]
+  [ stop ]
   ;; update the numbers and the display and plots
   update-populations
   colour-patches
@@ -55,21 +56,16 @@ to update-populations
     set pop sum pops
     set next-pops n-values num-subpops [ i -> 0 ]
   ]
-;  ifelse any? the-habitable-land with [pop > 0] [
-    set total-pop sum [pop] of the-habitable-land
-    set total-extent count the-habitable-land with [pop > 0]
-    set prop-occupied total-extent / count the-land
-    set mean-occupancy-rate mean [pop / capacity] of the-habitable-land
-;  ]
-;  [
-;    set total-pop 0
-;    set total-extent 0
-;    set prop-occupied 0
-;    set mean-occupancy-rate 0
-;    set total-extent 0
-;  ]
-  ask monitoring-area [
-    set history lput pops history
+  set total-pop sum [pop] of the-habitable-land
+  set total-wild sum [item 0 pops] of the-habitable-land
+  set total-extent count the-habitable-land with [pop > 0]
+  set prop-occupied total-extent / count the-land
+  set mean-occupancy-rate mean [pop / capacity] of the-habitable-land
+
+  if monitor-area? [
+    ask monitoring-area [
+      set history lput (fput ticks pops) history
+    ]
   ]
 end
 
@@ -99,17 +95,20 @@ to save-monitor
   ]
   file-open fname
   file-print "x y t k p1 p2 p3"
-  foreach n-values ticks [i -> i] [ t ->
+  let nrows length [history] of one-of monitoring-area
+  let i 0
+  repeat nrows [
     ask monitoring-area [
+      let data item i history
       file-type word pxcor " "
       file-type word pycor " "
-      file-type word t " "
-      file-type word capacity " "
-      let p item t history
-      file-type word item 0 p " "
-      file-type word item 1 p " "
-      file-print item 2 p
+      file-type word item 0 data " "     ;; ticks
+      file-type word capacity " " 
+      file-type word item 1 data " "     ;; wild
+      file-type word item 2 data " "     ;; GM
+      file-print item 3 data             ;; sterile
     ]
+    set i i + 1
   ]
   file-close
 end

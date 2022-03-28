@@ -29,9 +29,6 @@ to setup
   if use-seed? [
     random-seed seed
   ]
-  set central-p patch ((min-pxcor + max-pxcor) / 2) ((min-pycor + max-pycor) / 2)
-  ;; setting up a dispersal kernel is slow so only do it if needed
-  set use-kernel-method? false
   set debug? false
 
   ;; number of subpopulation is 3 in the wasp model
@@ -75,7 +72,6 @@ to setup
     release-wasps true
   ]
   
-  ;; initialise the monitoring area (not used in the abstract-space model
   setup-monitoring-area
 
   update-populations
@@ -96,15 +92,7 @@ to setup-capacities
 ;; For the realistic GIS space:  
   let ds gis:load-dataset "wasp-suitability.asc"
   gis:apply-raster ds capacity  
-  
-;  ;; abstract space is a high to low west to east (left to right!) gradient
-;  ;; with a little randomness
-;  ask patches [
-;    set capacity max-pxcor - pxcor + random 2
-;  ]
-;  repeat 5 [
-;    diffuse capacity 0.5
-;  ]
+
   ;; scale it so the maximum capacity is the max requested
   let max-k max [capacity] of patches
   let multiple max-capacity-per-sq-km / max-k
@@ -124,11 +112,6 @@ to setup-roads
   ask patches [
     set road? (road? = 0)
   ]
-  
-;  ;; abstract space just a couple of straight lines
-;  ask patches [
-;    set road? pxcor = 43 or pycor = 6
-;  ]
   set the-roads patches with [road?]
   ask the-roads [
     sprout-roads 1 [
@@ -159,7 +142,10 @@ end
 ;; initialise? is true if this is during setup
 ;;                false if while model is running
 to release-wasps [initialise?]
-  ask n-of number-of-sites potential-release-sites [
+  let release-sites ifelse-value grid-releases? 
+  [ potential-release-sites ] 
+  [ n-of number-of-sites potential-release-sites ]
+  ask release-sites [
     increment-population release-type colonies-per-site
     if initialise? [
       set init-pops next-pops
@@ -168,17 +154,40 @@ to release-wasps [initialise?]
   ]
 end
 
-;; get release sits from the specified upper percentil of capacities
+
+;; get release sites from the specified upper percentil of capacities
 to-report potential-release-sites 
   ifelse percentile-selector = 0 [
-    report the-habitable-land
+    report ifelse-value grid-releases? [get-grid-corners] [the-habitable-land]
   ]
   [
     let n-percentile count the-habitable-land * (1 - percentile-selector)
     let cutoff-capacity [capacity] of item n-percentile (reverse sort-on [capacity] the-habitable-land)
-    report the-habitable-land with [capacity >= cutoff-capacity]
+    report ifelse-value grid-releases? 
+    [ get-grid-corners with [capacity >= cutoff-capacity] ]
+    [ the-habitable-land with [capacity >= cutoff-capacity] ]
   ]
 end
+
+to-report get-grid-corners
+  report the-habitable-land with [pxcor mod grid-resolution = 0 and pycor mod grid-resolution = 0]
+;  let corners patch-set nobody
+;  let east max [pxcor] of the-habitable-land
+;  let west min [pxcor] of the-habitable-land
+;  let xs n-values ceiling ((east - west + 1) / grid-resolution) [i -> west + i * grid-resolution]
+;  let north max [pycor] of the-habitable-land
+;  let south min [pycor] of the-habitable-land
+;  let ys n-values ceiling ((north - south + 1) / grid-resolution) [i -> south + i * grid-resolution]
+;  foreach xs [ x ->
+;    foreach ys [ y ->
+;      if [capacity] of (patch x y) > 0 [
+;        set corners (patch-set corners patch x y)
+;      ]
+;    ]
+;  ]
+;  report corners
+end
+
 
 
 to initialise-pops-to-zero
@@ -192,10 +201,10 @@ end
 
 to setup-monitoring-area
   set monitoring-area patch-set nobody
-;  if track-monitoring-area? [
-;    set monitoring-area the-land with [pxcor < 100 and pycor > 150 ]
-;    set monitoring-area patches with [pxcor > 35 and pxcor < 61 and pycor > 170 and pycor < 196]
-;  ]
+  if monitor-area? [
+    set monitoring-area the-land with [pxcor < 100 and pycor > 150 ]
+    set monitoring-area patches with [pxcor > 35 and pxcor < 61 and pycor > 170 and pycor < 196]
+  ]
   ask monitoring-area [
     set history []
   ]

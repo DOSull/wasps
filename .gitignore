@@ -11,7 +11,7 @@ GIS/
 *.doc*
 *.zip
 /*.png
-monitor.txt
+monitor*.txt
 *.log
 paper/figures/data/
 paper/
@@ -19,3 +19,5 @@ _materials/
 er/
 _materials/
 .Rproj.user
+data/
+*.csv

@@ -55,16 +55,18 @@ to colour-patches
     [
       let mx-q max [capacity] of patches
       let mn-q min [capacity] of patches
-      ask the-land [
-        set pcolor palette:scale-gradient [[255 255 255] [153 153 153]] capacity mx-q mn-q
-      ]
+;      ask the-land [
+;        set pcolor palette:scale-gradient [[255 255 255] [153 153 153]] capacity mx-q mn-q
+;      ]
       ask vizs [
-        ;set pcolor white
+        set pcolor white
         set hidden? false
         ifelse pop > 0 [
-          let r-p first pops / pop
-          let b-p item 1 pops / pop
-          set color (list (255 * r-p) 0 (255 * b-p) 153)
+          let r-p clamp (first pops / capacity) 0 1
+          let b-p clamp (item 1 pops / capacity) 0 1
+          let g-p clamp (item 2 pops / capacity) 0 1
+          set color (list (255 * r-p) (255 * g-p) (255 * b-p) (min (list (pop / capacity * 255) 255)))
+;          set color (list (255 * r-p) 0 (255 * b-p) 153)
         ]
         [ set hidden? true ]
       ]
@@ -133,6 +135,10 @@ to renew-plots
   plot sum [item 0 pops] of the-land
   set-current-plot-pen "GM"
   plot sum [item 1 pops] of the-land
-  set-current-plot-pen "dying"
+  set-current-plot-pen "sterile"
   plot sum [item 2 pops] of the-land
+end
+
+to-report clamp [x mn mx] 
+  report min (list max (list mn x) mx)
 end

@@ -103,8 +103,8 @@ patches-own [
 GRAPHICS-WINDOW
 198
 8
-614
-425
+606
+417
 -1
 -1
 8.0
@@ -118,9 +118,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-50
+49
 0
-50
+49
 1
 1
 1
@@ -151,9 +151,9 @@ SLIDER
 65
 birth-rate
 birth-rate
-0.25
+mortality
 4
-2.5
+2.0
 0.01
 1
 NIL
@@ -223,7 +223,7 @@ PENS
 "total" 1.0 0 -8630108 true "" ""
 "wild" 1.0 0 -2674135 true "" ""
 "GM" 1.0 0 -13791810 true "" ""
-"dying" 1.0 0 -13840069 true "" ""
+"sterile" 1.0 0 -13840069 true "" ""
 
 SLIDER
 15
@@ -233,8 +233,8 @@ SLIDER
 p-ldd
 p-ldd
 0
-0.001
 0.01
+1.0E-4
 0.00001
 1
 NIL
@@ -260,7 +260,7 @@ d-mean
 d-mean
 0.01
 10
-5.0
+2.0
 0.01
 1
 NIL
@@ -286,7 +286,7 @@ show-pop
 show-pop
 0
 num-subpops
-0.0
+3.0
 1
 1
 NIL
@@ -331,7 +331,7 @@ SWITCH
 279
 show-pop?
 show-pop?
-0
+1
 1
 -1000
 
@@ -378,7 +378,7 @@ seed
 seed
 0
 1000
-10.0
+30.0
 1
 1
 NIL
@@ -404,7 +404,7 @@ mean-occupancy
 mean-occupancy
 0
 1
-0.5
+0.9
 0.01
 1
 NIL
@@ -443,9 +443,9 @@ SLIDER
 number-of-sites
 number-of-sites
 0
-50
+2500
 10.0
-1
+10
 1
 NIL
 HORIZONTAL
@@ -473,13 +473,13 @@ Population initialisation
 SLIDER
 1123
 70
-1294
+1295
 103
 colonies-per-site
 colonies-per-site
 0
-1000
-5.0
+max-capacity-per-sq-km * 0.2
+16.0
 1
 1
 NIL
@@ -494,7 +494,7 @@ percentile-selector
 percentile-selector
 0
 1
-0.95
+0.0
 0.01
 1
 NIL
@@ -524,7 +524,7 @@ periodicity
 periodicity
 0
 10
-0.0
+2.0
 1
 1
 NIL
@@ -658,7 +658,7 @@ SLIDER
 max-capacity-per-sq-km
 max-capacity-per-sq-km
 100
-5000
+1000
 100.0
 10
 1
@@ -932,7 +932,7 @@ distribution-scale
 distribution-scale
 1
 50
-20.0
+30.0
 1
 1
 NIL
@@ -946,7 +946,7 @@ CHOOSER
 LDD
 LDD
 "targetted-roads" "targetted-random" "untargetted"
-0
+2
 
 BUTTON
 1425
@@ -1022,6 +1022,43 @@ Annual mortality of queens (usu. 1)
 11
 0.0
 1
+
+MONITOR
+1008
+408
+1104
+453
+greens-coeff
+(variance [pop] of patches / mean [pop] of patches - 1) / (total-pop - 1)
+6
+1
+11
+
+SWITCH
+1405
+29
+1540
+62
+grid-releases?
+grid-releases?
+0
+1
+-1000
+
+SLIDER
+1406
+66
+1537
+99
+grid-resolution
+grid-resolution
+1
+25
+4.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1282,16 +1319,16 @@ Polygon -7500403 true true 135 105 90 60 45 45 75 105 135 135
 Polygon -7500403 true true 165 105 165 135 225 105 255 45 210 60
 Polygon -7500403 true true 135 90 120 45 150 15 180 45 165 90
 
-square
-false
-0
-Rectangle -7500403 true true 30 30 270 270
-
 square 2
 false
 0
 Rectangle -7500403 true true 30 30 270 270
 Rectangle -16777216 true false 60 60 240 240
+
+square 3
+false
+0
+Rectangle -7500403 true true 0 0 300 300
 
 star
 false
@@ -1472,6 +1509,201 @@ NetLogo 6.2.0
     </enumeratedValueSet>
     <enumeratedValueSet variable="scenario">
       <value value="&quot;base plus release sites&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="experiment" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="250"/>
+    <metric>total-pop</metric>
+    <metric>prop-occupied</metric>
+    <metric>sum [item 1 pops] of the-habitable-land</metric>
+    <metric>sum [item 2 pops] of the-habitable-land</metric>
+    <enumeratedValueSet variable="var-mean-ratio">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="stdev-occupancy">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="distribution-scale">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-seed?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="spatial-setup">
+      <value value="&quot;random-correlated&quot;"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="seed" first="1" step="1" last="10"/>
+    <enumeratedValueSet variable="percentile-selector">
+      <value value="0.95"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="number-of-sites" first="4" step="2" last="20"/>
+    <enumeratedValueSet variable="proportion-gm">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="stochastic-repro?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-capacity-per-sq-km">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="colonies-per-site">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="p-ldd">
+      <value value="1.0E-4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodicity">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="LDD">
+      <value value="&quot;untargetted&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="birth-rate">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="pop-sd">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="release-type">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-occupancy">
+      <value value="0.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mortality">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-kernel-method?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="homogeneous?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="d-mean">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="track-monitoring-area?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="debug?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="scenario">
+      <value value="&quot;base plus release sites&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="experiment-grid-releases" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="150"/>
+    <metric>total-pop</metric>
+    <metric>prop-occupied</metric>
+    <metric>sum [item 1 pops] of the-habitable-land</metric>
+    <metric>sum [item 2 pops] of the-habitable-land</metric>
+    <enumeratedValueSet variable="var-mean-ratio">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="stdev-occupancy">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="distribution-scale">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-seed?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="spatial-setup">
+      <value value="&quot;random-correlated&quot;"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="seed" first="1" step="1" last="30"/>
+    <enumeratedValueSet variable="percentile-selector">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="number-of-sites">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proportion-gm">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="stochastic-repro?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-capacity-per-sq-km">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="colonies-per-site">
+      <value value="1"/>
+      <value value="4"/>
+      <value value="9"/>
+      <value value="16"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="p-ldd">
+      <value value="1.0E-4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodicity">
+      <value value="1"/>
+      <value value="2"/>
+      <value value="3"/>
+      <value value="4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="LDD">
+      <value value="&quot;untargetted&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="birth-rate">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="pop-sd">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="release-type">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-occupancy">
+      <value value="0.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mortality">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-kernel-method?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="homogeneous?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="d-mean">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="track-monitoring-area?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="debug?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="scenario">
+      <value value="&quot;base plus release sites&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="grid-releases?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="grid-resolution">
+      <value value="1"/>
+      <value value="2"/>
+      <value value="3"/>
+      <value value="4"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>

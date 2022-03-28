@@ -28,8 +28,8 @@ to-report next-generation
   let reproductive sum but-last pops
   ;; from which we get the new-population
   ;; determine local R
-  set R-local R-annual * (1 - pop / capacity) 
-  let expected-next-pop sum pops + R-local * reproductive - (mortality * last pops)
+  set R-local R-annual * max (list (1 - pop / capacity) 0)
+  let expected-next-pop pop + R-local * reproductive - (mortality * last pops)
   if expected-next-pop < 1 [
     report [0 0 0]
   ]

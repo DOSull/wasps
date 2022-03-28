@@ -80,35 +80,5 @@ to profile-multinomial [n]
   print profiler:report
   profiler:reset
 end
+  
 
-
-to compare-dispersal [n]
-  set use-kernel-method? true
-  setup
-
-  profiler:start
-  repeat n [ go ]
-  profiler:stop
-  print profiler:report
-  profiler:reset
-
-  reset-map
-  set use-kernel-method? false
-  profiler:start
-  repeat n [ go ]
-  profiler:stop
-  print profiler:report
-  profiler:reset
-end
-
-to compare-count-matches [n]
-  profiler:start
-  let L n-values 1000 [i -> random-poisson 5]
-  repeat n [ 
-    let y count-x-in-list-r L 1
-    let z count-x-in-list L 1
-  ]
-  profiler:stop
-  print profiler:report
-  profiler:reset
-end  

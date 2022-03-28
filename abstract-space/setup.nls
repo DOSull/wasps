@@ -31,10 +31,6 @@ to setup
   if use-seed? [
     random-seed seed
   ]
-  set central-p patch ((min-pxcor + max-pxcor) / 2) ((min-pycor + max-pycor) / 2)
-  ;; setting up a dispersal kernel is slow so only do it if needed
-  if use-kernel-method? [ setup-kernel ]
-
   ;; number of subpopulation is 3 in the wasp model
   set num-subpops 3
   ;; the corresponding brewer palettes (item 3 for total population)
@@ -53,17 +49,6 @@ to setup
   ;; initialise the patch population lists
   initialise-pops-to-zero
 
-  ;; now the various possible initialisations
-  if homogeneous? [ 
-    ; This works by making all the patch capacities the same
-    let mean-k mean [capacity] of the-habitable-land
-    ask the-habitable-land [
-      set capacity mean-k
-    ]
-    ;; could also set the sd-init-occ to zero
-    ;; buit that's probably one for the model user
-    ; set stdev-occupancy 0.0
-  ]
   if member? "base" scenario [
     ; this will initialize to N(mean-occupancy, stdev-occupancy) * capacity in all
     ; the habitable patches. A proportion proportion-gm will be GM wasps
@@ -82,7 +67,7 @@ to setup
   update-populations
   ask the-habitable-land [
     sprout-vizs 1 [
-      set shape "circle"
+      set shape "square 3"
     ]
   ]
   colour-patches
@@ -187,7 +172,10 @@ end
 ;; initialise? is true if this is during setup
 ;;                false if while model is running
 to release-wasps [initialise?]
-  ask n-of number-of-sites potential-release-sites [
+  let release-sites ifelse-value grid-releases? 
+  [ potential-release-sites ] 
+  [ n-of number-of-sites potential-release-sites ]
+  ask release-sites [
     increment-population release-type colonies-per-site
     if initialise? [
       set init-pops next-pops
@@ -199,14 +187,21 @@ end
 ;; get release sits from the specified upper percentil of capacities
 to-report potential-release-sites 
   ifelse percentile-selector = 0 [
-    report the-habitable-land
+    report ifelse-value grid-releases? [get-grid-corners] [the-habitable-land]
   ]
   [
     let n-percentile count the-habitable-land * (1 - percentile-selector)
     let cutoff-capacity [capacity] of item n-percentile (reverse sort-on [capacity] the-habitable-land)
-    report the-habitable-land with [capacity >= cutoff-capacity]
+    report ifelse-value grid-releases? 
+    [ get-grid-corners with [capacity >= cutoff-capacity] ]
+    [ the-habitable-land with [capacity >= cutoff-capacity] ]
   ]
 end
+
+to-report get-grid-corners
+  report the-habitable-land with [pxcor mod grid-resolution = 0 and pycor mod grid-resolution = 0]
+end
+
 
 
 to initialise-pops-to-zero
@@ -219,11 +214,11 @@ end
 
 to setup-monitoring-area
   set monitoring-area patches
-  if track-monitoring-area? [
+;  if track-monitoring-area? [
     ask monitoring-area [
       set history []
     ]
-  ]
+;  ]
 end
 
 
