@@ -45,6 +45,8 @@ to setup
   set the-land patches with [capacity >= 0]
   set the-habitable-land the-land with [capacity > 0]
   set the-sea patches with [capacity < 0]
+  setup-grid-release-sites
+  set total-released 0
 
   ;; initialise the patch population lists
   initialise-pops-to-zero
@@ -75,15 +77,10 @@ to setup
 
   set show-contours? false
   renew-plots
-  if debug? [ reset-timer ]
 end
 
 
 to setup-capacities
-;; For the realistic GIS space:  
-;  let ds gis:load-dataset "wasp-suitability.asc"
-;  gis:apply-raster ds capacity  
-  
   ;; abstract space is a high to low west to east (left to right!) gradient
   ;; with a little randomness
   if spatial-setup = "random-correlated" [
@@ -115,7 +112,6 @@ to rescale-capacities
   let min-k min [capacity] of patches
   let mean-k mean [capacity] of patches
   let multiple max-capacity-per-sq-km / (max-k - min-k) 
-  if debug? [ show multiple ]
   ask patches [
     ifelse (capacity >= 0)
     [ ifelse capacity > mean-k 
@@ -132,10 +128,6 @@ to-report rescale [x min-domain max-domain min-codomain max-codomain]
 end
 
 to setup-ldd-targets
-;; Roads
-;  set ds gis:load-dataset "roads-oblique.asc"
-;  gis:apply-raster ds road?
-  
   ;; abstract space just a couple of straight lines
   ask patches [
     ifelse LDD = "targetted-roads"
@@ -149,6 +141,22 @@ to setup-ldd-targets
       set shape "x"
       set size 0.9
     ]
+  ]
+end
+
+
+to setup-grid-release-sites
+  set grid-release-sites the-habitable-land with [pxcor mod grid-resolution = 0 and pycor mod grid-resolution = 0]
+  ifelse periodicity = 0 [
+    ask grid-release-sites [set release-schedule-id -1]
+  ]
+  [
+    (foreach (sort grid-release-sites) 
+             (n-values count grid-release-sites [i -> i]) [ [p i] ->
+      ask p [
+        set release-schedule-id (i mod periodicity)
+      ]
+    ])
   ]
 end
 
@@ -172,36 +180,47 @@ end
 ;; initialise? is true if this is during setup
 ;;                false if while model is running
 to release-wasps [initialise?]
-  let release-sites ifelse-value grid-releases? 
-  [ potential-release-sites ] 
-  [ n-of number-of-sites potential-release-sites ]
+  let release-sites patch-set nobody
+  ifelse grid-releases? [
+    ifelse spatial-or-temporal = "temporal" [
+      if periodicity = 0 or ticks mod periodicity = 0 [
+        set release-sites grid-release-sites
+      ]
+    ]
+    [ ;; spatial 
+      ifelse periodicity = 0 
+      [ set release-sites grid-release-sites ]
+      [ set release-sites grid-release-sites with [release-schedule-id = (ticks mod periodicity)] ]
+    ]
+  ]
+  [
+    if ticks mod periodicity = 0 [
+      set release-sites n-of number-of-sites potential-release-sites
+    ]
+  ]
   ask release-sites [
     increment-population release-type colonies-per-site
     if initialise? [
       set init-pops next-pops
       set init-pop sum init-pops
     ]
+    set total-released total-released + (count release-sites * colonies-per-site)
   ]
 end
 
-;; get release sits from the specified upper percentil of capacities
+;; get release sits from the specified upper percentile of capacities
 to-report potential-release-sites 
   ifelse percentile-selector = 0 [
-    report ifelse-value grid-releases? [get-grid-corners] [the-habitable-land]
+    report ifelse-value grid-releases? [grid-release-sites] [the-habitable-land]
   ]
   [
     let n-percentile count the-habitable-land * (1 - percentile-selector)
     let cutoff-capacity [capacity] of item n-percentile (reverse sort-on [capacity] the-habitable-land)
     report ifelse-value grid-releases? 
-    [ get-grid-corners with [capacity >= cutoff-capacity] ]
+    [ grid-release-sites with [capacity >= cutoff-capacity] ]
     [ the-habitable-land with [capacity >= cutoff-capacity] ]
   ]
 end
-
-to-report get-grid-corners
-  report the-habitable-land with [pxcor mod grid-resolution = 0 and pycor mod grid-resolution = 0]
-end
-
 
 
 to initialise-pops-to-zero

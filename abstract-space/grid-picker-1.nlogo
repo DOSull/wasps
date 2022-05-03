@@ -119,8 +119,8 @@ end
 GRAPHICS-WINDOW
 210
 10
-703
-504
+713
+514
 -1
 -1
 5.0
@@ -133,10 +133,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--48
-48
--48
-48
+-49
+49
+-49
+49
 0
 0
 1
@@ -169,7 +169,7 @@ coverage
 coverage
 0.1
 1
-0.53
+0.62
 0.01
 1
 NIL
@@ -206,7 +206,7 @@ max-denominator
 max-denominator
 5
 100
-39.0
+85.0
 1
 1
 NIL

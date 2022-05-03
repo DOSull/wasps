@@ -1,0 +1,37 @@
+---
+title: "Processing wasp control strategy data"
+author: "David O'Sullivan"
+date: "03/05/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
+library(janitor)
+```
+
+## Read the data
+And clean up all the NetLogo name weirdness
+
+```{r}
+wasps <- read.csv(
+  "abstract-space-final experiment-grid-releases-2-table.csv", skip = 6) %>%
+  clean_names() %>%
+  rename(run_number = x_run_number, t = x_step) %>%
+  mutate(total_wild = total_pop - total_gm - total_sterile) %>%
+  arrange(sample(seq_len(nrow(wasps)), nrow(wasps)))
+```
+
+Quick look at all the data as time series.
+
+```{r}
+ggplot(wasps %>% filter(grid_resolution == 1)) +
+  geom_line(aes(x = t, y = total_pop, colour = spatial_or_temporal, 
+                group = run_number), alpha = 0.5) +
+  scale_colour_brewer(palette = "Set1") +
+  facet_grid(periodicity ~ colonies_per_site, scales = "free_x",
+             labeller = labeller(.rows = label_both, .cols = label_both))
+```

@@ -27,8 +27,6 @@ __includes [
   "display.nls"          ;; display updates
   "dispersal.nls"        ;; dispersal including calculation of kernels
   "reproduction.nls"     ;; reproduction including needed statistical distros
-  "patch-distances.nls"  ;; measurement of patch distances recognising they are areas not points
-  "profile.nls"          ;; profilers for some parts of the model during development
 ]
 
 extensions [
@@ -36,13 +34,6 @@ extensions [
   profiler               ;; profiling
   rnd                    ;; weighted random draws from lists and agentsets
   vid                    ;; video recording
-;  gis                    ;; GIS data
-
-;; ----------------
-;; OD matrix method
-  matrix
-;  array
-;; ----------------
 ]
 
 breed [ vizs viz ]       ;; to visualize population mix wild (red) vs GM (blue) across space
@@ -54,7 +45,11 @@ globals [
   num-subpops            ;; the number of subpopulations (3 in the wasps model)
   total-pop              ;; total population across the landscape
   total-wild             ;; total wild population across the landscape
+  total-gm               ;; total GM population across the landscape
+  total-sterile          ;; total sterile population across the landscape
   mean-occupancy-rate    ;; the mean population as a proportion of capacity
+
+  total-released
 
   ;; dispersal related
   total-extent           ;; the total number of patches with any wasps present
@@ -68,13 +63,9 @@ globals [
   preferred-sites        ;; preferred-sites for LDD dispersal (may be roads or other)
   the-habitable-land     ;; all patches with capacity > 0
   monitoring-area        ;; a subset of patches used to record time series data for model exploration
+  grid-release-sites     ;; the sites where releases of GM wasps may occur
 
   show-contours?
-;; ----------------
-;; OD matrix method
-;  patch-list
-;  pathways
-;; ----------------
 ]
 
 patches-own [
@@ -88,21 +79,18 @@ patches-own [
   R-local                ;; the local R value based on population and capacity constraint (1 - n/k)
   preferred-site?        ;; preferred for LDD
   history                ;; a list recording population history for a patch in the monitoring area
-  temp ;; useful to have
-;; ----------------
-;; OD matrix method
-;  id
-;; ----------------
+  release-schedule-id    ;; tag indicating in which years releases will occur at this site
+  temp
 ]
 @#$#@#$#@
 GRAPHICS-WINDOW
-198
-8
-606
-417
+190
+10
+621
+442
 -1
 -1
-8.0
+9.0
 1
 10
 1
@@ -113,9 +101,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-49
+46
 0
-49
+46
 1
 1
 1
@@ -201,9 +189,9 @@ total-pop
 
 PLOT
 199
-429
+449
 613
-641
+661
 Populations
 NIL
 NIL
@@ -373,7 +361,7 @@ seed
 seed
 0
 1000
-30.0
+10.0
 1
 1
 NIL
@@ -497,9 +485,9 @@ HORIZONTAL
 
 SLIDER
 976
-559
-1148
 592
+1148
+625
 release-type
 release-type
 0
@@ -533,17 +521,6 @@ SWITCH
 stochastic-repro?
 stochastic-repro?
 0
-1
--1000
-
-SWITCH
-765
-359
-875
-392
-debug?
-debug?
-1
 1
 -1000
 
@@ -604,9 +581,9 @@ how often to release wasps: \n0 =  never (or only at t0)\nn = every n years
 
 TEXTBOX
 1152
-561
+594
 1315
-617
+650
 0 = wild; 1 = GM\nThis should usually be set to 1, but 0 can be used to explore invasion
 11
 0.0
@@ -743,16 +720,6 @@ TEXTBOX
 193
 643
 Probability of long distance dispersal to a randomly select road location
-11
-0.0
-1
-
-TEXTBOX
-765
-398
-884
-453
-When we remember, debug messages can be shown in the command centre
 11
 0.0
 1
@@ -927,7 +894,7 @@ grid-resolution
 grid-resolution
 1
 25
-4.0
+2.0
 1
 1
 NIL
@@ -963,6 +930,31 @@ of habitat capacity
 11
 0.0
 1
+
+CHOOSER
+982
+543
+1144
+588
+spatial-or-temporal
+spatial-or-temporal
+"spatial" "temporal"
+0
+
+SLIDER
+1147
+328
+1331
+361
+program-duration
+program-duration
+0
+100
+30.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1313,7 +1305,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.1.0
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -1608,6 +1600,109 @@ NetLogo 6.1.0
       <value value="2"/>
       <value value="3"/>
       <value value="4"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="experiment-grid-releases-2" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="100"/>
+    <metric>total-pop</metric>
+    <metric>prop-occupied</metric>
+    <metric>total-gm</metric>
+    <metric>total-sterile</metric>
+    <metric>total-released</metric>
+    <enumeratedValueSet variable="var-mean-ratio">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="stdev-occupancy">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="distribution-scale">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-seed?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="spatial-setup">
+      <value value="&quot;random-correlated&quot;"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="seed" first="1" step="1" last="10"/>
+    <enumeratedValueSet variable="percentile-selector">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="number-of-sites">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proportion-gm">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="stochastic-repro?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-capacity-per-sq-km">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="colonies-per-site">
+      <value value="1"/>
+      <value value="4"/>
+      <value value="16"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="p-ldd">
+      <value value="1.0E-4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodicity">
+      <value value="0"/>
+      <value value="1"/>
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="LDD">
+      <value value="&quot;untargetted&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="birth-rate">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="pop-sd">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="release-type">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-occupancy">
+      <value value="0.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mortality">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="d-mean">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="monitor-area?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="scenario">
+      <value value="&quot;base plus release sites&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="grid-releases?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="grid-resolution">
+      <value value="1"/>
+      <value value="2"/>
+      <value value="4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="spatial-or-temporal">
+      <value value="&quot;spatial&quot;"/>
+      <value value="&quot;temporal&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="program-duration">
+      <value value="20"/>
+      <value value="30"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>

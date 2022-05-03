@@ -1,0 +1,22 @@
+---
+title: "Processing wasp control strategy data"
+author: "David O'Sullivan"
+date: "03/05/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
+library(janitor)
+```
+
+## Read the data
+And clean up all the NetLogo name weirdness
+
+```{r}
+wasps <- read.csv("abstract-space-final experiment-grid-releases-2-table.csv") %>%
+  clean_names()
+```
