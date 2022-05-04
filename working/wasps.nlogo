@@ -27,22 +27,14 @@ __includes [
   "display.nls"          ;; display updates
   "dispersal.nls"        ;; dispersal including calculation of kernels
   "reproduction.nls"     ;; reproduction including needed statistical distros
-  "patch-distances.nls"  ;; measurement of patch distances recognising they are areas not points
-  "profile.nls"          ;; profilers for some parts of the model during development
 ]
 
 extensions [
   palette                ;; Brewer colour palettes
   profiler               ;; profiling
   rnd                    ;; weighted random draws from lists and agentsets
-;  vid                    ;; video recording
   gis                    ;; GIS data
-
-;; ----------------
-;; OD matrix method
-  matrix
-;  array
-;; ----------------
+  vid                    ;; video recording
 ]
 
 breed [ vizs viz ]       ;; to visualize population mix wild (red) vs GM (blue) across space
@@ -54,7 +46,11 @@ globals [
   num-subpops            ;; the number of subpopulations (3 in the wasps model)
   total-pop              ;; total population across the landscape
   total-wild             ;; total wild population
+  total-gm
+  total-sterile
   mean-occupancy-rate    ;; the mean population as a proportion of capacity
+
+  total-released
 
   ;; dispersal related
   total-extent           ;; the total number of patches with any wasps present
@@ -68,6 +64,7 @@ globals [
   the-roads              ;; all patches with a road present
   the-habitable-land     ;; all patches with capacity > 0
   monitoring-area        ;; a subset of patches used to record time series data for model exploration
+  grid-release-sites
 
   debug?
 ]
@@ -83,6 +80,8 @@ patches-own [
   R-local                ;; the local R value based on population and capacity constraint (1 - n/k)
   road?                  ;; if a road is present
   history                ;; a list recording population history for a patch in the monitoring area
+  release-schedule-id    ;; tag indicating in which years releases will occur at this site
+  temp
 ]
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -138,7 +137,7 @@ birth-rate
 birth-rate
 0.25
 4
-1.5
+2.0
 0.01
 1
 NIL
@@ -180,9 +179,9 @@ NIL
 
 MONITOR
 1065
-508
-1183
-553
+592
+1202
+637
 NIL
 total-pop
 0
@@ -193,7 +192,7 @@ PLOT
 628
 388
 1054
-672
+683
 Populations
 NIL
 NIL
@@ -226,10 +225,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-1064
-403
-1183
-448
+1210
+538
+1305
+583
 NIL
 prop-occupied
 3
@@ -245,7 +244,7 @@ d-mean
 d-mean
 0.01
 10
-1.92
+2.0
 0.01
 1
 NIL
@@ -253,9 +252,9 @@ HORIZONTAL
 
 MONITOR
 1064
-455
+539
 1202
-500
+584
 mean-occupancy-rate
 mean-occupancy-rate
 3
@@ -271,7 +270,7 @@ show-pop
 show-pop
 0
 num-subpops
-0.0
+3.0
 1
 1
 NIL
@@ -464,7 +463,7 @@ colonies-per-site
 colonies-per-site
 0
 1000
-100.0
+20.0
 1
 1
 NIL
@@ -486,10 +485,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1107
-340
-1279
-373
+1109
+377
+1281
+410
 release-type
 release-type
 0
@@ -509,7 +508,7 @@ periodicity
 periodicity
 0
 10
-1.0
+2.0
 1
 1
 NIL
@@ -553,10 +552,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-1298
-115
-1419
-133
+1299
+119
+1420
+137
 how many locations
 11
 0.0
@@ -586,17 +585,17 @@ TEXTBOX
 1283
 289
 1451
-339
-how often to release wasps: \n0 =  never (or only at t0)\nn = every n years
+359
+how often to release wasps: \n0 =  never (or only at t0)\nn = every n years,\nOR: if set to \"spatial\" only at every nth site, every year
 11
 0.0
 1
 
 TEXTBOX
-1283
-342
-1446
-398
+1285
+374
+1448
+430
 0 = wild; 1 = GM\nThis should usually be set to 1, but 0 can be used to explore invasion
 11
 0.0
@@ -611,7 +610,7 @@ max-capacity-per-sq-km
 max-capacity-per-sq-km
 500
 5000
-500.0
+1380.0
 10
 1
 NIL
@@ -808,10 +807,10 @@ Annual variability in R
 1
 
 SWITCH
-1282
-527
-1422
-560
+1299
+444
+1439
+477
 monitor-area?
 monitor-area?
 1
@@ -829,10 +828,10 @@ Annual mortality of queens (usu. 1)
 1
 
 MONITOR
-1065
-562
-1177
-607
+1208
+592
+1344
+637
 NIL
 total-wild
 0
@@ -857,8 +856,8 @@ SLIDER
 grid-resolution
 grid-resolution
 1
-50
-5.0
+20
+1.0
 1
 1
 NIL
@@ -876,20 +875,20 @@ grid-releases?
 -1000
 
 TEXTBOX
-1309
-39
-1396
-71
+1201
+10
+1356
+28
 Release of GM wasps
 14
 0.0
 1
 
 BUTTON
-1288
-569
-1413
-602
+1305
+486
+1430
+519
 NIL
 save-monitor
 NIL
@@ -901,6 +900,64 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+1284
+36
+1436
+69
+program-duration
+program-duration
+0
+100
+20.0
+1
+1
+NIL
+HORIZONTAL
+
+MONITOR
+1065
+641
+1200
+686
+NIL
+total-gm
+0
+1
+11
+
+MONITOR
+1208
+642
+1342
+687
+NIL
+total-sterile
+0
+1
+11
+
+CHOOSER
+1116
+321
+1278
+366
+spatial-or-temporal
+spatial-or-temporal
+"spatial" "temporal"
+0
+
+MONITOR
+1148
+421
+1252
+466
+NIL
+total-released
+0
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1251,7 +1308,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.1.0
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -1336,6 +1393,103 @@ NetLogo 6.1.0
     </enumeratedValueSet>
     <enumeratedValueSet variable="scenario">
       <value value="&quot;base plus release sites&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="GRID-RELEASE-EXPERIMENT" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="150"/>
+    <metric>total-pop</metric>
+    <metric>prop-occupied</metric>
+    <metric>total-gm</metric>
+    <metric>total-sterile</metric>
+    <enumeratedValueSet variable="grid-releases?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="grid-resolution">
+      <value value="1"/>
+      <value value="2"/>
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodicity">
+      <value value="0"/>
+      <value value="1"/>
+      <value value="2"/>
+      <value value="4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="colonies-per-site">
+      <value value="20"/>
+      <value value="80"/>
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="percentile-selector">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="spatial-or-temporal">
+      <value value="&quot;temporal&quot;"/>
+      <value value="&quot;spatial&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="program-duration">
+      <value value="20"/>
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-seed?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="seed" first="1" step="1" last="30"/>
+    <enumeratedValueSet variable="max-capacity-per-sq-km">
+      <value value="1380"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="birth-rate">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mortality">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="stochastic-repro?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="var-mean-ratio">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="d-mean">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="p-ldd">
+      <value value="1.0E-4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="scenario">
+      <value value="&quot;base plus release sites&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="release-type">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-occupancy">
+      <value value="0.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="pop-sd">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="stdev-occupancy">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="homogeneous?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="number-of-sites">
+      <value value="20"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proportion-gm">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="monitor-area?">
+      <value value="false"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>

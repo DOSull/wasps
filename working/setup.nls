@@ -45,6 +45,8 @@ to setup
   set the-land patches with [capacity >= 0]
   set the-habitable-land the-land with [capacity > 0]
   set the-sea patches with [capacity < 0]
+  setup-grid-release-sites
+  set total-released 0
 
   ;; initialise the patch population lists
   initialise-pops-to-zero
@@ -138,13 +140,45 @@ to increment-population [subpop n]
 end
 
 
+
+to setup-grid-release-sites
+  set grid-release-sites the-habitable-land with [pxcor mod grid-resolution = 0 and pycor mod grid-resolution = 0]
+  ifelse periodicity = 0 [
+    ask grid-release-sites [set release-schedule-id -1]
+  ]
+  [
+    (foreach (sort grid-release-sites) 
+             (n-values count grid-release-sites [i -> i]) [ [p i] ->
+      ask p [
+        set release-schedule-id (i mod periodicity)
+      ]
+    ])
+  ]
+end
+
+
 ;; releast GM wasps per the UI settings 
 ;; initialise? is true if this is during setup
 ;;                false if while model is running
 to release-wasps [initialise?]
-  let release-sites ifelse-value grid-releases? 
-  [ potential-release-sites ] 
-  [ n-of number-of-sites potential-release-sites ]
+  let release-sites potential-release-sites ;; patch-set nobody
+  ifelse grid-releases? [
+    ifelse spatial-or-temporal = "temporal" [
+      if periodicity > 0 and ticks mod periodicity != 0 [
+        set release-sites patch-set nobody
+      ]
+    ]
+    [ ;; spatial 
+      if periodicity > 0 [ 
+        set release-sites release-sites with [release-schedule-id = (ticks mod periodicity)] 
+      ]
+    ]
+  ]
+  [
+    if ticks mod periodicity = 0 [
+      set release-sites n-of number-of-sites release-sites
+    ]
+  ]  
   ask release-sites [
     increment-population release-type colonies-per-site
     if initialise? [
@@ -152,40 +186,22 @@ to release-wasps [initialise?]
       set init-pop sum init-pops
     ]
   ]
+  set total-released total-released + (count release-sites * colonies-per-site)
 end
 
 
-;; get release sites from the specified upper percentil of capacities
+;; get release sites from the specified upper percentile of capacities
 to-report potential-release-sites 
   ifelse percentile-selector = 0 [
-    report ifelse-value grid-releases? [get-grid-corners] [the-habitable-land]
+    report ifelse-value grid-releases? [grid-release-sites] [the-habitable-land]
   ]
   [
     let n-percentile count the-habitable-land * (1 - percentile-selector)
     let cutoff-capacity [capacity] of item n-percentile (reverse sort-on [capacity] the-habitable-land)
     report ifelse-value grid-releases? 
-    [ get-grid-corners with [capacity >= cutoff-capacity] ]
+    [ grid-release-sites with [capacity >= cutoff-capacity] ]
     [ the-habitable-land with [capacity >= cutoff-capacity] ]
   ]
-end
-
-to-report get-grid-corners
-  report the-habitable-land with [pxcor mod grid-resolution = 0 and pycor mod grid-resolution = 0]
-;  let corners patch-set nobody
-;  let east max [pxcor] of the-habitable-land
-;  let west min [pxcor] of the-habitable-land
-;  let xs n-values ceiling ((east - west + 1) / grid-resolution) [i -> west + i * grid-resolution]
-;  let north max [pycor] of the-habitable-land
-;  let south min [pycor] of the-habitable-land
-;  let ys n-values ceiling ((north - south + 1) / grid-resolution) [i -> south + i * grid-resolution]
-;  foreach xs [ x ->
-;    foreach ys [ y ->
-;      if [capacity] of (patch x y) > 0 [
-;        set corners (patch-set corners patch x y)
-;      ]
-;    ]
-;  ]
-;  report corners
 end
 
 

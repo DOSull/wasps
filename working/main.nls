@@ -34,10 +34,8 @@ to go
       ]
     ]
     ;; if any regular wasp releases are requested do that now
-    if periodicity > 0 and total-wild > 0 [
-      if ticks mod periodicity = 0 [
-        release-wasps false
-      ]
+    if ticks < program-duration and periodicity > 0 and total-wild > 0 [
+      release-wasps false
     ]
   ]
   [ stop ]
@@ -58,6 +56,8 @@ to update-populations
   ]
   set total-pop sum [pop] of the-habitable-land
   set total-wild sum [item 0 pops] of the-habitable-land
+  set total-gm sum [item 1 pops] of the-habitable-land
+  set total-sterile sum [item 2 pops] of the-habitable-land
   set total-extent count the-habitable-land with [pop > 0]
   set prop-occupied total-extent / count the-land
   set mean-occupancy-rate mean [pop / capacity] of the-habitable-land
@@ -94,7 +94,7 @@ to save-monitor
     file-delete fname
   ]
   file-open fname
-  file-print "x y t k p1 p2 p3"
+  file-print "x y t capacity p_wild p_gm p_sterile"  
   let nrows length [history] of one-of monitoring-area
   let i 0
   repeat nrows [
