@@ -20,9 +20,9 @@ As detailed in the following:
 
 + Even extended control programs if not pursued to eradication (which is very difficult) are no more successful than a 'release-once-and-forget' strategy (`periodicity == 0`)
 + Eradication is possible, but is only achieved with 'release everywhere' (`grid_resolution == 1`) strategies; note that release everywhere is relative to the model resolution, meaning one release site every 1km -- in practice a finer grid even than this would probably be required!
-+ The number of GM wasps released (`per_site`) only marginally increases the chances of success; the main effect of releasing more wasps is to accelerate the initial decrease in wasp population
-+ Modulating releases spatial (the `spatial` strategy, ie release every year at every nth site) is more detrimental to success than modulating temporally (the `temporal` strategy, ie release everywhere every nth year)
-+ Long term outcomes may sensitively depend on when a control strategy is stopped; in particular, it is possible for seemingly very low populations to make a full recovery if GM populations are so small as to be vulnerable to extinction in the population: this means that highly accurate monitoring (that could detect very small and remote refugial populations), or extremely conservative settings (i.e. continuing releases long after they might seem to be necessary), or both would be required for reliable eradication. 
++ The number of GM wasps released (the `per_site` parameter) only marginally increases the chances of success; the main effect of releasing more wasps is to accelerate the decrease in wasp population and reduce time to eradication.
++ Modulating releases spatially (the `spatial` strategy, i.e., release every year at every nth site) is more detrimental to success than modulating temporally (the `temporal` strategy, i.e., release everywhere every nth year)
++ Long term outcomes can be sensitively depend on when a control strategy is stopped; in particular, it is possible for seemingly very low populations to make a full recovery if GM populations are so small as to be vulnerable to extinction in the population: this means that accurate monitoring (that could detect very small and remote refugial populations), or extremely conservative settings (i.e., continuing releases long after might seem necessary), or both would be required for reliable eradication.
 
 
 ```{r setup, include=FALSE}
@@ -46,17 +46,21 @@ wasps <- read.csv(
   mutate(total_wild = total_pop - total_gm - total_sterile,
          program_duration = as.factor(program_duration),
          periodicity = as.factor(periodicity),
-         grid_resolution = as.factor(grid_resolution))
+         grid_resolution = as.factor(grid_resolution)) %>%
+  select(-grid_releases, -percentile_selector,
+         -(use_seed:monitor_area))  # get rid of a bunch of stuff we don't use
 ```
+
 ## Standardise population figures to start populations
 This seems worth doing for simplicity's sake.
 
 ```{r}
 start_pops <- wasps %>%
   filter(t == 0) %>%
-  select(run_number, total_pop, total_wild, total_gm, total_sterile) %>%
-  rename(pop_0 = total_pop, wild_0 = total_wild, 
-         gm_0 = total_gm, sterile_0 = total_sterile)
+  select(run_number, total_pop, total_wild, total_gm) %>%
+  rename(pop_0 = total_pop, 
+         wild_0 = total_wild, 
+         gm_0 = total_gm)
 
 wasps <- wasps %>%
   merge(start_pops, all.x = TRUE) %>%

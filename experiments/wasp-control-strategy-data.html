@@ -1987,22 +1987,22 @@ everywhere’ (<code>grid_resolution == 1</code>) strategies; note that
 release everywhere is relative to the model resolution, meaning one
 release site every 1km – in practice a finer grid even than this would
 probably be required!</li>
-<li>The number of GM wasps released (<code>per_site</code>) only
-marginally increases the chances of success; the main effect of
-releasing more wasps is to accelerate the initial decrease in wasp
-population</li>
-<li>Modulating releases spatial (the <code>spatial</code> strategy, ie
-release every year at every nth site) is more detrimental to success
-than modulating temporally (the <code>temporal</code> strategy, ie
-release everywhere every nth year)</li>
-<li>Long term outcomes may sensitively depend on when a control strategy
-is stopped; in particular, it is possible for seemingly very low
-populations to make a full recovery if GM populations are so small as to
-be vulnerable to extinction in the population: this means that highly
+<li>The number of GM wasps released (the <code>per_site</code>
+parameter) only marginally increases the chances of success; the main
+effect of releasing more wasps is to accelerate the decrease in wasp
+population and reduce time to eradication.</li>
+<li>Modulating releases spatially (the <code>spatial</code> strategy,
+i.e., release every year at every nth site) is more detrimental to
+success than modulating temporally (the <code>temporal</code> strategy,
+i.e., release everywhere every nth year)</li>
+<li>Long term outcomes can be sensitively depend on when a control
+strategy is stopped; in particular, it is possible for seemingly very
+low populations to make a full recovery if GM populations are so small
+as to be vulnerable to extinction in the population: this means that
 accurate monitoring (that could detect very small and remote refugial
-populations), or extremely conservative settings (i.e. continuing
-releases long after they might seem to be necessary), or both would be
-required for reliable eradication.</li>
+populations), or extremely conservative settings (i.e., continuing
+releases long after might seem necessary), or both would be required for
+reliable eradication.</li>
 </ul>
 </div>
 <div id="read-and-clean-the-data" class="section level1">
@@ -2019,21 +2019,24 @@ ups to simplify names.</p>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">total_wild =</span> total_pop <span class="sc">-</span> total_gm <span class="sc">-</span> total_sterile,</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">program_duration =</span> <span class="fu">as.factor</span>(program_duration),</span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">periodicity =</span> <span class="fu">as.factor</span>(periodicity),</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">grid_resolution =</span> <span class="fu">as.factor</span>(grid_resolution))</span></code></pre></div>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">grid_resolution =</span> <span class="fu">as.factor</span>(grid_resolution)) <span class="sc">%&gt;%</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>grid_releases, <span class="sc">-</span>percentile_selector,</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>         <span class="sc">-</span>(use_seed<span class="sc">:</span>monitor_area))  <span class="co"># get rid of a bunch of stuff we don&#39;t use</span></span></code></pre></div>
 <div id="standardise-population-figures-to-start-populations" class="section level2">
 <h2>Standardise population figures to start populations</h2>
 <p>This seems worth doing for simplicity’s sake.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>start_pops <span class="ot">&lt;-</span> wasps <span class="sc">%&gt;%</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(t <span class="sc">==</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(run_number, total_pop, total_wild, total_gm, total_sterile) <span class="sc">%&gt;%</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">pop_0 =</span> total_pop, <span class="at">wild_0 =</span> total_wild, </span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">gm_0 =</span> total_gm, <span class="at">sterile_0 =</span> total_sterile)</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>wasps <span class="ot">&lt;-</span> wasps <span class="sc">%&gt;%</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">merge</span>(start_pops, <span class="at">all.x =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pop_t =</span> total_pop <span class="sc">/</span> pop_0,</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">wild_t =</span> total_wild <span class="sc">/</span> wild_0,</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">gm_t =</span> total_gm <span class="sc">/</span> gm_0)</span></code></pre></div>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(run_number, total_pop, total_wild, total_gm) <span class="sc">%&gt;%</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">pop_0 =</span> total_pop, </span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">wild_0 =</span> total_wild, </span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">gm_0 =</span> total_gm)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>wasps <span class="ot">&lt;-</span> wasps <span class="sc">%&gt;%</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">merge</span>(start_pops, <span class="at">all.x =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pop_t =</span> total_pop <span class="sc">/</span> pop_0,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">wild_t =</span> total_wild <span class="sc">/</span> wild_0,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>         <span class="at">gm_t =</span> total_gm <span class="sc">/</span> gm_0)</span></code></pre></div>
 </div>
 </div>
 <div id="eradication-success" class="section level1">
