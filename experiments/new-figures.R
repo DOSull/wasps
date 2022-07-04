@@ -6,7 +6,7 @@ library(tidyr)
 
 ## Read and pre-process data
 setwd("~/Documents/code/wasps/experiments")
-wasps.control <- read.csv("wasps INVASION-EXPERIMENT-070322-table.csv", skip=6)
+wasps.control <- read.csv("wasps CONTROL-EXPERIMENT-070322-table.csv", skip=6)
 
 
 # Select needed variables, determine total wild and GM populations 
@@ -116,7 +116,17 @@ ggplot(filter(grid.plot.data)) +
   geom_contour_filled(aes(x = birth.rate, y = d.mean, z = final.population)) +
   facet_wrap(~ p.ldd) +
   ggtitle("Final mean population")
+
 ggplot(filter(grid.plot.data)) + 
   geom_contour_filled(aes(x = birth.rate, y = d.mean, z = final.occupancy)) +
   facet_wrap(~ p.ldd) +
   ggtitle("Final mean occupancy")
+
+
+
+ggplot(filter(wasps.sel)) + 
+  geom_boxplot(aes(x = birth.rate, y = final.pop, group = birth.rate)) +
+  facet_grid(d.mean ~ p.ldd) +
+  ggtitle("Final mean occupancy")
+
+

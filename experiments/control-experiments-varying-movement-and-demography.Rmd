@@ -1,0 +1,156 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+# Analysis of control experiments
+This notebook looks at the impacts of movement variables and demography on population outcomes over 200 year runs.
+
+## Load libraries and pre-process the data
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(janitor)
+
+## Read and pre-process data
+setwd("~/Documents/code/wasps/experiments")
+wasps_control <- read.csv("wasps CONTROL-EXPERIMENT-070322-table.csv", skip = 6)
+```
+
+The initial experimental runs did not calculate some useful totals and the names used by NetLogo behaviour space are pretty strange, so some clean up needed.
+
+```{r}
+wasps_sel <- wasps_control %>%
+  clean_names() %>%
+  rename(run_number = x_run_number, t = x_step) %>%
+  select(run_number, d_mean, p_ldd, birth_rate, t, 
+         total_pop, prop_occupied, 
+         sum_item_1_pops_of_the_habitable_land, 
+         sum_item_2_pops_of_the_habitable_land) %>%
+  rename(type1_pop = sum_item_1_pops_of_the_habitable_land,
+         type2_pop = sum_item_2_pops_of_the_habitable_land) %>%
+  mutate(gm_pop = type1_pop + type2_pop,
+         wild_pop = total_pop - gm_pop)
+```
+
+## Determine the initial populations in each run
+```{r}
+wasps_start_pop <- wasps_sel %>%
+  filter(t == 0) %>%
+  select(run_number, total_pop) %>%
+  rename(pop_0 = total_pop)
+# and join to the data and calculate populations relative to start pop
+wasps_sel <- wasps_sel %>%
+  merge(wasps_start_pop, all.x = TRUE) %>%
+  mutate(relative_pop = total_pop / pop_0)
+```
+
+## Determine final populations and add to data
+For final pops we take populations over the last 25 years of each run
+
+```{r}
+final_pops <- wasps_sel %>% 
+  filter(t >= 175) %>%
+  group_by(run_number) %>%
+  # and calculate final population and occupancy over that period
+  summarise(pop_f = mean(relative_pop),
+            occupancy_f = mean(prop_occupied))
+# add to the data
+wasps_sel <- wasps_sel %>%
+  merge(final_pops)
+```
+
+### Write the tidied data out
+```{r}
+wasps_sel %>% write.csv("tidied_CONTROL-EXPERIMENT-070322-table.csv")
+```
+
+# Make some plots
+## Population and occupancy time series
+Facetted small multiples of population and occupancy time series fixing each variable in turn.
+
+```{r}
+plot_occ_pop_by_x <- function(fixed = "birth_rate", 
+                              grid_vars = c("d_mean", "p_ldd"), 
+                              val, fmt = "pdf", dpi = 600, 
+                              width = 100, height = 75, units = "mm") {
+  d <- wasps_sel %>%
+    filter(.data[[fixed]] == val)
+  xprint <- format(val, nsmall = 1)
+  title <- paste("Population and occupancy by ", grid_vars[1], " and ", 
+                 grid_vars[2], ", ", fixed, "=", xprint, sep = "") 
+  fname <- paste("baseline_control_experiments/",
+                 "pop_occ_by_", grid_vars[1], "_", grid_vars[2], "_", 
+                 fixed, "_", xprint, ".", fmt, sep = "")
+  
+  g <- ggplot(d, aes(x = t, group = run_number)) + 
+    geom_line(aes(y = relative_pop, colour = "Population"),
+                lwd = 0.25, alpha = 0.25) +
+    geom_line(aes(y = prop_occupied, colour = "Occupied area"), 
+                lwd = 0.5, alpha = 0.25) +
+    labs(x = "Time, generations", y = "Fraction of initial value", 
+                colour = "Parameter") +
+    facet_grid(reformulate(grid_vars[1], grid_vars[2]),
+                labeller = label_both, as.table = FALSE) +
+    ggtitle(title) +
+    theme(text = element_text(size = 6, family = "sans"),
+          panel.grid = element_line(size = 0.25, colour = "white"),
+          axis.ticks = element_line(size = 0.25))
+
+  print(g) # for the HTML output
+
+  ggsave(fname, width = width, height = height, 
+         units = units, dpi = dpi)
+}
+```
+
+```{r}
+for (x in unique(wasps_sel$birth_rate)) {
+  plot_occ_pop_by_x(val = x)
+}
+for (x in unique(wasps_sel$d_mean)) {
+  plot_occ_pop_by_x("d_mean", c("birth_rate", "p_ldd"), val = x)
+}
+for (x in unique(wasps_sel$p_ldd)) {
+  plot_occ_pop_by_x("p_ldd", c("birth_rate", "d_mean"), val = x)
+}
+```
+
+
+## Grid plots of final population and occupancy
+These might be useful... unclear...
+
+```{r}
+grid_plot_data <- wasps_sel %>%
+  group_by(birth_rate, d_mean, p_ldd) %>%
+  summarise(mean_pop_f = mean(pop_f),
+            mean_occ_f = mean(occupancy_f)) %>%
+  ungroup()
+```
+
+
+```{r}
+ggplot(grid_plot_data) + 
+  geom_contour_filled(aes(x = birth_rate, y = d_mean, z = mean_pop_f)) +
+  scale_fill_brewer(palette = "Reds") +
+  facet_wrap(~ p_ldd) +
+  ggtitle("Final mean population") +
+  theme(text = element_text(size = 6, family = "sans"),
+        panel.grid = element_line(size = 0.25, colour = "white"),
+        axis.ticks = element_line(size = 0.25))
+ggsave("baseline_control_experiments/final_mean_pop_by_birth_rate_d_mean_p_ldd.pdf",
+       width = 100, height = 75, units = "mm", dpi = 600)
+
+ggplot(grid_plot_data) + 
+  geom_contour_filled(aes(x = birth_rate, y = d_mean, z = mean_occ_f)) +
+  scale_fill_brewer(palette = "Reds") +
+  facet_wrap(~ p_ldd) +
+  ggtitle("Final mean occupancy") +
+  theme(text = element_text(size = 6, family = "sans"),
+        panel.grid = element_line(size = 0.25, colour = "white"),
+        axis.ticks = element_line(size = 0.25))
+ggsave("baseline_control_experiments/final_mean_occ_by_birth_rate_d_mean_p_ldd.pdf",
+       width = 100, height = 75, units = "mm", dpi = 600)
+
+```

@@ -1,0 +1,102 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+# Analysis of control experiments
+This notebook looks at the impacts of movement variables and demography on population outcomes over 200 year runs.
+
+## Load libraries and pre-process the data
+```{r}
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+library(tidyr)
+library(janitor)
+
+## Read and pre-process data
+setwd("~/Documents/code/wasps/experiments")
+baseline_control <- read.csv("tidied_CONTROL-EXPERIMENT-070322-table.csv") %>%
+  filter(birth_rate == 2, d_mean == 2, p_ldd == 1e-4)
+homogeneous_control <- read.csv("wasps CONTROL-EXPERIMENT-HOMOGENEOUS-table.csv",
+                                skip = 6)
+```
+
+The initial experimental runs did not calculate some useful totals and the names used by NetLogo behaviour space are pretty strange, so some clean up needed.
+
+```{r}
+homogeneous_control <- homogeneous_control %>%
+  clean_names() %>%
+  rename(run_number = x_run_number, t = x_step) %>%
+  select(run_number, d_mean, p_ldd, birth_rate, t, 
+         total_pop, prop_occupied, total_gm, total_sterile) %>%
+  rename(type1_pop = total_gm,
+         type2_pop = total_sterile) %>%
+  mutate(gm_pop = type1_pop + type2_pop,
+         wild_pop = total_pop - gm_pop)
+```
+
+## Determine the initial populations in each run
+```{r}
+homogeneous_start_pop <- homogeneous_control %>%
+  filter(t == 0) %>%
+  select(run_number, total_pop) %>%
+  rename(pop_0 = total_pop)
+# and join to the data and calculate populations relative to start pop
+homogeneous_control <- homogeneous_control %>%
+  merge(homogeneous_start_pop, all.x = TRUE) %>%
+  mutate(relative_pop = total_pop / pop_0)
+```
+
+## Determine final populations and add to data
+For final pops we take populations over the last 25 years of each run
+
+```{r}
+final_pops <- homogeneous_control %>% 
+  filter(t >= 175) %>%
+  group_by(run_number) %>%
+  # and calculate final population and occupancy over that period
+  summarise(pop_f = mean(relative_pop),
+            occupancy_f = mean(prop_occupied))
+# add to the data
+homogeneous_control <- homogeneous_control %>%
+  merge(final_pops)
+```
+
+### Write the tidied data out
+```{r}
+homogeneous_control %>% write.csv("tidied_CONTROL-EXPERIMENT-HOMOGENEOUS-table.csv")
+```
+
+# Make some plots
+
+```{r}
+g1 <- ggplot(baseline_control, aes(x = t, group = run_number)) + 
+  geom_line(aes(y = relative_pop, colour = "Population"),
+              lwd = 0.25, alpha = 0.25) +
+  geom_line(aes(y = prop_occupied, colour = "Occupied area"), 
+              lwd = 0.5, alpha = 0.25) +
+  labs(x = "Time, generations", y = "Fraction of initial value", 
+              colour = "Parameter") +
+  ggtitle("Realistic landscape") +
+  theme(text = element_text(size = 6, family = "sans"),
+        panel.grid = element_line(size = 0.25, colour = "white"),
+        axis.ticks = element_line(size = 0.25))
+
+g2 <- ggplot(homogeneous_control, aes(x = t, group = run_number)) + 
+  geom_line(aes(y = relative_pop, colour = "Population"),
+              lwd = 0.25, alpha = 0.25) +
+  geom_line(aes(y = prop_occupied, colour = "Occupied area"), 
+              lwd = 0.5, alpha = 0.25) +
+  labs(x = "Time, generations", y = "Fraction of initial value", 
+              colour = "Parameter") +
+  ggtitle("Homogeneous landscape") +
+  theme(text = element_text(size = 6, family = "sans"),
+        panel.grid = element_line(size = 0.25, colour = "white"),
+        axis.ticks = element_line(size = 0.25))
+
+ggarrange(g1, g2, nrow = 1, common.legend = TRUE, legend = "right")
+
+ggsave("homogeneous_vs_realistic/time-series-comparison.pdf", 
+       width = 100, height = 75, dpi = 600, units = "mm")
+```

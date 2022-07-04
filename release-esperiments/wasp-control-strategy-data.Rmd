@@ -1,7 +1,7 @@
 ---
 title: "Processing wasp control strategy data"
 author: "David O'Sullivan"
-date: "03/05/2022"
+date: "07/06/2022"
 output: html_document
 ---
 
@@ -18,7 +18,7 @@ And clean up all the NetLogo name weirdness
 
 ```{r}
 wasps <- read.csv(
-  "abstract-space-final experiment-grid-releases-2-table.csv", skip = 6) %>%
+  "wasps GRID-RELEASE-EXPERIMENT-table.csv", skip = 6) %>%
   clean_names() %>%
   rename(run_number = x_run_number, t = x_step) %>%
   mutate(total_wild = total_pop - total_gm - total_sterile) %>%
@@ -28,10 +28,12 @@ wasps <- read.csv(
 Quick look at all the data as time series.
 
 ```{r}
-ggplot(wasps %>% filter(grid_resolution == 1)) +
-  geom_line(aes(x = t, y = total_pop, colour = spatial_or_temporal,
-                group = run_number), alpha = 0.5) +
+ggplot(wasps %>% 
+         arrange(run_number) %>% 
+         filter(grid_resolution == 1, spatial_or_temporal == "temporal")) +
+  geom_line(aes(x = t, y = total_pop, colour = as.factor(program_duration),
+                group = run_number), alpha = 0.15) +
   scale_colour_brewer(palette = "Set1") +
-  facet_grid(periodicity ~ colonies_per_site, scales = "free_x",
+  facet_grid(periodicity ~ colonies_per_site, scales = "free",
              labeller = labeller(.rows = label_both, .cols = label_both))
 ```

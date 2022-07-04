@@ -12,7 +12,7 @@ wasps.control <- read.csv("abstract-space experiment-table.csv", skip=6)
 # Select needed variables, determine total wild and GM populations 
 # and do some renaming
 wasps.sel <- wasps.control %>%
-  select(X.run.number., d.mean, p.ldd, birth.rate, X.step., 
+  dplyr::select(X.run.number., d.mean, p.ldd, birth.rate, X.step., 
          total.pop, prop.occupied, number.of.sites, seed,
          sum..item.1.pops..of.the.habitable.land, 
          sum..item.2.pops..of.the.habitable.land) %>%
@@ -24,7 +24,7 @@ wasps.sel <- wasps.control %>%
 # Determine initial populations, and add to the data
 wasps.start.pop <- wasps.sel %>%
   filter(X.step. == 0) %>%
-  select(X.run.number., total.pop) %>%
+  dplyr::select(X.run.number., total.pop) %>%
   rename(initial.pop = total.pop)
 wasps.sel <- wasps.sel %>%
   merge(wasps.start.pop, all.x = TRUE) %>%
@@ -32,14 +32,15 @@ wasps.sel <- wasps.sel %>%
 
 # Determine final populations and add to data
 final.pops <- wasps.sel %>% 
-  filter(X.step. >= 230) %>%
+  filter(X.step. >= 130) %>%
   group_by(X.run.number.) %>%
   summarise(final.pop = mean(relative.pop),
             final.occ = mean(prop.occupied))
 wasps.sel <- wasps.sel %>%
   merge(final.pops)
 
-ggplot(filter(wasps.sel, X.step. >= 50, X.step. < 100)) +
+ggplot(wasps.sel) +
+  # ggplot(filter(wasps.sel, X.step. >= 50, X.step. < 100)) +
   geom_line(aes(x = X.step., y = relative.pop, 
                 group = X.run.number.,
                 colour = as.factor(seed)), alpha = 0.5) +
