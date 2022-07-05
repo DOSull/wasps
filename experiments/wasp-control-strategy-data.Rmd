@@ -18,7 +18,7 @@ editor_options:
 # Summary of findings
 As detailed in the following:
 
-+ Even extended control programs if not pursued to eradication (which is very difficult) are no more successful than a 'release-once-and-forget' strategy (`period == 'None'`)
++ Even extended control programs if not pursued to eradication (which is very difficult) are no more successful than a 'release-once-and-forget' strategy (`period == 'Once'`)
 + Eradication is possible, but is only achieved with 'release everywhere' (`grid_resolution == 1`) strategies; note that release everywhere is relative to the model resolution, meaning one release site every 1km -- in practice a finer grid even than this would probably be required!
 + The number of GM wasps released (the `per_site` parameter) only marginally increases the chances of success; the main effect of releasing more wasps is to accelerate the decrease in wasp population and reduce time to eradication.
 + Modulating releases spatially (the `spatial` strategy, i.e., release every year at every nth site) is more detrimental to success than modulating temporally (the `temporal` strategy, i.e., release everywhere every nth year)
@@ -142,7 +142,7 @@ There is a lot going on here, which is challenging to parse out, when showing _a
 
 + The finding that `grid_resolution == 1`, `period == 1` combinations are 100% successful at eradication is confirmed. 
 + A second important finding is that in almost all other scenarios the eventual equilibrium population of wild wasps is substantially reduced, albeit after at least 20 years. 
-+ Importantly, even `period == 'None'` scenarios, i.e. 'release-once-and-forget` achieve this outcome, even if more slowly (after 50-60 years).
++ Importantly, even `period == 'Once'` scenarios, i.e. 'release-once-and-forget` achieve this outcome, even if more slowly (after 50-60 years).
 
 Using all the data as above makes it hard to discern specific effects of different scenario parameters. So below, we consider some subsets of the data to try to better understand the dynamics.
 
