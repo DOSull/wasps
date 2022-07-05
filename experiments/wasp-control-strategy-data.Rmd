@@ -37,6 +37,7 @@ library(janitor)
 Clean up all the NetLogo variable name weirdness with `janitor::clean_names()`, along with a couple of other tidy ups to simplify names. We also convert some variables to factors and consistently order them from lower to higher 'control-effort' to  improve the visualizations.
 
 ```{r}
+setwd("~/Documents/code/wasps/experiments")
 wasps <- read.csv(
   "wasps GRID-RELEASE-EXPERIMENT-table.csv", skip = 6) %>%
   clean_names() %>%
@@ -90,8 +91,6 @@ wasps <- wasps %>%
 
 Now we can make a (complicated!) plot showing eradication success rate relative to different control program settings. 
 
-**Note** It isn't clear which particular combinations of variables should be used in the individual panels vs those conditioning which scenarios are included in each panel. I have ordered all variables and factors so that 'more effort' is up and right both within panels, and (to the extent possible) also in the arrangement of panels.
-
 ```{r}
 wasps %>% 
   select(eradication, strategy, per_site, program_duration,
@@ -110,7 +109,9 @@ wasps %>%
     labs(x = "GM colonies released per site", y = "Grid resolution, km", fill = "Success")
 ```
 
-There are two broad strategies in these results, where the interpretation of the `periodicity` setting is slightly different:
+**Note** It isn't clear which particular combinations of variables should be used in the individual panels vs those conditioning which scenarios are included in each panel. I have ordered all variables and factors so that 'more effort' is up and right both within panels, and (to the extent possible) also in the arrangement of panels.
+
+There are two broad strategies in these results, where the interpretation of the `period` setting is slightly different:
 
 + `spatial` (the two leftmost columns) where `period` denotes that the chosen grid of release sites is activated every year, but only at every nth site; or
 + `temporal` (the two rightmost columns) where every site in the grid of release sites is activated every nth year, with n the `period`.
