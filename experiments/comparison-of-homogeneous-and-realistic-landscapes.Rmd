@@ -100,3 +100,24 @@ ggarrange(g1, g2, nrow = 1, common.legend = TRUE, legend = "right")
 ggsave("homogeneous_vs_realistic/time-series-comparison.pdf", 
        width = 100, height = 75, dpi = 600, units = "mm")
 ```
+
+```{r}
+alpha <- 0.05
+
+baseline <- (baseline_control[baseline_control$t == 200, ])$relative_pop
+m <- 1 - mean(baseline)
+ci <- 1.96 * sd(baseline) / sqrt(length(baseline))
+m
+m + c(-1, 1) * ci
+```
+
+```{r}
+alpha <- 0.05
+
+homogeneous <- (homogeneous_control[homogeneous_control$t == 200, ])$relative_pop
+m <- 1 - mean(homogeneous)
+ci <- 1.96 * sd(homogeneous) / sqrt(length(homogeneous))
+m
+m + c(-1, 1) * ci
+```
+

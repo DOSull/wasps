@@ -219,7 +219,7 @@ to setup-monitoring-area
   set monitoring-area patch-set nobody
   if monitor-area? [
     set monitoring-area the-land with [pxcor < 100 and pycor > 150 ]
-    set monitoring-area patches with [pxcor > 35 and pxcor < 61 and pycor > 170 and pycor < 196]
+    set monitoring-area patches with [pxcor > 35 and pxcor < 86 and pycor > 170 and pycor < 221]
   ]
   ask monitoring-area [
     set history []

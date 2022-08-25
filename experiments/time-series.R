@@ -1,6 +1,8 @@
 library(ggplot2)
 library(raster)
 library(tmap)
+library(dplyr)
+library(tidyr)
 
 
 # Ternary Color Maps ------------------------------------------------------
@@ -47,7 +49,7 @@ d <- d %>%
 # d$hexcolour <- mapply(ColorMapTricolore, 
 #                       d$wild_prop, d$gm_prop, d$sterile_prop)
 
-time_step_range <- seq(25, 42, 1)
+time_step_range <- seq(5, 75, 4)
 
 # Data prep
 # Have to assign unique id to every row in the table
