@@ -175,7 +175,7 @@ to release-wasps [initialise?]
     ]
   ]
   [
-    if ticks mod periodicity = 0 [
+    if (ticks = 0 and periodicity = 0) or (periodicity > 0 and ticks mod periodicity = 0) [
       set release-sites n-of number-of-sites release-sites
     ]
   ]  
@@ -218,8 +218,9 @@ end
 to setup-monitoring-area
   set monitoring-area patch-set nobody
   if monitor-area? [
-    set monitoring-area the-land with [pxcor < 100 and pycor > 150 ]
-    set monitoring-area patches with [pxcor > 35 and pxcor < 86 and pycor > 170 and pycor < 221]
+;    set monitoring-area the-land with [pxcor < 100 and pycor > 150 ]
+;    set monitoring-area patches with [pxcor > 35 and pxcor < 86 and pycor > 170 and pycor < 221]
+    set monitoring-area the-habitable-land
   ]
   ask monitoring-area [
     set history []

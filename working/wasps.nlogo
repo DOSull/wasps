@@ -34,7 +34,7 @@ extensions [
   profiler               ;; profiling
   rnd                    ;; weighted random draws from lists and agentsets
   gis                    ;; GIS data
-  vid                    ;; video recording
+;;  vid                    ;; video recording
 ]
 
 breed [ vizs viz ]       ;; to visualize population mix wild (red) vs GM (blue) across space
@@ -270,7 +270,7 @@ show-pop
 show-pop
 0
 num-subpops
-1.0
+0.0
 1
 1
 NIL
@@ -362,7 +362,7 @@ seed
 seed
 0
 1000
-1.0
+0.0
 1
 1
 NIL
@@ -463,7 +463,7 @@ colonies-per-site
 colonies-per-site
 0
 1000
-500.0
+200.0
 1
 1
 NIL
@@ -478,7 +478,7 @@ percentile-selector
 percentile-selector
 0
 1
-0.0
+0.95
 0.01
 1
 NIL
@@ -857,7 +857,7 @@ grid-resolution
 grid-resolution
 1
 20
-5.0
+1.0
 1
 1
 NIL
@@ -870,7 +870,7 @@ SWITCH
 125
 grid-releases?
 grid-releases?
-0
+1
 1
 -1000
 
@@ -946,7 +946,7 @@ CHOOSER
 spatial-or-temporal
 spatial-or-temporal
 "spatial" "temporal"
-0
+1
 
 MONITOR
 1148

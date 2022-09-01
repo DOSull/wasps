@@ -89,7 +89,7 @@ to reset-map
 end
 
 to save-monitor
-  let fname (word "monitor-dmean" d-mean "-pldd" p-ldd "-rmean" R-mean ".txt")
+  let fname (word "monitor-dmean" d-mean "-pldd" p-ldd "-birthrate" birth-rate "-" timestamp ".txt")
   if file-exists? fname [
     file-delete fname
   ]
@@ -111,4 +111,8 @@ to save-monitor
     set i i + 1
   ]
   file-close
+end
+
+to-report timestamp
+  report replace-item 15 replace-item 12 date-and-time "_" "_" 
 end

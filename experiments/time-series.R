@@ -5,51 +5,20 @@ library(dplyr)
 library(tidyr)
 
 
-# Ternary Color Maps ------------------------------------------------------
-#' CIE-Lch Mixture of Ternary Composition
-#'
-#' Return the ternary balance scheme colors for a matrix of ternary compositions.
-#' adapted from Tricolore
-ColorMapTricolore <- function (p1, p2, p3, 
-                               c_ = 200, l_ = 50,
-                               contrast = 1) {
-  C <- c(p1, p2, p3) * c_
-  phi <- c(0, 60, 240) %% 360 * pi / 180
-  Z <- matrix(complex(argument = phi, modulus = c(t(C))),
-              ncol = 3, byrow = TRUE)
-  z <- rowSums(Z)
-  M <- cbind(h = (Arg(z) * 57.3) %% 360, c = Mod(z), l = l_)
-  cfactor <- M[, 2] * contrast / c_ + 1 - contrast
-  M[, 3] <- cfactor * M[, 3]
-  M[, 2] <- cfactor * M[, 2]
-  
-  rgb <- hcl(h = M[,1], c = M[,2], l = M[,3],
-             alpha = 1, fixup = TRUE)
-  rgb <- substr(rgb, 1, 7)
-  return(rgb)
-}
+setwd("~/Documents/code/wasps/experiments")
 
 
-
-
-
-setwd("~/Documents/code/wasps/abstract-space")
-
-d <- read.table(
-  "monitor-dmean1-pldd0-rmean1-01:37:28.161_PM_17-Mar-2022.txt", 
-  header = TRUE)
+basename <- "monitor-dmean2-pldd1.0E-4-rmean1-01:17:53.437_PM_01-Sep-2022"
+d <- read.table(paste(basename, ".txt", sep = ""), header = TRUE)
 
 d <- d %>%
-  mutate(total = p1 + p2 + p3, 
-         wild_prop = if_else(total == 0, 0, p1 / total), #if_else(p1 > k, 1, p1 / k), 
-         gm_prop = if_else(total == 0, 0, p2 / total), #if_else(p2 > k, 1, p2 / k), 
-         sterile_prop = if_else(total == 0, 0, p3 / total), #if_else(p3 > k, 1, p3 / k),
-         total = if_else(total > k, 1, total / k))
+  mutate(total = p_wild + p_gm + p_sterile, 
+         wild_prop = if_else(total == 0, 0, p_wild / total), #if_else(p1 > k, 1, p1 / k), 
+         gm_prop = if_else(total == 0, 0, p_gm / total), #if_else(p2 > k, 1, p2 / k), 
+         sterile_prop = if_else(total == 0, 0, p_sterile / total), #if_else(p3 > k, 1, p3 / k),
+         total = if_else(total > capacity, 1, total / capacity))
 
-# d$hexcolour <- mapply(ColorMapTricolore, 
-#                       d$wild_prop, d$gm_prop, d$sterile_prop)
-
-time_step_range <- seq(5, 75, 4)
+time_step_range <- seq(20, 47, 3)
 
 # Data prep
 # Have to assign unique id to every row in the table
@@ -59,15 +28,23 @@ d_to_map <- d %>%
   mutate(hexcolour = rgb(wild_prop, sterile_prop, gm_prop),
          id = row_number())
 
+pdf(paste("time-series/", basename, ".pdf", sep = ""), 
+    width = 4, height = 3)
 ggplot(d_to_map) +
-  geom_tile(aes(x = x, y = y, width = 1, height = 1,
-                fill = as.factor(id), alpha = total),
-            show.legend = FALSE) +
+  geom_raster(aes(x = x, y = y, fill = as.factor(id), alpha = total),
+              show.legend = FALSE) +
+  # geom_tile(aes(x = x, y = y, width = 1, height = 1,
+  #               fill = as.factor(id), alpha = total),
+  #           show.legend = FALSE) +
   scale_fill_manual(values = d_to_map$hexcolour) + 
   coord_equal() +
-  facet_wrap(~ t, ncol = 6) +
-  theme_minimal()
-
+  facet_wrap(~ t, ncol = 5) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line = element_blank(), 
+        axis.text = element_blank(),
+        axis.title = element_blank())
+dev.off()
 
 ## An alternative using raster and tmap...
 library(raster)
