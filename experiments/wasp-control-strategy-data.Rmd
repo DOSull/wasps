@@ -46,16 +46,55 @@ wasps <- read.csv(
          per_site = colonies_per_site) %>%
   mutate(total_wild = total_pop - total_gm - total_sterile,
          program_duration = as.factor(program_duration),
-         period = factor(as.character(periodicity),
-                         levels = c("0", "4", "2", "1"),
+         period = factor(# as.character(periodicity),
+                         periodicity, levels = c(0, 4, 2, 1),
+                         # levels = c("0", "4", "2", "1"),
                          labels = c("Once", "4", "2", "1"),
                          ordered = TRUE),
-         grid_resolution = factor(as.character(grid_resolution),
-                                  levels = c("5", "2", "1"),
+         grid_resolution = factor(# as.character(grid_resolution),
+                                  grid_resolution, levels = c(5, 2, 1),
+                                  #levels = c("5", "2", "1"),
                                   ordered = TRUE),
-         per_site = as.factor(per_site)) %>%
+         per_site = factor(per_site, 
+                           levels = c(20, 40, 80, 200, 500))) %>%
   select(-grid_releases, -periodicity, -percentile_selector,
          -(use_seed:monitor_area))  # get rid of a bunch of stuff we don't use
+```
+
+Also load additional data
+
+```{r}
+run_number_max <- max(wasps$run_number)
+
+wasps_extra <- read.csv(
+  "wasps GRID-RELEASE-EXPERIMENT-EXTRA-table.csv", skip = 6) %>%
+  clean_names() %>%
+  rename(run_number = x_run_number, t = x_step, 
+         strategy = spatial_or_temporal,
+         per_site = colonies_per_site) %>%
+  mutate(run_number = run_number + run_number_max, 
+         total_wild = total_pop - total_gm - total_sterile,
+         program_duration = as.factor(program_duration),
+         period = factor(# as.character(periodicity),
+                         periodicity, levels = c(0, 4, 2, 1),
+                         # levels = c("0", "4", "2", "1"),
+                         labels = c("Once", "4", "2", "1"),
+                         ordered = TRUE),
+         grid_resolution = factor(# as.character(grid_resolution),
+                                  grid_resolution, levels = c(5, 2, 1),
+                                  #levels = c("5", "2", "1"),
+                                  ordered = TRUE),
+         per_site = factor(per_site, 
+                           levels = c(20, 40, 80, 200, 500))) %>%
+  select(-grid_releases, -periodicity, -percentile_selector,
+         -(use_seed:monitor_area))
+```
+
+And join it
+
+```{r}
+wasps <- wasps %>%
+  bind_rows(wasps_extra)
 ```
 
 ## Standardise population figures to start populations
@@ -220,7 +259,8 @@ wasps %>% filter(strategy == "temporal", period == "Once", t <= 50) %>%
 Similarly, in eradication scenarios, releasing more wasps accelerates the effect.
 
 ```{r}
-wasps %>% filter(strategy == "temporal", period == "1", grid_resolution == "1") %>%
+wasps %>% filter(strategy == "temporal", period == "1", 
+                 grid_resolution == "1") %>%
   ggplot() +
     geom_line(aes(x = t, y = wild_t, colour = as.factor(per_site),
                   group = run_number)) +
