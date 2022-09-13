@@ -180,7 +180,8 @@ to release-wasps [initialise?]
     ]
   ]  
   ask release-sites [
-    increment-population release-type colonies-per-site
+    ;; note modification here to cap releases at local capacity
+    increment-population release-type min (list colonies-per-site (floor capacity))
     if initialise? [
       set init-pops next-pops
       set init-pop sum init-pops
