@@ -1,0 +1,288 @@
+---
+title: "Understanding GM control strategy effects"
+author: "David O'Sullivan"
+date: "04/06/2022"
+output:
+  rmdformats::robobook:
+    lightbox: false
+    thumbnails: false
+    gallery: false
+    embed_fonts: true
+    self_contained: true
+    toc_depth: 4
+    code_folding: show
+editor_options: 
+  chunk_output_type: console
+---
+
+# Summary of findings
+As detailed in the following:
+
++ Even extended control programs if not pursued to eradication (which is very difficult) are no more successful than a 'release-once-and-forget' strategy (`period == 'Once'`)
++ Eradication is possible, but is only achieved with 'release everywhere' (`grid_resolution == 1`) strategies; note that release everywhere is relative to the model resolution, meaning one release site every 1km -- in practice a finer grid even than this would probably be required!
++ The number of GM wasps released (the `per_site` parameter) only marginally increases the chances of success; the main effect of releasing more wasps is to accelerate the decrease in wasp population and reduce time to eradication.
++ Modulating releases spatially (the `spatial` strategy, i.e., release every year at every nth site) is more detrimental to success than modulating temporally (the `temporal` strategy, i.e., release everywhere every nth year)
++ Long term outcomes can be sensitively depend on when a control strategy is stopped; in particular, it is possible for seemingly very low populations to make a full recovery if GM populations are so small as to be vulnerable to extinction in the population: this means that accurate monitoring (that could detect very small and remote refugial populations), or extremely conservative settings (i.e., continuing releases long after might seem necessary), or both would be required for reliable eradication.
+
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(tidyr)
+library(tibble)
+library(ggplot2)
+library(janitor)
+```
+
+# Read and clean the data
+Clean up all the NetLogo variable name weirdness with `janitor::clean_names()`, along with a couple of other tidy ups to simplify names. We also convert some variables to factors and consistently order them from lower to higher 'control-effort' to  improve the visualizations.
+
+```{r}
+setwd("~/Documents/code/wasps/experiments")
+wasps <- read.csv(
+  "wasps GRID-RELEASE-EXPERIMENT-WITH-RELEASE-CAP-table.csv", skip = 6) %>%
+  clean_names() %>%
+  rename(run_number = x_run_number, t = x_step, 
+         strategy = spatial_or_temporal,
+         per_site = colonies_per_site) %>%
+  mutate(total_wild = total_pop - total_gm - total_sterile,
+         program_duration = as.factor(program_duration),
+         period = factor(# as.character(periodicity),
+                         periodicity, levels = c(0, 4, 2, 1),
+                         # levels = c("0", "4", "2", "1"),
+                         labels = c("Once", "4", "2", "1"),
+                         ordered = TRUE),
+         grid_resolution = factor(# as.character(grid_resolution),
+                                  grid_resolution, levels = c(5, 2, 1),
+                                  #levels = c("5", "2", "1"),
+                                  ordered = TRUE),
+         per_site = factor(per_site, 
+                           levels = c(20, 40, 80, 200, 500))) %>%
+  select(-grid_releases, -periodicity, -percentile_selector,
+         -(use_seed:monitor_area))  # get rid of a bunch of stuff we don't use
+```
+
+<!-- Also load additional data -->
+
+<!-- ```{r} -->
+<!-- run_number_max <- max(wasps$run_number) -->
+
+<!-- wasps_extra <- read.csv( -->
+<!--   "wasps GRID-RELEASE-EXPERIMENT-EXTRA-table.csv", skip = 6) %>% -->
+<!--   clean_names() %>% -->
+<!--   rename(run_number = x_run_number, t = x_step,  -->
+<!--          strategy = spatial_or_temporal, -->
+<!--          per_site = colonies_per_site) %>% -->
+<!--   mutate(run_number = run_number + run_number_max,  -->
+<!--          total_wild = total_pop - total_gm - total_sterile, -->
+<!--          program_duration = as.factor(program_duration), -->
+<!--          period = factor(# as.character(periodicity), -->
+<!--                          periodicity, levels = c(0, 4, 2, 1), -->
+<!--                          # levels = c("0", "4", "2", "1"), -->
+<!--                          labels = c("Once", "4", "2", "1"), -->
+<!--                          ordered = TRUE), -->
+<!--          grid_resolution = factor(# as.character(grid_resolution), -->
+<!--                                   grid_resolution, levels = c(5, 2, 1), -->
+<!--                                   #levels = c("5", "2", "1"), -->
+<!--                                   ordered = TRUE), -->
+<!--          per_site = factor(per_site,  -->
+<!--                            levels = c(20, 40, 80, 200, 500))) %>% -->
+<!--   select(-grid_releases, -periodicity, -percentile_selector, -->
+<!--          -(use_seed:monitor_area)) -->
+<!-- ``` -->
+
+<!-- And join it -->
+
+<!-- ```{r} -->
+<!-- wasps <- wasps %>% -->
+<!--   bind_rows(wasps_extra) -->
+<!-- ``` -->
+
+## Standardise population figures to start populations
+This seems worth doing for simplicity's sake.
+
+```{r}
+start_pops <- wasps %>%
+  filter(t == 0) %>%
+  select(run_number, total_pop, total_wild, total_gm) %>%
+  rename(pop_0 = total_pop, 
+         wild_0 = total_wild, 
+         gm_0 = total_gm)
+
+wasps <- wasps %>%
+  merge(start_pops, all.x = TRUE) %>%
+  mutate(pop_t = total_pop / pop_0,
+         wild_t = total_wild / wild_0,
+         gm_t = total_gm / gm_0)
+```
+
+# Eradication success
+First we tag scenarios where eradication has occurred. These are any that end 'prematurely' before the full 150 year run time elapsed.
+
+```{r}
+end_time <- wasps %>%
+  group_by(run_number) %>% 
+  summarise(max_t = max(t))
+
+wasps <- wasps %>%
+  merge(end_time) %>%
+  mutate(eradication = max_t < 100)
+```
+
+Now we can make a (complicated!) plot showing eradication success rate relative to different control program settings. 
+
+```{r}
+wasps %>% 
+  select(eradication, strategy, per_site, program_duration,
+         grid_resolution, period) %>%
+  group_by(strategy, per_site, program_duration, 
+           grid_resolution, period) %>%
+  summarise(success = sum(eradication) / n()) %>%
+  ggplot() +
+    geom_tile(aes(x = per_site, y = grid_resolution,
+                  fill = success)) +
+    scale_fill_distiller(palette = "Greens", direction = 1) +
+    facet_grid(period ~ strategy + program_duration, as.table = FALSE,
+               labeller = label_both) +
+    ggtitle("Eradication success by grid resolution and periodicity",
+            subtitle = "Also showing different combinations of colonies per site and spatial vs temporal strategies") +
+    labs(x = "GM colonies released per site", y = "Grid resolution, km", fill = "Success")
+```
+
+**Note** It isn't clear which particular combinations of variables should be used in the individual panels vs those conditioning which scenarios are included in each panel. I have ordered all variables and factors so that 'more effort' is up and right both within panels, and (to the extent possible) also in the arrangement of panels.
+
+There are two broad strategies in these results, where the interpretation of the `period` setting is slightly different:
+
++ `spatial` (the two leftmost columns) where `period` denotes that the chosen grid of release sites is activated every year, but only at every nth site; or
++ `temporal` (the two rightmost columns) where every site in the grid of release sites is activated every nth year, with n the `period`.
+
+Additionally, each strategy may be in place for either 20 or 30 years (`program_duration`). **Note** that `periodicity == 'None'` in both cases is a 'release-once-and-forget' strategy, which never achieves eradication in either case, and where `period` and `program_duration` settings are irrelevant.
+
+From the above plots, overall the `temporal` strategies are more successful. However in both cases, eradication only occur when `grid_resolution` is 1, i.e. a very dense network of release sites is required. `spatial` strategies furthermore only rarely achieve eradication when the `period` is other than 1 (i.e. every site). This suggests that the key determinant of eradication is 'flooding' the entire landscape regularly, which prevents wild populations 'escaping' from GM wasps.
+
+In the `temporal` strategies there is an increased chance of eradication when more colonies are released per site, such that even if releases only occur every 4 years eradication is still possible at high levels of releases. Note that these are very high levels of release --- close to half the habitat capacity of wasps!
+
+The overall picture is only marginally affected by control program duration. Some details of the differences here are discussed in the section [Sensitivity of success to program duration](#sensitivity-of-success-to-program-duration) below.
+
+
+# Time series visualizations
+To try to understand better what's going on, we now look at time series evolution of the total wild wasp population relative to the initial population.
+
+```{r}
+ggplot(wasps) +
+  geom_line(aes(x = t, y = wild_t, colour = program_duration,
+                group = run_number), alpha = 0.25) +
+  scale_colour_brewer(palette = "Set1") +
+  facet_grid(grid_resolution ~ period, scales = "free_x", as.table = FALSE, 
+             labeller = label_both) +
+  ggtitle("All data time series") + 
+  labs(x = "Time, years", y = "Wild population relative to start") +
+  theme(legend.position = "bottom")
+```
+There is a lot going on here, which is challenging to parse out, when showing _all the data_. Nevertheless, we can see that:
+
++ The finding that `grid_resolution == 1`, `period == 1` combinations are 100% successful at eradication is confirmed. 
++ A second important finding is that in almost all other scenarios the eventual equilibrium population of wild wasps is substantially reduced, albeit after at least 20 years. 
++ Importantly, even `period == 'Once'` scenarios, i.e. 'release-once-and-forget` achieve this outcome, even if more slowly (after 50-60 years).
+
+Using all the data as above makes it hard to discern specific effects of different scenario parameters. So below, we consider some subsets of the data to try to better understand the dynamics.
+
+
+## Sensitivity of success to program duration
+First we revisit the effect of the control program duration on success. This is a story of the _sensitive dependence of success on when a control program is stopped_.
+
+The confusing times series in the middle two panels of the top row of the 'all data' time series plots, show how sensitively dependent eventual eradication success might be on small numbers of surviving wild and GM wasps in much reduced populations. To examine this, here is a closer look at the relevant plots, subdivided by spatial and temporal strategy cases (which otherwise greatly confuse the picture).
+
+First, split the data by `spatial` vs `temporal` strategy.
+
+```{r}
+wasps_s <- wasps %>% 
+  filter(strategy == "spatial")
+wasps_t <- wasps %>% 
+  filter(strategy == "temporal")
+```
+
+### Temporal strategy: wild wasp recovery is rare but unpredictable
+**Remember**, this is with reference only to those scenario settings where eradication is _almost_ achieved, i.e. when `grid_resolution == 1` and `period != 1`.
+
+```{r}
+wasps_t %>% 
+  filter(period %in% c("2", "4"), grid_resolution == "1") %>%
+  ggplot() +
+    geom_line(aes(x = t, y = wild_t, colour = program_duration,
+                  group = run_number)) +
+    scale_colour_brewer(palette = "Set1") +
+    facet_grid(period ~ per_site, as.table = FALSE, labeller = label_both) +
+    labs(x = "Time, years", y = "Wild population relative to start") +
+    theme(legend.position = "bottom")
+```
+`per_site` release numbers affect the initial rate of population fall (this is clearer in the [next section](#effects-of-releasing-more-gm-wasps-at-each-site)) but also act as a control on the probability of dramatic recovery in wild populations. This recovery also depends on the program duration.
+
+The most likely explanation of the dynamics seen here is that total wasp population is greatly reduced while the control program continues, so much so that the less numerous GM wasps which depend for their persistence in the population on the presence of wild wasps, become vulnerable to extinction in small populations. This could account for the otherwise confusing result that the long-term impact of a 20 year control program with low wasp release densities (bottom left plot) is _better_ than for a 30 year program. The latter reduces populations to the point where GM wasps disappear and the wild population makes a full recovery. In the 20 year program case some GM wasps persist and eventually (after another 50 years) reduce equilibrium populations to the low levels seen in other scenarios. 
+
+The relative success of longer or shorter control programs is reversed in the middle bottom plot where stopping control after 20 years allows the wild population to recover, but 30 years is long enough to achieve eradication.
+
+### Spatial strategy: wild wasp recovery is commonplace
+
+```{r}
+wasps_s %>% 
+  filter(period %in% c("2", "4"), grid_resolution == "1") %>%
+  ggplot() +
+    geom_line(aes(x = t, y = wild_t, colour = program_duration,
+                  group = run_number)) +
+    scale_colour_brewer(palette = "Set1") +
+    facet_grid(period ~ per_site, as.table = FALSE, labeller = label_both) +
+    labs(x = "Time, years", y = "Wild population relative to start") +
+    theme(legend.position = "bottom")
+```
+In the case of the spatial strategy (where releases are made every year, but only at every nth site) the results are easier to parse, but again, show how sensitive eventual success is to 'knowing when to stop'. The more intense `period == 2` scenarios ultimately see full recovery of the wild wasp population in almost all cases, while the less intense `period == 4` scenarios settle into a low wasp population long term equilibrium! A key management challenge would seem to be an ability to distinguish the situations in the top row of this plot from those in the bottom!
+
+The general conclusion from both these sets of results is that the worst possible outcome is one where a program thought to have been successful is abandoned. The only way to avoid this outcome would seem to be to continue with a program long after the point where it seems to have already succeeded, which would involve a situation where the vast majority of wasps in the population would be those being released as part of the control program! 
+
+
+## Effects of releasing more GM wasps at each site
+Considering only `periodicity == 'None'` release-and-forget strategies, over their first 50 years, we can see the impact of the numbers of GM wasps released on the speed of convergence on the long term equilibrium.
+
+```{r}
+wasps %>% filter(strategy == "temporal", period == "Once", t <= 50) %>%
+  ggplot() +
+    geom_line(aes(x = t, y = wild_t, colour = as.factor(per_site),
+                  group = run_number)) +
+    scale_colour_viridis_d() +
+    facet_wrap(~ grid_resolution, scales = "free_x", as.table = FALSE, 
+               labeller = label_both) +
+    ggtitle('Effect of number of releases on rate of convergence to equilibrium') + 
+    labs(x = "Time, years", y = "Population relative to start", 
+         colour = "GM Colonies released per site") +
+    theme(legend.position = "bottom")
+```
+
+Similarly, in eradication scenarios, releasing more wasps accelerates the effect.
+
+```{r}
+wasps %>% filter(strategy == "temporal", period == "1", 
+                 grid_resolution == "1") %>%
+  ggplot() +
+    geom_line(aes(x = t, y = wild_t, colour = as.factor(per_site),
+                  group = run_number)) +
+    scale_colour_viridis_d() +
+    ggtitle('Eradication scenarios') + 
+    labs(x = "Time, years", y = "Population relative to start", 
+         colour = "GM Colonies released per site") +
+    theme(legend.position = "bottom")
+```
+
+The time to eradication is also reduced by releasing more wasps. Again, keep in mind all these scenarios involve releasing vast numbers of GM wasps over wide areas! 
+
+```{r}
+wasps %>% filter(eradication == TRUE) %>%
+  select(per_site, max_t, period, strategy) %>%
+  mutate(per_site = as.factor(per_site)) %>%
+  ggplot() +
+    geom_boxplot(aes(x = per_site, y = max_t, group = per_site)) +
+    facet_grid(period ~ strategy, labeller = label_both, as.table = FALSE) + 
+    labs(x = "Colonies released per site", y = "Time to eradication", 
+         title = "Eradication times by intensity of releases")
+```
+
+In this plot, the anomalous result that eradication may occur at 80 releases per site under the `spatial` strategy at `period == 2` but not at the higher release numbers is particularly obvious. This result might be due to the strain that adding so many wasps places on local habit capacity in the year of release. This could cause a local population to collapse negating the impact of the large number of GM wasps released. Understanding this result fully probably requires closer analysis of local population dynamics under different combinations of local wild + released GM wasps relative to habitat capacity --- and would require a more extensive set of experiments where the `per_site` parameter was set to a larger number of possible values.
+

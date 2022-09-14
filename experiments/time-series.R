@@ -19,21 +19,15 @@ d <- d %>%
          total = if_else(total > capacity, 1, total / capacity))
 
 time_step_range <- seq(20, 47, 3)
-max_t <- max(d$total)
-
-d <- d %>%
-  mutate(w = p_wild / max_t * 255, gm = p_gm / max_t * 255, 
-         sterile = p_sterile / max_t * 255, tot = total / max_t * 255)
+# time_step_range <- seq(110, 137, 3)
 
 # Data prep
 # Have to assign unique id to every row in the table
 # to be able to use hexcolours...
 d_to_map <- d %>%
   filter(t %in% time_step_range) %>%
-  mutate(hexcolour = rgb(p_wild, p_sterile, p_gm, total, maxColorValue = 255),
+  mutate(hexcolour = rgb(wild_prop, sterile_prop, gm_prop, total),
          id = row_number())
-# mutate(hexcolour = rgb(wild_prop, sterile_prop, gm_prop, total),
-#        id = row_number())
 
 pdf(paste("time-series/", basename, ".pdf", sep = ""), 
     width = 4, height = 3)
