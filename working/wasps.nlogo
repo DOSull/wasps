@@ -362,7 +362,7 @@ seed
 seed
 0
 1000
-3.0
+0.0
 1
 1
 NIL
@@ -508,7 +508,7 @@ periodicity
 periodicity
 0
 10
-2.0
+0.0
 1
 1
 NIL
@@ -813,7 +813,7 @@ SWITCH
 477
 monitor-area?
 monitor-area?
-0
+1
 1
 -1000
 
@@ -1690,6 +1690,105 @@ NetLogo 6.2.0
     <enumeratedValueSet variable="colonies-per-site">
       <value value="40"/>
       <value value="200"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="percentile-selector">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="spatial-or-temporal">
+      <value value="&quot;temporal&quot;"/>
+      <value value="&quot;spatial&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="program-duration">
+      <value value="20"/>
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-seed?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="seed" first="1" step="1" last="30"/>
+    <enumeratedValueSet variable="max-capacity-per-sq-km">
+      <value value="1380"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="birth-rate">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mortality">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="stochastic-repro?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="var-mean-ratio">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="d-mean">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="p-ldd">
+      <value value="1.0E-4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="scenario">
+      <value value="&quot;base plus release sites&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="release-type">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-occupancy">
+      <value value="0.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="pop-sd">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="stdev-occupancy">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="homogeneous?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="number-of-sites">
+      <value value="20"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proportion-gm">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-pop">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="monitor-area?">
+      <value value="false"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="GRID-RELEASE-EXPERIMENT-FINAL" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="100"/>
+    <metric>total-pop</metric>
+    <metric>prop-occupied</metric>
+    <metric>total-gm</metric>
+    <metric>total-sterile</metric>
+    <enumeratedValueSet variable="grid-releases?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="grid-resolution">
+      <value value="1"/>
+      <value value="2"/>
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodicity">
+      <value value="0"/>
+      <value value="1"/>
+      <value value="2"/>
+      <value value="4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="colonies-per-site">
+      <value value="20"/>
+      <value value="40"/>
+      <value value="80"/>
+      <value value="200"/>
+      <value value="500"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="percentile-selector">
       <value value="0"/>
