@@ -270,7 +270,7 @@ show-pop
 show-pop
 0
 num-subpops
-1.0
+0.0
 1
 1
 NIL
@@ -857,7 +857,7 @@ grid-resolution
 grid-resolution
 1
 20
-1.0
+2.0
 1
 1
 NIL
@@ -963,43 +963,44 @@ total-released
 ## WHAT IS IT?
 A model of wasp control by a potential gene drive in the upper South Island of Aotearoa New Zealand.
 
-This version is in an abstract 50 x 50km space.
-
 ## HOW IT WORKS
 ### Overview
-Each 1km grid cell location in the model study area has an associated population carrying **`capacity`** which controls the population dynamics of the area. The maximum possible carrying capacity is set by the **max-capacity-per-sq-km** control. In this abstract space, the capacity is decreases linearly from west to east.
+Each 1km grid cell location in the model study area has an associated population carrying **capacity** which controls the population dynamics of the area. The maximum possible carrying capacity is set by the **max-capacity-per-sq-km** control. 
+
+Carrying capacities are based on the Basic Ecosystems dataset available at https://lris.scinfo.org.nz/layer/95415-basic-ecosystems/.
 
 ### Population dynamics
 At any given moment the the number of wasp nests (i.e. queens) in a grid cell is contained in the patch list variable **pops** which records respectively the number of *wild* (W), *gene-drive modified* (G) and *sterile* (S) queens in the cell. The reproductive population is given by W + G, which in model code is
 
-    set reproductive sum but-last pops
+    let reproductive sum but-last pops
 
-The mean annual reproductive rate of all cells in a given year is determined from the parameter setting **R-mean** and **R-sd** by drawing from a normal distribution.
+The mean annual reproductive rate of all cells in a given year is determined from the parameter settings **birth-rate**, **mortality**, and **R-sd** by drawing from a normal distribution.
 
-    set R-annual random-normal R-mean R-sd
+    set R-mean birth-rate - mortality
+    set R-annual random-normal R-mean pop-sd
 
-This is modified locally per patch based on the current population and capacity according to
+where **mortality** will usually be set to 1 (since wasps are an annual species with no overlap between generations) so that a **birth-rate** of 2 is required for population to be maintained over time. When **mortality** is set to 1 this formulation is equivalent to a logistic map.
 
-    set R-local (1 - mortality) + (R-annual + mortality) * (1 - pop / capacity)
+The mean system wide annual R is modified locally per patch based on the current population and capacity according to
 
-where **mortality** will usually be set to 1 (since wasps are an annual species with no overlap between generations) and the boosting of R by the amount of the mortality setting ensures that **R-mean** is an expected number of surviving new queens *net* of mortality of the current generation. When **mortality** is set to 1 this formulation is equivalent to a logistic map.
+    set R-local R-annual * (1 - pop / capacity)
 
-The expected new population in a cell is given by
+The naive expected new population in a cell is given by
 
-    set new-pop R-local * reproductive
+    let expected-next-pop pop + R-local * reproductive - (mortality * last pops)
 
-Stochastic variation is optionally applied when **stochastic-repro?** is set On, using either
+where this more complicated formulation allows for the survival of non-sterile populations beyond one year. Stochastic variation in this new population is optionally applied when **stochastic-repro?** is set On, using either
 
-    set new-pop random-poisson new-pop
+    set actual-new-pop random-poisson expected-next-pop
 
 or
 
-    set new-pop nbinmoial-with-mean-vmr new-pop var-mean-ratio
+    set actual-new-pop nbinomial-with-mean-vmr expected-next-pop var-mean-ratio
 
-The former is used when **var-mean-ratio** is set to 1, while the latter is applied with any higher value. The **nbinomial-with-mean-vmr** reporter converts specified mean *m* and variance mean ratio *vmr* to the *r* and *p* parameters of the Negative Binomial according to *r = m / (vmr - 1)* and *p = 1 - (1 / vmr)*  and invokes *random-nbinomial* which converts this to an appropriate composite Gamma-Poisson mixture (see https://en.wikipedia.org/wiki/Negative_binomial_distribution#Gamma%E2%80%93Poisson_mixture).
+The former is used when **var-mean-ratio** is set to 1, while the latter is applied with any higher value. The **nbinomial-with-mean-vmr** reporter converts a specified mean *m* and variance mean ratio *vmr* to the *r* and *p* parameters of the Negative Binomial according to *r = m / (vmr - 1)* and *p = 1 - (1 / vmr)*  and invokes *random-nbinomial* which converts this to an appropriate composite Gamma-Poisson mixture (see https://en.wikipedia.org/wiki/Negative_binomial_distribution#Gamma%E2%80%93Poisson_mixture).
 
 ### Genetics
-The total **new-pop** *N*<sup>+</sup> is split into wild, GM and sterile sub-populations by a multinomial draw with weights given by
+The total **actual-new-pop** *N*<sub>*t*+1</sub> is split into wild, GM and sterile sub-populations by a multinomial draw with weights given by
 
   *p<sub>W</sub>* = *W*<sup>2</sup>
   *p<sub>G</sub>* = 2*WG*, and
@@ -1009,11 +1010,11 @@ Note that a binomial random generator has been coded in place of a naive impleme
 
 This is also the basis for an implementation of a multinomial variate draw, which distributes a requested _n_ items among categories weighted according to the wild, GM and sterile weights calculated above. The reporter works by repeated conditional binomial draws where each draw is based on the current remaining items to be drawn, and weight of the current category relative to the total weight of all categories (including the present one), i.e.,
 
-  *W*<sup>+</sup> ~ Bin(*n*, *p<sub>W</sub>* / (*p<sub>W</sub>* + *p<sub>G</sub>*))
-  *G*<sup>+</sup> ~ Bin(*n* - *W*<sup>+</sup>, *p*<sub>G</sub>* / (1 - *p*<sub>W</sub>))
-  *S*<sup>+</sup> = *N<sup>+</sup> - *W*<sup>+</sup> - *G*<sup>+</sup>
+  *W*<sub>*t*+1</sub> ~ Bin(*n*, *p<sub>W</sub>* / (*p<sub>W</sub>* + *p<sub>G</sub>*))
+  *G*<sub>*t*+1</sub> ~ Bin(*n* - *W*<sub>*t*+1</sub>, *p*<sub>G</sub>* / (1 - *p*<sub>W</sub>))
+  *S*<sub>*t*+1</sub> = *N*<sub>*t*+1</sub> - *W*<sub>*t*+1</sub> - *G*<sub>*t*+1</sub>
 
-Note that for assignment to just three categories the reporter seems to be faster than the extension based **rnd:rnd:weighted-n-of-list-with-repeats** function.
+Note that for assignment to just three categories the hand-coded **multinomial-int** reporter seems to be faster than the extension based **rnd:weighted-n-of-list-with-repeats** function.
 
 ### Dispersal
 New population may disperse to new locations.

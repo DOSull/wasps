@@ -31,6 +31,8 @@ library(tidyr)
 library(tibble)
 library(ggplot2)
 library(janitor)
+library(stringr)
+library(forcats)
 ```
 
 # Read and clean the data
@@ -47,16 +49,14 @@ wasps <- read.csv(
   mutate(total_wild = total_pop - total_gm - total_sterile,
          program_duration = as.factor(program_duration),
          period = factor(# as.character(periodicity),
-                         periodicity, levels = c(0, 4, 2, 1),
-                         # levels = c("0", "4", "2", "1"),
-                         labels = c("Once", "4", "2", "1"),
-                         ordered = TRUE),
+                         periodicity, levels = c(1, 2, 4, 0),
+                         labels = c("1", "2", "4", "Once")),
          grid_resolution = factor(# as.character(grid_resolution),
                                   grid_resolution, levels = c(5, 2, 1),
-                                  #levels = c("5", "2", "1"),
-                                  ordered = TRUE),
+                                  labels = c("5", "2", "1")),
          per_site = factor(per_site, 
-                           levels = c(20, 40, 80, 200, 500))) %>%
+                           levels = c(20, 40, 80, 200, 500)),
+         strat = str_c(strategy, program_duration)) %>%
   select(-grid_releases, -periodicity, -percentile_selector,
          -(use_seed:monitor_area))  # get rid of a bunch of stuff we don't use
 ```
@@ -96,21 +96,26 @@ wasps <- wasps %>%
 Now we can make a (complicated!) plot showing eradication success rate relative to different control program settings. 
 
 ```{r}
-wasps %>% 
+wasps %>%
   select(eradication, strategy, per_site, program_duration,
          grid_resolution, period) %>%
-  group_by(strategy, per_site, program_duration, 
+  group_by(strategy, per_site, program_duration,
            grid_resolution, period) %>%
   summarise(success = sum(eradication) / n()) %>%
   ggplot() +
-    geom_tile(aes(x = per_site, y = grid_resolution,
-                  fill = success)) +
+    geom_tile(aes(x = per_site, y = grid_resolution, fill = success)) +
     scale_fill_distiller(palette = "Greens", direction = 1) +
-    facet_grid(period ~ strategy + program_duration, as.table = FALSE,
+    facet_grid(period ~ strategy + program_duration,
                labeller = label_both) +
     ggtitle("Eradication success by grid resolution and periodicity",
             subtitle = "Also showing different combinations of colonies per site and spatial vs temporal strategies") +
-    labs(x = "GM colonies released per site", y = "Grid resolution, km", fill = "Success")
+    labs(x = "GM colonies released per site", y = "Grid resolution, km", fill = "Success") +
+  theme_minimal()
+# +
+#   theme(text = element_text(size = 6, family = "sans"))
+
+# ggsave("control-strategy-success/fig5-control-strategy-success.pdf",
+#        width = 150, height = 105, units = "mm", dpi = 600)
 ```
 
 **Note** It isn't clear which particular combinations of variables should be used in the individual panels vs those conditioning which scenarios are included in each panel. I have ordered all variables and factors so that 'more effort' is up and right both within panels, and (to the extent possible) also in the arrangement of panels.
@@ -133,12 +138,16 @@ The overall picture is only marginally affected by control program duration. Som
 To try to understand better what's going on, we now look at time series evolution of the total wild wasp population relative to the initial population.
 
 ```{r}
+wasps$period <- fct_rev(wasps$period)
+wasps$grid_resolution <- fct_rev(wasps$grid_resolution)
+```
+
+```{r}
 ggplot(wasps) +
   geom_line(aes(x = t, y = wild_t, colour = program_duration,
                 group = run_number), alpha = 0.25) +
   scale_colour_brewer(palette = "Set1") +
-  facet_grid(grid_resolution ~ period, scales = "free_x", as.table = FALSE, 
-             labeller = label_both) +
+  facet_grid(grid_resolution ~ period, labeller = label_both) +
   ggtitle("All data time series") + 
   labs(x = "Time, years", y = "Wild population relative to start") +
   theme(legend.position = "bottom")
@@ -176,7 +185,7 @@ wasps_t %>%
     geom_line(aes(x = t, y = wild_t, colour = program_duration,
                   group = run_number)) +
     scale_colour_brewer(palette = "Set1") +
-    facet_grid(period ~ per_site, as.table = FALSE, labeller = label_both) +
+    facet_grid(period ~ per_site, labeller = label_both) +
     labs(x = "Time, years", y = "Wild population relative to start") +
     theme(legend.position = "bottom")
 ```
@@ -193,7 +202,7 @@ wasps_s %>%
     geom_line(aes(x = t, y = wild_t, colour = program_duration,
                   group = run_number)) +
     scale_colour_brewer(palette = "Set1") +
-    facet_grid(period ~ per_site, as.table = FALSE, labeller = label_both) +
+    facet_grid(period ~ per_site, labeller = label_both) +
     labs(x = "Time, years", y = "Wild population relative to start") +
     theme(legend.position = "bottom")
 ```
@@ -206,13 +215,16 @@ The general conclusion from both these sets of results is that the worst possibl
 Considering only `periodicity == 'None'` release-and-forget strategies, over their first 50 years, we can see the impact of the numbers of GM wasps released on the speed of convergence on the long term equilibrium.
 
 ```{r}
+wasps$grid_resolution <- fct_rev(wasps$grid_resolution)
+```
+
+```{r}
 wasps %>% filter(strategy == "temporal", period == "Once", t <= 50) %>%
   ggplot() +
     geom_line(aes(x = t, y = wild_t, colour = as.factor(per_site),
                   group = run_number)) +
     scale_colour_viridis_d() +
-    facet_wrap(~ grid_resolution, scales = "free_x", as.table = FALSE, 
-               labeller = label_both) +
+    facet_wrap(~ grid_resolution, scales = "free_x", labeller = label_both) +
     ggtitle('Effect of number of releases on rate of convergence to equilibrium') + 
     labs(x = "Time, years", y = "Population relative to start", 
          colour = "GM Colonies released per site") +
@@ -242,7 +254,7 @@ wasps %>% filter(eradication == TRUE) %>%
   mutate(per_site = as.factor(per_site)) %>%
   ggplot() +
     geom_boxplot(aes(x = per_site, y = max_t, group = per_site)) +
-    facet_grid(period ~ strategy, labeller = label_both, as.table = FALSE) + 
+    facet_grid(period ~ strategy, labeller = label_both) + 
     labs(x = "Colonies released per site", y = "Time to eradication", 
          title = "Eradication times by intensity of releases")
 ```

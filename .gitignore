@@ -8,6 +8,7 @@ BS-model/
 buffer-core-GIS-model/
 combined-buffer/
 GIS/
+input-gis-data/
 *.doc*
 *.zip
 /*.png

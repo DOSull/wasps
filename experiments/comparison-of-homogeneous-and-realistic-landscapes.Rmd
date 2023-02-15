@@ -97,7 +97,7 @@ g2 <- ggplot(homogeneous_control, aes(x = t, group = run_number)) +
 
 ggarrange(g1, g2, nrow = 1, common.legend = TRUE, legend = "right")
 
-ggsave("homogeneous_vs_realistic/time-series-comparison.pdf", 
+ggsave("homogeneous_vs_realistic/fig1-time-series-comparison.pdf", 
        width = 100, height = 75, dpi = 600, units = "mm")
 ```
 
